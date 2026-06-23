@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 class IdleTimeoutWrapper extends StatefulWidget {
   final Widget child;
@@ -66,7 +67,7 @@ class _IdleTimeoutWrapperState extends State<IdleTimeoutWrapper> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               title: const Column(
                 children: [
-                  Icon(Icons.timer, color: Color(0xFF1B5E20), size: 48),
+                  Icon(Icons.timer, color: AppColors.primary, size: 48),
                   SizedBox(height: 16),
                   Text('Masih di Sini?', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
@@ -85,11 +86,11 @@ class _IdleTimeoutWrapperState extends State<IdleTimeoutWrapper> {
                         child: CircularProgressIndicator(
                           value: countdown / 10,
                           backgroundColor: Colors.grey[200],
-                          color: const Color(0xFF1B5E20),
+                          color: AppColors.primary,
                           strokeWidth: 8,
                         ),
                       ),
-                      Text('$countdown', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
+                      Text('$countdown', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -103,7 +104,7 @@ class _IdleTimeoutWrapperState extends State<IdleTimeoutWrapper> {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

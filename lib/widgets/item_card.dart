@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/auction_item.dart';
 import '../providers/app_provider.dart';
 import '../screens/item_detail_screen.dart';
+import '../utils/app_colors.dart';
 import 'dart:io';
 
 class ItemCard extends StatelessWidget {
@@ -25,12 +26,12 @@ class ItemCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.cardBorder.withValues(alpha: 0.6)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
@@ -38,66 +39,131 @@ class ItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Placeholder or Actual Image
+            // Image
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                 child: FutureBuilder(
                   future: Provider.of<AppProvider>(context, listen: false).getItemPhotos(item.id!),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Container(
+                        color: AppColors.accentLighter,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 24, height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                          ),
+                        ),
+                      );
                     }
                     if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                      // Get primary photo or first photo
                       final photos = snapshot.data!;
                       final primaryPhoto = photos.firstWhere((p) => p.isPrimary, orElse: () => photos.first);
-                      return Image.file(
-                        File(primaryPhoto.localPath),
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey)),
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.file(
+                            File(primaryPhoto.localPath),
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                            alignment: Alignment.center,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              color: AppColors.accentLighter,
+                              child: const Center(
+                                child: Icon(Icons.image_not_supported_outlined, size: 50, color: AppColors.textMuted),
+                              ),
+                            ),
+                          ),
+                          // Karat badge
+                          if (item.karat != null && item.karat!.isNotEmpty)
+                            Positioned(
+                              top: 12,
+                              left: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  item.karat!,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       );
                     }
                     return Container(
-                      color: Colors.grey.shade100,
+                      color: AppColors.accentLighter,
                       width: double.infinity,
-                      child: const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+                      child: const Center(
+                        child: Icon(Icons.image_outlined, size: 50, color: AppColors.textMuted),
+                      ),
                     );
                   },
                 ),
               ),
             ),
+
+            // Content
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Category badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF9A825).withOpacity(0.2),
+                      color: AppColors.accentLight,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      item.categoryName ?? 'Unknown',
-                      style: const TextStyle(color: Color(0xFFF9A825), fontSize: 12, fontWeight: FontWeight.w600),
+                      item.categoryName ?? 'Lainnya',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
+                  // Name
                   Text(
                     item.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                      height: 1.3,
+                    ),
                   ),
+                  const SizedBox(height: 4),
+                  // Weight
+                  if (item.weightGram > 0)
+                    Text(
+                      '${item.weightGram}g',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   const SizedBox(height: 8),
+                  // Price
                   Text(
                     currencyFormatter.format(item.basePrice),
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B5E20),
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
                     ),
                   ),
                 ],

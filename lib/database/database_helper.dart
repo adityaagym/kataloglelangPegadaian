@@ -22,8 +22,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -70,10 +71,139 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE gold_prices (
+        id $idType,
+        price_per_gram REAL NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE financing_config (
+        id $idType,
+        dp_options TEXT NOT NULL DEFAULT '15,25,35,50',
+        admin_fee_flat REAL NOT NULL DEFAULT 50000,
+        admin_fee_percent REAL NOT NULL DEFAULT 0,
+        munah_rate REAL NOT NULL DEFAULT 0.38,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        updated_at TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE financing_tenors (
+        id $idType,
+        config_id INTEGER NOT NULL,
+        months INTEGER NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        other_fee REAL NOT NULL DEFAULT 0,
+        FOREIGN KEY (config_id) REFERENCES financing_config (id)
+      )
+    ''');
+
     // Insert default categories
     await db.insert('categories', {'name': 'Perhiasan Emas', 'description': 'Berbagai perhiasan emas murni maupun campuran'});
     await db.insert('categories', {'name': 'Elektronik', 'description': 'Gadget, laptop, dan elektronik lainnya'});
     await db.insert('categories', {'name': 'Logam Mulia', 'description': 'Emas batangan antam/UBS'});
+    await db.insert('categories', {'name': 'Kendaraan', 'description': 'Mobil, motor, dan kendaraan lainnya'});
+
+    // Insert default gold price
+    await db.insert('gold_prices', {
+      'price_per_gram': 1120000,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+
+    // Insert default financing config
+    final configId = await db.insert('financing_config', {
+      'dp_options': '15,25,35,50',
+      'admin_fee_flat': 50000,
+      'admin_fee_percent': 0,
+      'munah_rate': 0.38,
+      'is_active': 1,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+
+    // Insert default tenors
+    for (final months in [6, 12, 18, 24, 36]) {
+      await db.insert('financing_tenors', {
+        'config_id': configId,
+        'months': months,
+        'is_active': 1,
+        'other_fee': 0,
+      });
+    }
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS gold_prices (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          price_per_gram REAL NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS financing_config (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          dp_options TEXT NOT NULL DEFAULT '15,25,35,50',
+          admin_fee_flat REAL NOT NULL DEFAULT 50000,
+          admin_fee_percent REAL NOT NULL DEFAULT 0,
+          munah_rate REAL NOT NULL DEFAULT 0.38,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          updated_at TEXT
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS financing_tenors (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          config_id INTEGER NOT NULL,
+          months INTEGER NOT NULL,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          other_fee REAL NOT NULL DEFAULT 0,
+          FOREIGN KEY (config_id) REFERENCES financing_config (id)
+        )
+      ''');
+
+      // Add Kendaraan category if not exists
+      final existing = await db.query('categories', where: 'name = ?', whereArgs: ['Kendaraan']);
+      if (existing.isEmpty) {
+        await db.insert('categories', {'name': 'Kendaraan', 'description': 'Mobil, motor, dan kendaraan lainnya'});
+      }
+
+      // Insert default gold price if empty
+      final goldPrices = await db.query('gold_prices');
+      if (goldPrices.isEmpty) {
+        await db.insert('gold_prices', {
+          'price_per_gram': 1120000,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      // Insert default financing config if empty
+      final configs = await db.query('financing_config');
+      if (configs.isEmpty) {
+        final configId = await db.insert('financing_config', {
+          'dp_options': '15,25,35,50',
+          'admin_fee_flat': 50000,
+          'admin_fee_percent': 0,
+          'munah_rate': 0.38,
+          'is_active': 1,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+        for (final months in [6, 12, 18, 24, 36]) {
+          await db.insert('financing_tenors', {
+            'config_id': configId,
+            'months': months,
+            'is_active': 1,
+            'other_fee': 0,
+          });
+        }
+      }
+    }
   }
 
   // --- Categories ---
@@ -107,8 +237,7 @@ class DatabaseHelper {
 
   Future<List<AuctionItem>> readAllAuctionItems({bool activeOnly = false}) async {
     final db = await instance.database;
-    final whereClause = activeOnly ? 'is_active = 1' : null;
-    
+
     // Join with categories to get category name
     final result = await db.rawQuery('''
       SELECT a.*, c.name as category_name
@@ -137,6 +266,8 @@ class DatabaseHelper {
 
   Future<int> deleteAuctionItem(int id) async {
     final db = await instance.database;
+    // Also delete photos
+    await db.delete('item_photos', where: 'item_id = ?', whereArgs: [id]);
     return await db.delete(
       'auction_items',
       where: 'id = ?',
@@ -168,6 +299,195 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // --- Gold Prices ---
+  Future<double> getGoldPricePerGram() async {
+    final db = await instance.database;
+    final result = await db.query('gold_prices', orderBy: 'id DESC', limit: 1);
+    if (result.isNotEmpty) {
+      return (result.first['price_per_gram'] as num).toDouble();
+    }
+    return 1120000; // Default
+  }
+
+  Future<Map<String, dynamic>?> getLatestGoldPriceRecord() async {
+    final db = await instance.database;
+    final result = await db.query('gold_prices', orderBy: 'id DESC', limit: 1);
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
+  Future<int> updateGoldPrice(double pricePerGram) async {
+    final db = await instance.database;
+    return await db.insert('gold_prices', {
+      'price_per_gram': pricePerGram,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// Get all gold-category items with auto-calculated price
+  Future<List<Map<String, dynamic>>> getGoldItemsWithCalculatedPrice() async {
+    final db = await instance.database;
+    final goldPrice = await getGoldPricePerGram();
+
+    final result = await db.rawQuery('''
+      SELECT a.*, c.name as category_name
+      FROM auction_items a
+      LEFT JOIN categories c ON a.category_id = c.id
+      WHERE c.name LIKE '%Emas%' OR c.name LIKE '%Logam Mulia%'
+      ORDER BY a.name ASC
+    ''');
+
+    return result.map((row) {
+      final weightGram = (row['weight_gram'] as num).toDouble();
+      final calculatedPrice = weightGram * goldPrice;
+      return {
+        ...row,
+        'calculated_price': calculatedPrice,
+        'gold_price_per_gram': goldPrice,
+      };
+    }).toList();
+  }
+
+  /// Update base_price of gold items based on current gold price
+  Future<void> recalculateGoldItemPrices() async {
+    final db = await instance.database;
+    final goldPrice = await getGoldPricePerGram();
+
+    // Get gold categories
+    final goldCategories = await db.rawQuery('''
+      SELECT id FROM categories 
+      WHERE name LIKE '%Emas%' OR name LIKE '%Logam Mulia%'
+    ''');
+
+    final categoryIds = goldCategories.map((c) => c['id']).toList();
+    if (categoryIds.isEmpty) return;
+
+    final placeholders = categoryIds.map((_) => '?').join(',');
+    final items = await db.rawQuery(
+      'SELECT id, weight_gram, karat FROM auction_items WHERE category_id IN ($placeholders)',
+      categoryIds,
+    );
+
+    for (final item in items) {
+      final weight = (item['weight_gram'] as num).toDouble();
+      final karatStr = item['karat'] as String?;
+
+      double karatVal = 24.0;
+      if (karatStr != null && karatStr.isNotEmpty) {
+        final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
+        final match = regExp.firstMatch(karatStr);
+        if (match != null) {
+          final parsed = double.tryParse(match.group(1)!) ?? 24.0;
+          karatVal = parsed > 24.0 ? 24.0 : (parsed < 0 ? 0 : parsed);
+        }
+      }
+
+      final newPrice = goldPrice * (karatVal / 24.0) * weight;
+      await db.update(
+        'auction_items',
+        {'base_price': newPrice},
+        where: 'id = ?',
+        whereArgs: [item['id']],
+      );
+    }
+  }
+
+  // --- Financing Config ---
+  Future<Map<String, dynamic>?> getActiveFinancingConfig() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'financing_config',
+      where: 'is_active = 1',
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    if (result.isNotEmpty) return result.first;
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>> getFinancingTenors(int configId) async {
+    final db = await instance.database;
+    return await db.query(
+      'financing_tenors',
+      where: 'config_id = ?',
+      whereArgs: [configId],
+      orderBy: 'months ASC',
+    );
+  }
+
+  Future<void> saveFinancingConfig({
+    required String dpOptions,
+    required double adminFeeFlat,
+    required double adminFeePercent,
+    required double munahRate,
+    required bool isActive,
+    required List<Map<String, dynamic>> tenors,
+  }) async {
+    final db = await instance.database;
+
+    // Deactivate old configs
+    await db.update('financing_config', {'is_active': 0});
+
+    final configId = await db.insert('financing_config', {
+      'dp_options': dpOptions,
+      'admin_fee_flat': adminFeeFlat,
+      'admin_fee_percent': adminFeePercent,
+      'munah_rate': munahRate,
+      'is_active': isActive ? 1 : 0,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+
+    for (final tenor in tenors) {
+      await db.insert('financing_tenors', {
+        'config_id': configId,
+        'months': tenor['months'],
+        'is_active': tenor['is_active'] ?? 1,
+        'other_fee': tenor['other_fee'] ?? 0,
+      });
+    }
+  }
+
+  // --- Stats ---
+  Future<int> getActiveItemCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM auction_items WHERE is_active = 1');
+    return (result.first['cnt'] as int?) ?? 0;
+  }
+
+  Future<Map<String, dynamic>?> getTopCategory() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('''
+      SELECT c.name, COUNT(a.id) as cnt 
+      FROM auction_items a 
+      JOIN categories c ON a.category_id = c.id 
+      WHERE a.is_active = 1
+      GROUP BY c.name 
+      ORDER BY cnt DESC 
+      LIMIT 1
+    ''');
+    if (result.isNotEmpty) return result.first;
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>> getRecentItems({int limit = 3}) async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT a.*, c.name as category_name
+      FROM auction_items a
+      LEFT JOIN categories c ON a.category_id = c.id
+      ORDER BY a.created_at DESC
+      LIMIT ?
+    ''', [limit]);
+  }
+
+  // --- Backup ---
+  Future<String> getDatabasePath() async {
+    final dbPath = await getDatabasesPath();
+    return join(dbPath, 'katalog_lelang.db');
   }
 
   Future close() async {
