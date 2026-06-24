@@ -45,7 +45,9 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
           content: const Text('Masukkan harga yang valid.'),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
@@ -55,16 +57,23 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
     setState(() => _isSaving = true);
 
     try {
-      await Provider.of<AppProvider>(context, listen: false).updateGoldPrice(price);
+      await Provider.of<AppProvider>(
+        context,
+        listen: false,
+      ).updateGoldPrice(price);
       await _loadData();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Harga emas berhasil diperbarui! Harga katalog telah dikalkulasi ulang.'),
+            content: const Text(
+              'Harga emas berhasil diperbarui! Harga katalog telah dikalkulasi ulang.',
+            ),
             backgroundColor: AppColors.successGreen,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -75,7 +84,9 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
             content: Text('Error: $e'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -86,10 +97,16 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     return SingleChildScrollView(
@@ -99,7 +116,11 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
         children: [
           const Text(
             'Update Harga Emas Hari Ini',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textDark),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -118,8 +139,8 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorder),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,29 +150,51 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: AppColors.accentLight,
-                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.secondary,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(Icons.diamond_outlined, size: 28, color: AppColors.primary),
+                        child: const Icon(
+                          Icons.diamond_outlined,
+                          size: 28,
+                          color: AppColors.primary,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       const Text(
                         'Harga Emas per Gram',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       const Text(
                         'Masukkan harga emas terbaru untuk simulasi harga dasar lelang pada seluruh barang emas.',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
                       ),
                       const SizedBox(height: 28),
 
                       // Input field
                       const Text(
                         'Harga Hari Ini',
-                        style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                          fontSize: 14,
+                        ),
                       ),
-                      const Text(' *', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
+                      const Text(
+                        ' *',
+                        style: TextStyle(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _priceController,
@@ -169,18 +212,26 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                             color: AppColors.primary,
                           ),
                           filled: true,
-                          fillColor: AppColors.accentLighter,
+                          fillColor: AppColors.muted,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                              width: 2,
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -193,7 +244,11 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                         ),
                         child: const Text(
                           'Contoh: jika harga 1 gram emas murni hari ini adalah Rp 1.120.000, masukkan angka 1120000.',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.4),
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -205,14 +260,27 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: const StadiumBorder(),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             elevation: 0,
                           ),
                           onPressed: _isSaving ? null : _saveGoldPrice,
                           child: _isSaving
-                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : const Text('Simpan Harga Emas', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Simpan Harga Emas',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
@@ -229,8 +297,8 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorder),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,18 +307,29 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                         children: [
                           const Text(
                             'Preview Harga Katalog',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textDark,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentLight,
+                              color: AppColors.secondary,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
                               'Otomatis',
-                              style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -271,40 +350,62 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                         ...List.generate(_goldItems.length, (index) {
                           final item = _goldItems[index];
                           final name = item['name'] as String;
-                          final weight = (item['weight_gram'] as num).toDouble();
+                          final weight = (item['weight_gram'] as num)
+                              .toDouble();
                           final karat = item['karat'] as String?;
-                          final calculatedPrice = (item['calculated_price'] as num).toDouble();
-                          final goldPrice = (item['gold_price_per_gram'] as num).toDouble();
+                          final calculatedPrice =
+                              (item['calculated_price'] as num).toDouble();
+                          final goldPrice = (item['gold_price_per_gram'] as num)
+                              .toDouble();
 
                           return Padding(
-                            padding: EdgeInsets.only(bottom: index < _goldItems.length - 1 ? 16 : 0),
+                            padding: EdgeInsets.only(
+                              bottom: index < _goldItems.length - 1 ? 16 : 0,
+                            ),
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(12),
+                                color: AppColors.muted,
+                                borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           name,
-                                          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textDark, fontSize: 14),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textDark,
+                                            fontSize: 14,
+                                          ),
                                         ),
                                         if (karat != null && karat.isNotEmpty)
-                                          Text(karat, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                          Text(
+                                            karat,
+                                            style: const TextStyle(
+                                              color: AppColors.textMuted,
+                                              fontSize: 12,
+                                            ),
+                                          ),
                                         Text(
                                           '${weight}g',
-                                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                                          style: const TextStyle(
+                                            color: AppColors.textMuted,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           'Berat $weight gram × ${currencyFormatter.format(goldPrice)}',
-                                          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                                          style: const TextStyle(
+                                            color: AppColors.textMuted,
+                                            fontSize: 11,
+                                          ),
                                         ),
                                       ],
                                     ),

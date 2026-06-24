@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/app_provider.dart';
-import '../../utils/app_colors.dart';
+import '../providers/app_provider.dart';
+import '../utils/app_colors.dart';
 
 class FilterSheet extends StatefulWidget {
   final int? initialCategoryId;
@@ -26,127 +26,322 @@ class _FilterSheetState extends State<FilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 1050),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: Material(
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(32, 28, 32, 26),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Filter Barang Lelang',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            'Pilih kriteria utama agar daftar barang lebih mudah dibaca dan cepat ditemukan.',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton.filledTonal(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.muted,
+                        foregroundColor: AppColors.textSecondary,
+                        fixedSize: const Size(48, 48),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Container(
+                    color: AppColors.muted,
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: _panel(
+                                  title: 'Kategori Barang',
+                                  subtitle: 'Pilih satu kategori utama.',
+                                  trailing: _selectedCategoryId == null
+                                      ? 'Semua'
+                                      : 'Dipilih',
+                                  child: Consumer<AppProvider>(
+                                    builder: (context, provider, child) => Wrap(
+                                      spacing: 12,
+                                      runSpacing: 12,
+                                      children: [
+                                        _buildCategoryChip('Semua', null),
+                                        ...provider.categories.map(
+                                          (c) => _buildCategoryChip(c.name, c.id),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: _panel(
+                                  title: 'Harga Dasar Lelang',
+                                  subtitle: 'Gunakan batas minimum dan maksimum.',
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(child: _priceBox('Minimum', _minPrice)),
+                                          const Padding(
+                                            padding: EdgeInsets.fromLTRB(16, 28, 16, 0),
+                                            child: SizedBox(
+                                              width: 32,
+                                              child: Divider(color: AppColors.border),
+                                            ),
+                                          ),
+                                          Expanded(child: _priceBox('Maksimum', _maxPrice)),
+                                        ],
+                                      ),
+                                      RangeSlider(
+                                        values: RangeValues(_minPrice, _maxPrice),
+                                        min: 0,
+                                        max: 50000000,
+                                        divisions: 100,
+                                        activeColor: AppColors.primary,
+                                        inactiveColor: AppColors.secondary,
+                                        onChanged: (values) => setState(() {
+                                          _minPrice = values.start;
+                                          _maxPrice = values.end;
+                                        }),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: _panel(
+                                  title: 'Kondisi Barang',
+                                  subtitle: 'Kondisi masih mengikuti data asli barang.',
+                                  child: Wrap(
+                                    spacing: 12,
+                                    runSpacing: 12,
+                                    children: [
+                                      _FilterSelectableChip(
+                                        label: 'Sangat Baik',
+                                        isSelected: true,
+                                        onTap: () {},
+                                      ),
+                                      _FilterSelectableChip(
+                                        label: 'Baik',
+                                        isSelected: true,
+                                        onTap: () {},
+                                      ),
+                                      _FilterSelectableChip(
+                                        label: 'Cukup Baik',
+                                        isSelected: false,
+                                        onTap: () {},
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondary,
+                                    borderRadius: BorderRadius.circular(26),
+                                    border: Border.all(color: const Color(0xFFD7E7D8)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Ringkasan Filter',
+                                        style: TextStyle(
+                                          fontSize: 21,
+                                          fontWeight: FontWeight.w900,
+                                          color: AppColors.successGreen,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      _summaryRow(
+                                        'Kategori',
+                                        _selectedCategoryId == null
+                                            ? 'Semua'
+                                            : '1 kategori',
+                                      ),
+                                      _summaryRow(
+                                        'Harga',
+                                        '${(_minPrice / 1000000).toStringAsFixed(1)} jt - ${(_maxPrice / 1000000).toStringAsFixed(1)} jt',
+                                      ),
+                                      _summaryRow('Kondisi', 'Semua kondisi'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 320,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: () => setState(() {
+                          _selectedCategoryId = null;
+                          _minPrice = 0;
+                          _maxPrice = 50000000;
+                        }),
+                        child: const Text(
+                          'Reset Filter',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            widget.onApply(
+                              _selectedCategoryId,
+                              _minPrice,
+                              _maxPrice,
+                            );
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Terapkan Filter',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      padding: const EdgeInsets.all(28),
+    );
+  }
+
+  Widget _panel({
+    required String title,
+    required String subtitle,
+    String? trailing,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textDark.withValues(alpha: 0.035),
+            blurRadius: 26,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.cardBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Filter Barang Lelang',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textDark,
+                  ),
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                onPressed: () => Navigator.pop(context),
-              ),
+              if (trailing != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    trailing,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.successGreen,
+                    ),
+                  ),
+                ),
             ],
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Kategori',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
-          ),
-          const SizedBox(height: 12),
-          Consumer<AppProvider>(
-            builder: (context, provider, child) {
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _buildCategoryChip('Semua', null),
-                  ...provider.categories.map((c) => _buildCategoryChip(c.name, c.id)),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 28),
-          const Text(
-            'Rentang Harga',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
           ),
           const SizedBox(height: 4),
-          RangeSlider(
-            values: RangeValues(_minPrice, _maxPrice),
-            min: 0,
-            max: 50000000,
-            divisions: 100,
-            labels: RangeLabels(
-              'Rp ${(_minPrice / 1000000).toStringAsFixed(1)}jt',
-              'Rp ${(_maxPrice / 1000000).toStringAsFixed(1)}jt',
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
             ),
-            activeColor: AppColors.primary,
-            inactiveColor: AppColors.accentLight,
-            onChanged: (values) {
-              setState(() {
-                _minPrice = values.start;
-                _maxPrice = values.end;
-              });
-            },
           ),
-          const SizedBox(height: 28),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    side: const BorderSide(color: AppColors.cardBorder),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _selectedCategoryId = null;
-                      _minPrice = 0;
-                      _maxPrice = 50000000;
-                    });
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Reset Filter'),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    widget.onApply(_selectedCategoryId, _minPrice, _maxPrice);
-                    Navigator.pop(context);
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Terapkan Filter', style: TextStyle(fontWeight: FontWeight.w700)),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          const SizedBox(height: 18),
+          child,
         ],
       ),
     );
@@ -154,19 +349,126 @@ class _FilterSheetState extends State<FilterSheet> {
 
   Widget _buildCategoryChip(String label, int? categoryId) {
     final isSelected = _selectedCategoryId == categoryId;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      selectedColor: AppColors.primary,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppColors.textPrimary,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+    return _FilterSelectableChip(
+      label: label,
+      isSelected: isSelected,
+      onTap: () => setState(
+        () => _selectedCategoryId = isSelected ? null : categoryId,
       ),
-      backgroundColor: Colors.white,
-      side: BorderSide(color: isSelected ? AppColors.primary : AppColors.cardBorder),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      showCheckmark: false,
-      onSelected: (s) => setState(() => _selectedCategoryId = s ? categoryId : null),
+    );
+  }
+
+  Widget _priceBox(String label, double value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.muted,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Text(
+            'Rp ${(value / 1000000).toStringAsFixed(1)} jt',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _summaryRow(String label, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterSelectableChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterSelectableChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: 1.5,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
     );
   }
 }

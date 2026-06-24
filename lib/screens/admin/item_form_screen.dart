@@ -39,7 +39,11 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   bool _isSaving = false;
   int _primaryPhotoIndex = 0; // index in the combined list
 
-  final List<String> _conditionOptions = ['Baik', 'Cukup Baik', 'Perlu Perbaikan'];
+  final List<String> _conditionOptions = [
+    'Baik',
+    'Cukup Baik',
+    'Perlu Perbaikan',
+  ];
 
   late TextEditingController _basePriceController;
 
@@ -47,9 +51,11 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   void initState() {
     super.initState();
     _basePriceController = TextEditingController(
-      text: widget.itemToEdit != null 
-          ? NumberFormat.decimalPattern('id').format(widget.itemToEdit!.basePrice.round())
-          : ''
+      text: widget.itemToEdit != null
+          ? NumberFormat.decimalPattern(
+              'id',
+            ).format(widget.itemToEdit!.basePrice.round())
+          : '',
     );
     if (widget.itemToEdit != null) {
       _name = widget.itemToEdit!.name;
@@ -74,7 +80,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   bool _isGoldCategory(AppProvider provider) {
     if (_categoryId == null) return false;
     try {
-      final category = provider.categories.firstWhere((c) => c.id == _categoryId);
+      final category = provider.categories.firstWhere(
+        (c) => c.id == _categoryId,
+      );
       final name = category.name.toLowerCase();
       return name.contains('emas') || name.contains('logam mulia');
     } catch (_) {
@@ -95,14 +103,19 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
     _basePrice = provider.goldPricePerGram * (karatVal / 24.0) * _weightGram;
     if (_basePrice > 0) {
-      _basePriceController.text = NumberFormat.decimalPattern('id').format(_basePrice.round());
+      _basePriceController.text = NumberFormat.decimalPattern(
+        'id',
+      ).format(_basePrice.round());
     } else {
       _basePriceController.text = '';
     }
   }
 
   Future<void> _loadExistingPhotos() async {
-    final photos = await Provider.of<AppProvider>(context, listen: false).getItemPhotos(widget.itemToEdit!.id!);
+    final photos = await Provider.of<AppProvider>(
+      context,
+      listen: false,
+    ).getItemPhotos(widget.itemToEdit!.id!);
     setState(() {
       _existingPhotos = photos;
       final primaryIdx = photos.indexWhere((p) => p.isPrimary);
@@ -120,7 +133,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               content: const Text('Maksimal 10 foto diperbolehkan.'),
               backgroundColor: AppColors.warning,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           );
         }
@@ -142,7 +157,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               content: const Text('Maksimal 10 foto diperbolehkan.'),
               backgroundColor: AppColors.warning,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           );
         }
@@ -162,7 +179,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           content: const Text('Pilih kategori terlebih dahulu.'),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
@@ -173,14 +192,16 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           content: const Text('Minimal 1 foto wajib diunggah.'),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
     }
 
     _formKey.currentState!.save();
-    
+
     final provider = Provider.of<AppProvider>(context, listen: false);
     final isGold = _isGoldCategory(provider);
     if (!isGold) {
@@ -204,7 +225,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         basePrice: _basePrice,
         description: _description,
         isActive: _isActive,
-        createdAt: widget.itemToEdit?.createdAt ?? DateTime.now().toIso8601String(),
+        createdAt:
+            widget.itemToEdit?.createdAt ?? DateTime.now().toIso8601String(),
       );
 
       if (widget.itemToEdit == null) {
@@ -215,7 +237,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       }
 
       for (int i = 0; i < _newPhotos.length; i++) {
-        final localPath = await FileHelper.saveImageToLocalDirectory(_newPhotos[i]);
+        final localPath = await FileHelper.saveImageToLocalDirectory(
+          _newPhotos[i],
+        );
         final combinedIndex = _existingPhotos.length + i;
         final photo = ItemPhoto(
           itemId: itemId,
@@ -236,7 +260,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
             content: const Text('Data berhasil disimpan!'),
             backgroundColor: AppColors.successGreen,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -247,7 +273,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
             content: Text('Error: $e'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -261,7 +289,10 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     return Scaffold(
       appBar: widget.itemToEdit != null
           ? AppBar(
-              title: const Text('Edit Barang', style: TextStyle(fontWeight: FontWeight.w700)),
+              title: const Text(
+                'Edit Barang',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
               backgroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
             )
@@ -273,7 +304,10 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 children: [
                   CircularProgressIndicator(color: AppColors.primary),
                   SizedBox(height: 16),
-                  Text('Menyimpan data...', style: TextStyle(color: AppColors.textSecondary)),
+                  Text(
+                    'Menyimpan data...',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ],
               ),
             )
@@ -285,12 +319,19 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                   if (widget.itemToEdit == null) ...[
                     const Text(
                       'Tambah Barang Lelang',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textDark,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
                       'Input data barang baru ke database offline cabang.',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 28),
                   ],
@@ -301,227 +342,413 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       // Left Panel - Form
                       Expanded(
                         flex: 1,
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Nama Barang
-                              _buildLabel('Nama Barang', required: true),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                initialValue: _name,
-                                decoration: _inputDecoration('Contoh: Cincin Emas Berlian'),
-                                validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
-                                onSaved: (val) => _name = val!,
-                              ),
-                              const SizedBox(height: 20),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Nama Barang
+                                _buildLabel('Nama Barang', required: true),
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  initialValue: _name,
+                                  decoration: _inputDecoration(
+                                    'Contoh: Cincin Emas Berlian',
+                                  ),
+                                  validator: (val) => val == null || val.isEmpty
+                                      ? 'Wajib diisi'
+                                      : null,
+                                  onSaved: (val) => _name = val!,
+                                ),
+                                const SizedBox(height: 20),
 
-                              // Kategori
-                              _buildLabel('Kategori', required: true),
-                              const SizedBox(height: 8),
-                              Consumer<AppProvider>(
-                                builder: (context, provider, child) {
-                                  final isGold = _isGoldCategory(provider);
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      DropdownButtonFormField<int>(
-                                        initialValue: _categoryId,
-                                        decoration: _inputDecoration('Pilih kategori'),
-                                        items: provider.categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
-                                        onChanged: (val) {
-                                          setState(() {
-                                            _categoryId = val;
-                                            final nextIsGold = _isGoldCategory(provider);
-                                            if (nextIsGold) {
-                                              _recalculateBasePrice(provider);
-                                            } else {
-                                              _weightGram = 0.0;
-                                              _karat = null;
-                                              if (widget.itemToEdit == null) {
-                                                _basePrice = 0.0;
-                                                _basePriceController.clear();
+                                // Kategori
+                                _buildLabel('Kategori', required: true),
+                                const SizedBox(height: 8),
+                                Consumer<AppProvider>(
+                                  builder: (context, provider, child) {
+                                    final isGold = _isGoldCategory(provider);
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        DropdownButtonFormField<int>(
+                                          initialValue: _categoryId,
+                                          decoration: _inputDecoration(
+                                            'Pilih kategori',
+                                          ),
+                                          items: provider.categories
+                                              .map(
+                                                (c) => DropdownMenuItem(
+                                                  value: c.id,
+                                                  child: Text(c.name),
+                                                ),
+                                              )
+                                              .toList(),
+                                          onChanged: (val) {
+                                            setState(() {
+                                              _categoryId = val;
+                                              final nextIsGold =
+                                                  _isGoldCategory(provider);
+                                              if (nextIsGold) {
+                                                _recalculateBasePrice(provider);
+                                              } else {
+                                                _weightGram = 0.0;
+                                                _karat = null;
+                                                if (widget.itemToEdit == null) {
+                                                  _basePrice = 0.0;
+                                                  _basePriceController.clear();
+                                                }
                                               }
-                                            }
-                                          });
-                                        },
-                                        validator: (val) => val == null ? 'Pilih kategori' : null,
-                                      ),
-                                      const SizedBox(height: 20),
-
-                                      // Berat + Karat (Only visible for Gold categories)
-                                      if (isGold) ...[
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  _buildLabel('Berat (gram)', required: true),
-                                                  const SizedBox(height: 8),
-                                                  TextFormField(
-                                                    initialValue: widget.itemToEdit != null && widget.itemToEdit!.categoryId == _categoryId ? _weightGram.toString() : '',
-                                                    decoration: _inputDecoration('0.00'),
-                                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                                    validator: (val) {
-                                                      if (!_isGoldCategory(provider)) return null;
-                                                      if (val == null || val.isEmpty) return 'Wajib diisi';
-                                                      if (double.tryParse(val) == null) return 'Harus angka';
-                                                      return null;
-                                                    },
-                                                    onChanged: (val) {
-                                                      setState(() {
-                                                        _weightGram = double.tryParse(val) ?? 0.0;
-                                                        _recalculateBasePrice(provider);
-                                                      });
-                                                    },
-                                                    onSaved: (val) {
-                                                      _weightGram = _isGoldCategory(provider) ? (double.tryParse(val ?? '') ?? 0.0) : 0.0;
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  _buildLabel('Kadar / Karat', required: true, suffix: '(maks 24)'),
-                                                  const SizedBox(height: 8),
-                                                  TextFormField(
-                                                    initialValue: _karat,
-                                                    decoration: _inputDecoration('Contoh: 18 atau 18 Karat'),
-                                                    validator: (val) {
-                                                      if (!_isGoldCategory(provider)) return null;
-                                                      if (val == null || val.isEmpty) return 'Wajib diisi';
-                                                      final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
-                                                      final match = regExp.firstMatch(val);
-                                                      if (match == null) return 'Harus berupa angka karat';
-                                                      final parsed = double.tryParse(match.group(1)!);
-                                                      if (parsed == null || parsed <= 0 || parsed > 24) {
-                                                        return 'Karat harus antara 1 - 24';
-                                                      }
-                                                      return null;
-                                                    },
-                                                    onChanged: (val) {
-                                                      setState(() {
-                                                        _karat = val;
-                                                        _recalculateBasePrice(provider);
-                                                      });
-                                                    },
-                                                    onSaved: (val) {
-                                                      _karat = _isGoldCategory(provider) ? val : null;
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
+                                            });
+                                          },
+                                          validator: (val) => val == null
+                                              ? 'Pilih kategori'
+                                              : null,
                                         ),
                                         const SizedBox(height: 20),
-                                      ],
 
-                                      // Kondisi Barang - Chip selector
-                                      _buildLabel('Kondisi Barang', required: true),
-                                      const SizedBox(height: 10),
-                                      Wrap(
-                                        spacing: 10,
-                                        children: _conditionOptions.map((option) {
-                                          final isSelected = _condition == option;
-                                          return ChoiceChip(
-                                            label: Text(option),
-                                            selected: isSelected,
-                                            selectedColor: AppColors.primary,
-                                            labelStyle: TextStyle(
-                                              color: isSelected ? Colors.white : AppColors.textPrimary,
-                                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                            ),
-                                            backgroundColor: Colors.white,
-                                            side: BorderSide(color: isSelected ? AppColors.primary : AppColors.cardBorder),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                            showCheckmark: false,
-                                            onSelected: (selected) {
-                                              if (selected) setState(() => _condition = option);
-                                            },
-                                          );
-                                        }).toList(),
-                                      ),
-                                      const SizedBox(height: 20),
+                                        // Berat + Karat (Only visible for Gold categories)
+                                        if (isGold) ...[
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    _buildLabel(
+                                                      'Berat (gram)',
+                                                      required: true,
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    TextFormField(
+                                                      initialValue:
+                                                          widget.itemToEdit !=
+                                                                  null &&
+                                                              widget
+                                                                      .itemToEdit!
+                                                                      .categoryId ==
+                                                                  _categoryId
+                                                          ? _weightGram
+                                                                .toString()
+                                                          : '',
+                                                      decoration:
+                                                          _inputDecoration(
+                                                            '0.00',
+                                                          ),
+                                                      keyboardType:
+                                                          const TextInputType.numberWithOptions(
+                                                            decimal: true,
+                                                          ),
+                                                      validator: (val) {
+                                                        if (!_isGoldCategory(
+                                                          provider,
+                                                        )) {
+                                                          return null;
+                                                        }
+                                                        if (val == null ||
+                                                            val.isEmpty) {
+                                                          return 'Wajib diisi';
+                                                        }
+                                                        if (double.tryParse(
+                                                              val,
+                                                            ) ==
+                                                            null) {
+                                                          return 'Harus angka';
+                                                        }
+                                                        return null;
+                                                      },
+                                                      onChanged: (val) {
+                                                        setState(() {
+                                                          _weightGram =
+                                                              double.tryParse(
+                                                                val,
+                                                              ) ??
+                                                              0.0;
+                                                          _recalculateBasePrice(
+                                                            provider,
+                                                          );
+                                                        });
+                                                      },
+                                                      onSaved: (val) {
+                                                        _weightGram =
+                                                            _isGoldCategory(
+                                                              provider,
+                                                            )
+                                                            ? (double.tryParse(
+                                                                    val ?? '',
+                                                                  ) ??
+                                                                  0.0)
+                                                            : 0.0;
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    _buildLabel(
+                                                      'Kadar / Karat',
+                                                      required: true,
+                                                      suffix: '(maks 24)',
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    TextFormField(
+                                                      initialValue: _karat,
+                                                      decoration: _inputDecoration(
+                                                        'Contoh: 18 atau 18 Karat',
+                                                      ),
+                                                      validator: (val) {
+                                                        if (!_isGoldCategory(
+                                                          provider,
+                                                        )) {
+                                                          return null;
+                                                        }
+                                                        if (val == null ||
+                                                            val.isEmpty) {
+                                                          return 'Wajib diisi';
+                                                        }
+                                                        final regExp = RegExp(
+                                                          r'([0-9]+(?:\.[0-9]+)?)',
+                                                        );
+                                                        final match = regExp
+                                                            .firstMatch(val);
+                                                        if (match == null) {
+                                                          return 'Harus berupa angka karat';
+                                                        }
+                                                        final parsed =
+                                                            double.tryParse(
+                                                              match.group(1)!,
+                                                            );
+                                                        if (parsed == null ||
+                                                            parsed <= 0 ||
+                                                            parsed > 24) {
+                                                          return 'Karat harus antara 1 - 24';
+                                                        }
+                                                        return null;
+                                                      },
+                                                      onChanged: (val) {
+                                                        setState(() {
+                                                          _karat = val;
+                                                          _recalculateBasePrice(
+                                                            provider,
+                                                          );
+                                                        });
+                                                      },
+                                                      onSaved: (val) {
+                                                        _karat =
+                                                            _isGoldCategory(
+                                                              provider,
+                                                            )
+                                                            ? val
+                                                            : null;
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 20),
+                                        ],
 
-                                      // Harga Dasar Lelang
-                                      _buildLabel('Harga Dasar Lelang', required: true),
-                                      const SizedBox(height: 8),
-                                      TextFormField(
-                                        controller: _basePriceController,
-                                        readOnly: isGold,
-                                        decoration: _inputDecoration(
-                                          isGold ? 'Dihitung otomatis' : 'Rp 0',
-                                          helperText: isGold 
-                                              ? 'Dihitung otomatis: Harga Emas x (Karat/24) x Berat' 
-                                              : 'Masukkan harga dasar lelang secara manual',
+                                        // Kondisi Barang - Chip selector
+                                        _buildLabel(
+                                          'Kondisi Barang',
+                                          required: true,
                                         ),
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: isGold 
-                                            ? null 
-                                            : [
-                                                FilteringTextInputFormatter.digitsOnly,
-                                                _ThousandsSeparatorFormatter(),
-                                              ],
-                                        validator: (val) {
-                                          if (isGold) {
-                                            if (val == null || val.isEmpty || val.replaceAll('.', '') == '0') {
-                                              return 'Masukkan berat dan kadar terlebih dahulu';
+                                        const SizedBox(height: 10),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.muted,
+                                            borderRadius: BorderRadius.circular(
+                                              18,
+                                            ),
+                                            border: Border.all(
+                                              color: AppColors.border,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: _conditionOptions.map((
+                                              option,
+                                            ) {
+                                              final isSelected =
+                                                  _condition == option;
+                                              return Expanded(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 4,
+                                                      ),
+                                                  child: ChoiceChip(
+                                                    label: Center(
+                                                      child: Text(
+                                                        option,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                    selected: isSelected,
+                                                    selectedColor:
+                                                        AppColors.primary,
+                                                    labelStyle: TextStyle(
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : AppColors
+                                                                .textSecondary,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                    side: BorderSide(
+                                                      color: isSelected
+                                                          ? AppColors.primary
+                                                          : AppColors.border,
+                                                    ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            999,
+                                                          ),
+                                                    ),
+                                                    showCheckmark: false,
+                                                    onSelected: (selected) {
+                                                      if (selected) {
+                                                        setState(
+                                                          () => _condition =
+                                                              option,
+                                                        );
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 20),
+
+                                        // Harga Dasar Lelang
+                                        _buildLabel(
+                                          'Harga Dasar Lelang',
+                                          required: true,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          controller: _basePriceController,
+                                          readOnly: isGold,
+                                          decoration: _inputDecoration(
+                                            isGold
+                                                ? 'Dihitung otomatis'
+                                                : 'Rp 0',
+                                            helperText: isGold
+                                                ? 'Dihitung otomatis: Harga Emas x (Karat/24) x Berat'
+                                                : 'Masukkan harga dasar lelang secara manual',
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: isGold
+                                              ? null
+                                              : [
+                                                  FilteringTextInputFormatter
+                                                      .digitsOnly,
+                                                  _ThousandsSeparatorFormatter(),
+                                                ],
+                                          validator: (val) {
+                                            if (isGold) {
+                                              if (val == null ||
+                                                  val.isEmpty ||
+                                                  val.replaceAll('.', '') ==
+                                                      '0') {
+                                                return 'Masukkan berat dan kadar terlebih dahulu';
+                                              }
+                                              return null;
+                                            }
+                                            if (val == null || val.isEmpty) {
+                                              return 'Wajib diisi';
                                             }
                                             return null;
-                                          }
-                                          if (val == null || val.isEmpty) return 'Wajib diisi';
-                                          return null;
-                                        },
-                                        onSaved: (val) {
-                                          if (val != null) {
-                                            final rawValue = val.replaceAll('.', '');
-                                            _basePrice = double.tryParse(rawValue) ?? 0.0;
-                                          } else {
-                                            _basePrice = 0.0;
-                                          }
-                                        },
+                                          },
+                                          onSaved: (val) {
+                                            if (val != null) {
+                                              final rawValue = val.replaceAll(
+                                                '.',
+                                                '',
+                                              );
+                                              _basePrice =
+                                                  double.tryParse(rawValue) ??
+                                                  0.0;
+                                            } else {
+                                              _basePrice = 0.0;
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Deskripsi
+                                _buildLabel(
+                                  'Deskripsi Barang',
+                                  required: false,
+                                ),
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  initialValue: _description,
+                                  decoration: _inputDecoration(
+                                    'Deskripsi tambahan...',
+                                  ),
+                                  maxLines: 4,
+                                  onSaved: (val) => _description = val,
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Status switch
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: SwitchListTile(
+                                    title: const Text(
+                                      'Status Aktif',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                    ],
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Deskripsi
-                              _buildLabel('Deskripsi Barang', required: false),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                initialValue: _description,
-                                decoration: _inputDecoration('Deskripsi tambahan...'),
-                                maxLines: 4,
-                                onSaved: (val) => _description = val,
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Status switch
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.background,
-                                  borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    subtitle: Text(
+                                      _isActive
+                                          ? 'Barang tampil di katalog'
+                                          : 'Barang disembunyikan',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    value: _isActive,
+                                    activeThumbColor: AppColors.primary,
+                                    onChanged: (val) =>
+                                        setState(() => _isActive = val),
+                                  ),
                                 ),
-                                child: SwitchListTile(
-                                  title: const Text('Status Aktif', style: TextStyle(fontWeight: FontWeight.w600)),
-                                  subtitle: Text(_isActive ? 'Barang tampil di katalog' : 'Barang disembunyikan',
-                                    style: const TextStyle(fontSize: 12)),
-                                  value: _isActive,
-                                  activeThumbColor: AppColors.primary,
-                                  onChanged: (val) => setState(() => _isActive = val),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -531,204 +758,309 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       // Right Panel - Photos
                       Expanded(
                         flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  'Unggah Foto Barang',
-                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textDark),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '(Maks 10)',
-                                  style: TextStyle(fontSize: 16, color: AppColors.textMuted.withValues(alpha: 0.7)),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Upload area
-                            GestureDetector(
-                              onTap: _pickImages,
-                              child: Container(
-                                height: 160,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: AppColors.accentLighter,
-                                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), style: BorderStyle.solid, width: 2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.cloud_upload_outlined, size: 44, color: AppColors.primary.withValues(alpha: 0.6)),
-                                    const SizedBox(height: 10),
-                                    const Text(
-                                      'Ambil Foto dari Kamera\n/ Pilih dari Galeri Tablet',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Unggah Foto Barang',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '(Maks 10)',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.textMuted.withValues(
+                                        alpha: 0.7,
                                       ),
                                     ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'Format JPG atau PNG',
-                                      style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.7), fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Upload area
+                              GestureDetector(
+                                onTap: _pickImages,
+                                child: Container(
+                                  height: 160,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.muted,
+                                    border: Border.all(
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.30,
+                                      ),
+                                      width: 2,
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            // Camera button
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton.icon(
-                                onPressed: _takePhoto,
-                                icon: const Icon(Icons.camera_alt_outlined, size: 20),
-                                label: const Text('Ambil dari Kamera'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.primary,
-                                  side: const BorderSide(color: AppColors.primary),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Photo thumbnails
-                            if (_existingPhotos.isNotEmpty || _newPhotos.isNotEmpty)
-                              SizedBox(
-                                height: 90,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: _existingPhotos.length + _newPhotos.length,
-                                  itemBuilder: (context, index) {
-                                    final isPrimary = index == _primaryPhotoIndex;
-                                    Widget imageWidget;
-                                    VoidCallback onDelete;
-
-                                    if (index < _existingPhotos.length) {
-                                      final photo = _existingPhotos[index];
-                                      imageWidget = Image.file(File(photo.localPath), fit: BoxFit.cover);
-                                      onDelete = () async {
-                                        await DatabaseHelper.instance.deleteItemPhoto(photo.id!);
-                                        _loadExistingPhotos();
-                                      };
-                                    } else {
-                                      final newIdx = index - _existingPhotos.length;
-                                      imageWidget = Image.file(_newPhotos[newIdx], fit: BoxFit.cover);
-                                      onDelete = () => setState(() => _newPhotos.removeAt(newIdx));
-                                    }
-
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 10),
-                                      child: GestureDetector(
-                                        onTap: () => setState(() => _primaryPhotoIndex = index),
-                                        child: Stack(
-                                          children: [
-                                            Container(
-                                              width: 80,
-                                              height: 80,
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(14),
-                                                border: isPrimary
-                                                    ? Border.all(color: AppColors.primary, width: 3)
-                                                    : Border.all(color: AppColors.cardBorder),
-                                              ),
-                                              child: ClipRRect(
-                                                borderRadius: BorderRadius.circular(11),
-                                                child: imageWidget,
-                                              ),
-                                            ),
-                                            // Primary badge
-                                            if (isPrimary)
-                                              Positioned(
-                                                bottom: 0,
-                                                left: 0,
-                                                right: 0,
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(vertical: 3),
-                                                  decoration: const BoxDecoration(
-                                                    color: AppColors.primary,
-                                                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(11)),
-                                                  ),
-                                                  child: const Text(
-                                                    'Foto Utama',
-                                                    textAlign: TextAlign.center,
-                                                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
-                                                  ),
-                                                ),
-                                              ),
-                                            // Delete button
-                                            Positioned(
-                                              top: -4,
-                                              right: -4,
-                                              child: GestureDetector(
-                                                onTap: onDelete,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(2),
-                                                  decoration: const BoxDecoration(
-                                                    color: AppColors.error,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Icon(Icons.close, size: 14, color: Colors.white),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.cloud_upload_outlined,
+                                        size: 44,
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.6,
                                         ),
                                       ),
-                                    );
-                                  },
+                                      const SizedBox(height: 10),
+                                      const Text(
+                                        'Ambil Foto dari Kamera\n/ Pilih dari Galeri Tablet',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'Format JPG atau PNG',
+                                        style: TextStyle(
+                                          color: AppColors.textMuted.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
 
-                            const SizedBox(height: 32),
+                              // Camera button
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: _takePhoto,
+                                  icon: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 20,
+                                  ),
+                                  label: const Text('Ambil dari Kamera'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    side: const BorderSide(
+                                      color: AppColors.primary,
+                                    ),
+                                    shape: const StadiumBorder(),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
 
-                            // Action buttons
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.textSecondary,
-                                      side: const BorderSide(color: AppColors.cardBorder),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: Text('Batal'),
-                                    ),
+                              const SizedBox(height: 20),
+
+                              // Photo thumbnails
+                              if (_existingPhotos.isNotEmpty ||
+                                  _newPhotos.isNotEmpty)
+                                SizedBox(
+                                  height: 90,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount:
+                                        _existingPhotos.length +
+                                        _newPhotos.length,
+                                    itemBuilder: (context, index) {
+                                      final isPrimary =
+                                          index == _primaryPhotoIndex;
+                                      Widget imageWidget;
+                                      VoidCallback onDelete;
+
+                                      if (index < _existingPhotos.length) {
+                                        final photo = _existingPhotos[index];
+                                        imageWidget = Image.file(
+                                          File(photo.localPath),
+                                          fit: BoxFit.cover,
+                                        );
+                                        onDelete = () async {
+                                          await DatabaseHelper.instance
+                                              .deleteItemPhoto(photo.id!);
+                                          _loadExistingPhotos();
+                                        };
+                                      } else {
+                                        final newIdx =
+                                            index - _existingPhotos.length;
+                                        imageWidget = Image.file(
+                                          _newPhotos[newIdx],
+                                          fit: BoxFit.cover,
+                                        );
+                                        onDelete = () => setState(
+                                          () => _newPhotos.removeAt(newIdx),
+                                        );
+                                      }
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 10,
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: () => setState(
+                                            () => _primaryPhotoIndex = index,
+                                          ),
+                                          child: Stack(
+                                            clipBehavior: Clip.none,
+                                            children: [
+                                              Container(
+                                                width: 80,
+                                                height: 80,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(18),
+                                                  border: isPrimary
+                                                      ? Border.all(
+                                                          color:
+                                                              AppColors.primary,
+                                                          width: 3,
+                                                        )
+                                                      : Border.all(
+                                                          color:
+                                                              AppColors.border,
+                                                        ),
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                  child: imageWidget,
+                                                ),
+                                              ),
+                                              if (isPrimary)
+                                                Positioned(
+                                                  bottom: 0,
+                                                  left: 0,
+                                                  right: 0,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 3,
+                                                        ),
+                                                    decoration: const BoxDecoration(
+                                                      color: AppColors.primary,
+                                                      borderRadius:
+                                                          BorderRadius.vertical(
+                                                            bottom:
+                                                                Radius.circular(
+                                                                  15,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                    child: const Text(
+                                                      'Foto Utama',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 9,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              Positioned(
+                                                top: -4,
+                                                right: -4,
+                                                child: GestureDetector(
+                                                  onTap: onDelete,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(2),
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                          color:
+                                                              AppColors.error,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                    child: const Icon(
+                                                      Icons.close,
+                                                      size: 14,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                      elevation: 0,
-                                    ),
-                                    onPressed: _saveItem,
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: Text('Simpan Barang', style: TextStyle(fontWeight: FontWeight.w700)),
+
+                              const SizedBox(height: 32),
+
+                              // Action buttons
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor:
+                                            AppColors.textSecondary,
+                                        side: const BorderSide(
+                                          color: AppColors.cardBorder,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: Text('Batal'),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      onPressed: _saveItem,
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: Text(
+                                          'Simpan Barang',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -744,13 +1076,26 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       children: [
         Text(
           text,
-          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark, fontSize: 14),
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.textDark,
+            fontSize: 14,
+          ),
         ),
         if (required)
-          const Text(' *', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700)),
+          const Text(
+            ' *',
+            style: TextStyle(
+              color: AppColors.error,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         if (suffix != null) ...[
           const SizedBox(width: 6),
-          Text(suffix, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          Text(
+            suffix,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
         ],
       ],
     );
@@ -765,15 +1110,15 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         borderSide: const BorderSide(color: AppColors.cardBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         borderSide: const BorderSide(color: AppColors.cardBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
     );
@@ -782,7 +1127,10 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
 class _ThousandsSeparatorFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
 
     String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
@@ -792,7 +1140,9 @@ class _ThousandsSeparatorFormatter extends TextInputFormatter {
     final formatter = NumberFormat.decimalPattern('id');
     final formatted = formatter.format(number);
 
-    int cursorPosition = formatted.length - (newValue.text.length - newValue.selection.baseOffset);
+    int cursorPosition =
+        formatted.length -
+        (newValue.text.length - newValue.selection.baseOffset);
     if (cursorPosition < 0) cursorPosition = 0;
     if (cursorPosition > formatted.length) cursorPosition = formatted.length;
 

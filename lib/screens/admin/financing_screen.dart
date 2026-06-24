@@ -40,7 +40,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
       final tenors = await provider.getFinancingTenors(config['id'] as int);
       if (mounted) {
         setState(() {
-          _dpOptions = (config['dp_options'] as String).split(',').map((s) => int.parse(s.trim())).toList();
+          _dpOptions = (config['dp_options'] as String)
+              .split(',')
+              .map((s) => int.parse(s.trim()))
+              .toList();
           _adminFeeFlat = (config['admin_fee_flat'] as num).toDouble();
           _adminFeePercent = (config['admin_fee_percent'] as num).toDouble();
           _munahRate = (config['munah_rate'] as num).toDouble();
@@ -71,7 +74,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
   Future<void> _saveConfig() async {
     setState(() => _isSaving = true);
     try {
-      await Provider.of<AppProvider>(context, listen: false).saveFinancingConfig(
+      await Provider.of<AppProvider>(
+        context,
+        listen: false,
+      ).saveFinancingConfig(
         dpOptions: _dpOptions.join(','),
         adminFeeFlat: _adminFeeFlat,
         adminFeePercent: _adminFeePercent,
@@ -86,7 +92,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
             content: const Text('Konfigurasi pembiayaan berhasil disimpan!'),
             backgroundColor: AppColors.successGreen,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -97,7 +105,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
             content: Text('Error: $e'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -108,10 +118,16 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     return SingleChildScrollView(
@@ -125,12 +141,19 @@ class _FinancingScreenState extends State<FinancingScreen> {
             children: [
               const Text(
                 'Konfigurasi Pembiayaan Syariah',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textDark,
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: _isActive ? AppColors.accentLight : AppColors.background,
+                  color: _isActive ? AppColors.secondary : AppColors.muted,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -138,14 +161,18 @@ class _FinancingScreenState extends State<FinancingScreen> {
                   children: [
                     Icon(
                       _isActive ? Icons.check_circle : Icons.cancel_outlined,
-                      color: _isActive ? AppColors.primary : AppColors.textMuted,
+                      color: _isActive
+                          ? AppColors.successGreen
+                          : AppColors.textMuted,
                       size: 18,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       _isActive ? 'Aturan aktif' : 'Nonaktif',
                       style: TextStyle(
-                        color: _isActive ? AppColors.primary : AppColors.textMuted,
+                        color: _isActive
+                            ? AppColors.successGreen
+                            : AppColors.textMuted,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -172,15 +199,19 @@ class _FinancingScreenState extends State<FinancingScreen> {
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorder),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Parameter Utama',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 24),
 
@@ -224,14 +255,26 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
                       // Status toggle
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.muted,
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: SwitchListTile(
-                          title: const Text('Status Aktif', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                          subtitle: const Text('Aktifkan/nonaktifkan aturan ini', style: TextStyle(fontSize: 12)),
+                          title: const Text(
+                            'Status Aktif',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Aktifkan/nonaktifkan aturan ini',
+                            style: TextStyle(fontSize: 12),
+                          ),
                           value: _isActive,
                           activeThumbColor: AppColors.primary,
                           onChanged: (val) => setState(() => _isActive = val),
@@ -251,15 +294,19 @@ class _FinancingScreenState extends State<FinancingScreen> {
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorder),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Tenor dan Biaya Lain',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -273,20 +320,38 @@ class _FinancingScreenState extends State<FinancingScreen> {
                           final isActive = tenor['is_active'] == 1;
 
                           return GestureDetector(
-                            onTap: () => setState(() => _selectedTenorMonths = months),
+                            onTap: () =>
+                                setState(() => _selectedTenorMonths = months),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.primary : (isActive ? AppColors.accentLight : AppColors.background),
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : (isActive
+                                          ? AppColors.secondary
+                                          : AppColors.muted),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                  color: isSelected ? AppColors.primary : (isActive ? AppColors.primary.withValues(alpha: 0.3) : AppColors.cardBorder),
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : (isActive
+                                            ? AppColors.primary.withValues(
+                                                alpha: 0.3,
+                                              )
+                                            : AppColors.border),
                                 ),
                               ),
                               child: Text(
                                 '$months bulan',
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : (isActive ? AppColors.primary : AppColors.textMuted),
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (isActive
+                                            ? AppColors.successGreen
+                                            : AppColors.textMuted),
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
                                 ),
@@ -300,23 +365,66 @@ class _FinancingScreenState extends State<FinancingScreen> {
                       // Tenor table
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(12),
+                          color: AppColors.muted,
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Column(
                           children: [
                             // Header
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               decoration: const BoxDecoration(
-                                border: Border(bottom: BorderSide(color: AppColors.cardBorder)),
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: AppColors.cardBorder,
+                                  ),
+                                ),
                               ),
                               child: const Row(
                                 children: [
-                                  Expanded(child: Text('Status', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
-                                  Expanded(child: Text('Tenor', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
-                                  Expanded(child: Text('Basis Per 10 Hari', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
-                                  Expanded(child: Text('Biaya Lain', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
+                                  Expanded(
+                                    child: Text(
+                                      'Status',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      'Tenor',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      'Basis Per 10 Hari',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      'Biaya Lain',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -325,13 +433,21 @@ class _FinancingScreenState extends State<FinancingScreen> {
                               final tenor = _tenors[index];
                               final months = tenor['months'] as int;
                               final isActive = tenor['is_active'] == 1;
-                              final otherFee = (tenor['other_fee'] as num?)?.toDouble() ?? 0;
+                              final otherFee =
+                                  (tenor['other_fee'] as num?)?.toDouble() ?? 0;
 
                               return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   border: index < _tenors.length - 1
-                                      ? const Border(bottom: BorderSide(color: AppColors.cardBorder))
+                                      ? const Border(
+                                          bottom: BorderSide(
+                                            color: AppColors.cardBorder,
+                                          ),
+                                        )
                                       : null,
                                 ),
                                 child: Row(
@@ -343,7 +459,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                             width: 8,
                                             height: 8,
                                             decoration: BoxDecoration(
-                                              color: isActive ? AppColors.successGreen : AppColors.textMuted,
+                                              color: isActive
+                                                  ? AppColors.successGreen
+                                                  : AppColors.textMuted,
                                               shape: BoxShape.circle,
                                             ),
                                           ),
@@ -351,7 +469,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                           Text(
                                             isActive ? 'Aktif' : 'Off',
                                             style: TextStyle(
-                                              color: isActive ? AppColors.textDark : AppColors.textMuted,
+                                              color: isActive
+                                                  ? AppColors.textDark
+                                                  : AppColors.textMuted,
                                               fontSize: 13,
                                             ),
                                           ),
@@ -361,19 +481,30 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                     Expanded(
                                       child: Text(
                                         '$months bulan',
-                                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                     Expanded(
                                       child: Text(
                                         '${_munahRate.toStringAsFixed(2)}%',
-                                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
+                                        ),
                                       ),
                                     ),
                                     Expanded(
                                       child: Text(
-                                        otherFee > 0 ? currencyFormatter.format(otherFee) : 'Rp 0',
-                                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                        otherFee > 0
+                                            ? currencyFormatter.format(otherFee)
+                                            : 'Rp 0',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -398,14 +529,24 @@ class _FinancingScreenState extends State<FinancingScreen> {
             child: ElevatedButton.icon(
               onPressed: _isSaving ? null : _saveConfig,
               icon: _isSaving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
                   : const Icon(Icons.save, size: 20),
               label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Konfigurasi'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                shape: const StadiumBorder(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 16,
+                ),
                 elevation: 0,
               ),
             ),
@@ -419,15 +560,19 @@ class _FinancingScreenState extends State<FinancingScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.muted,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 8),
           Text(

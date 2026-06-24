@@ -16,6 +16,7 @@ class _BackupScreenState extends State<BackupScreen> {
   String? _dbPath;
   int? _dbSizeKb;
   bool _isExporting = false;
+  String? _lastBackupPath;
 
   @override
   void initState() {
@@ -24,7 +25,10 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   Future<void> _loadDbInfo() async {
-    final path = await Provider.of<AppProvider>(context, listen: false).getDatabasePath();
+    final path = await Provider.of<AppProvider>(
+      context,
+      listen: false,
+    ).getDatabasePath();
     final file = File(path);
     int size = 0;
     if (await file.exists()) {
@@ -41,7 +45,10 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _exportDatabase() async {
     setState(() => _isExporting = true);
     try {
-      final path = await Provider.of<AppProvider>(context, listen: false).getDatabasePath();
+      final path = await Provider.of<AppProvider>(
+        context,
+        listen: false,
+      ).getDatabasePath();
       final sourceFile = File(path);
 
       if (!await sourceFile.exists()) {
@@ -55,12 +62,15 @@ class _BackupScreenState extends State<BackupScreen> {
       await sourceFile.copy(backupPath);
 
       if (mounted) {
+        setState(() => _lastBackupPath = backupPath);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Backup berhasil disimpan ke:\n$backupPath'),
             backgroundColor: AppColors.successGreen,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -72,7 +82,9 @@ class _BackupScreenState extends State<BackupScreen> {
             content: Text('Gagal backup: $e'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -90,7 +102,11 @@ class _BackupScreenState extends State<BackupScreen> {
         children: [
           const Text(
             'Backup & Restore Data',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textDark),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -104,8 +120,8 @@ class _BackupScreenState extends State<BackupScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.cardBorder),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -113,10 +129,14 @@ class _BackupScreenState extends State<BackupScreen> {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.accentLight,
-                    borderRadius: BorderRadius.circular(14),
+                    color: AppColors.secondary,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(Icons.storage_outlined, color: AppColors.primary, size: 28),
+                  child: const Icon(
+                    Icons.storage_outlined,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 20),
                 Expanded(
@@ -125,35 +145,59 @@ class _BackupScreenState extends State<BackupScreen> {
                     children: [
                       const Text(
                         'Database Lokal',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       if (_dbPath != null)
                         Text(
                           _dbPath!,
-                          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       if (_dbSizeKb != null)
                         Text(
                           'Ukuran: $_dbSizeKb KB',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.accentLight,
+                    color: AppColors.secondary,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.check_circle, color: AppColors.successGreen, size: 16),
+                      Icon(
+                        Icons.check_circle,
+                        color: AppColors.successGreen,
+                        size: 16,
+                      ),
                       SizedBox(width: 6),
-                      Text('Aktif', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                      Text(
+                        'Aktif',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -171,8 +215,8 @@ class _BackupScreenState extends State<BackupScreen> {
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorder),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     children: [
@@ -180,21 +224,33 @@ class _BackupScreenState extends State<BackupScreen> {
                         width: 64,
                         height: 64,
                         decoration: BoxDecoration(
-                          color: AppColors.accentLight,
-                          borderRadius: BorderRadius.circular(16),
+                          color: AppColors.secondary,
+                          borderRadius: BorderRadius.circular(22),
                         ),
-                        child: const Icon(Icons.cloud_download_outlined, color: AppColors.primary, size: 32),
+                        child: const Icon(
+                          Icons.cloud_download_outlined,
+                          color: AppColors.primary,
+                          size: 32,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       const Text(
                         'Export Database',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         'Buat salinan backup file database SQLite lokal.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       SizedBox(
@@ -202,13 +258,22 @@ class _BackupScreenState extends State<BackupScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _isExporting ? null : _exportDatabase,
                           icon: _isExporting
-                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
                               : const Icon(Icons.backup, size: 20),
-                          label: Text(_isExporting ? 'Mengekspor...' : 'Backup Sekarang'),
+                          label: Text(
+                            _isExporting ? 'Mengekspor...' : 'Backup Sekarang',
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: const StadiumBorder(),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             elevation: 0,
                           ),
@@ -227,11 +292,53 @@ class _BackupScreenState extends State<BackupScreen> {
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.cardBorder),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     children: [
+                      if (_isExporting) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: const LinearProgressIndicator(
+                            minHeight: 10,
+                            color: AppColors.successGreen,
+                            backgroundColor: AppColors.secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (_lastBackupPath != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFD7E7D8)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                color: AppColors.successGreen,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _lastBackupPath!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.successGreen,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       Container(
                         width: 64,
                         height: 64,
@@ -239,18 +346,30 @@ class _BackupScreenState extends State<BackupScreen> {
                           color: AppColors.goldBg,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(Icons.info_outline, color: AppColors.gold, size: 32),
+                        child: Icon(
+                          Icons.info_outline,
+                          color: AppColors.gold,
+                          size: 32,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       const Text(
                         'Informasi Backup',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         'Database berisi semua data barang, foto, harga emas, dan konfigurasi pembiayaan. Backup secara rutin untuk mencegah kehilangan data.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          height: 1.5,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Container(
@@ -261,12 +380,20 @@ class _BackupScreenState extends State<BackupScreen> {
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 20),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: AppColors.warning,
+                              size: 20,
+                            ),
                             SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 'Lakukan backup sebelum menghapus data atau memperbarui aplikasi.',
-                                style: TextStyle(color: AppColors.textPrimary, fontSize: 12, height: 1.3),
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 12,
+                                  height: 1.3,
+                                ),
                               ),
                             ),
                           ],

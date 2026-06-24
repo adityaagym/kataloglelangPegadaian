@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import '../models/auction_item.dart';
 import '../providers/app_provider.dart';
 import '../models/item_photo.dart';
@@ -18,12 +17,14 @@ class ItemDetailScreen extends StatefulWidget {
 }
 
 class _ItemDetailScreenState extends State<ItemDetailScreen> {
+  final PageController _pageController = PageController();
   int _currentImageIndex = 0;
 
   Map<String, dynamic>? _financingConfig;
   List<Map<String, dynamic>> _financingTenors = [];
   bool _isFinancingLoading = true;
-  int? _selectedDpPercent; // e.g. 15, 25, 35, 50
+  int? _selectedDpPercent;
+  int? _selectedTenorMonths;
   List<int> _dpOptions = [];
 
   @override
@@ -38,7 +39,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     if (config != null && config['is_active'] == 1) {
       final tenors = await provider.getFinancingTenors(config['id'] as int);
       final activeTenors = tenors.where((t) => t['is_active'] == 1).toList();
-
       final dpOpts = (config['dp_options'] as String)
           .split(',')
           .map((s) => int.tryParse(s.trim()) ?? 0)
@@ -50,18 +50,15 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           _financingConfig = config;
           _financingTenors = activeTenors;
           _dpOptions = dpOpts;
-          if (dpOpts.isNotEmpty) {
-            _selectedDpPercent = dpOpts.first;
-          }
+          _selectedDpPercent = dpOpts.isNotEmpty ? dpOpts.first : null;
+          _selectedTenorMonths = activeTenors.isNotEmpty
+              ? activeTenors.first['months'] as int
+              : null;
           _isFinancingLoading = false;
         });
       }
-    } else {
-      if (mounted) {
-        setState(() {
-          _isFinancingLoading = false;
-        });
-      }
+    } else if (mounted) {
+      setState(() => _isFinancingLoading = false);
     }
   }
 
@@ -76,493 +73,857 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   }) {
     final dpAmount = basePrice * (dpPercent / 100.0);
     final plafond = basePrice - dpAmount;
-
-    // Mu'nah fee per month (munahRate is per 10 days, so 3 times per month)
+    final adminFee = adminFeeFlat + (basePrice * (adminFeePercent / 100.0));
     final munahPerMonth = plafond * (munahRate / 100.0) * 3;
-
-    // Monthly installment
-    final monthlyInstallment = (plafond / tenorMonths) + munahPerMonth + (otherFee / tenorMonths);
-    return monthlyInstallment;
+    return (plafond / tenorMonths) +
+        munahPerMonth +
+        (otherFee / tenorMonths) +
+        (adminFee / tenorMonths);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          // Breadcrumb header with gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: AppColors.headerGradient,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                child: Row(
-                  children: [
-                    // Back button chip
-                    _buildBreadcrumbChip(
-                      icon: Icons.arrow_back,
-                      label: 'Kembali ke Katalog',
-                      onTap: () => Navigator.pop(context),
-                      isBack: true,
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildNav(),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(32, 10, 32, 32),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: AppColors.border),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.textDark.withValues(alpha: 0.08),
+                          blurRadius: 38,
+                          offset: const Offset(0, 16),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    // Category chip
-                    _buildBreadcrumbChip(
-                      label: widget.item.categoryName ?? 'Kategori',
+                    child: Row(
+                      children: [
+                        Expanded(flex: 54, child: _buildImageColumn()),
+                        const SizedBox(width: 28),
+                        Expanded(
+                          flex: 46,
+                          child: _buildDetails(currencyFormatter),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    // Branch chip
-                    Consumer<AppProvider>(
-                      builder: (context, provider, _) {
-                        return _buildBreadcrumbChip(
-                          label: 'Cabang ${provider.branchName}',
-                        );
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
 
-          // Content
-          Expanded(
-            child: Container(
-              color: Colors.white,
-              child: Row(
-                children: [
-                  // Left Column (Carousel)
-                  Expanded(
-                    flex: 55,
-                    child: Container(
-                      margin: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.cardBorder.withValues(alpha: 0.5)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 20,
-                            offset: const Offset(0, 4),
+  Widget _buildNav() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 22, 32, 10),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+        ),
+        child: Row(
+          children: [
+            _navChip(
+              Icons.arrow_back,
+              'Kembali ke Katalog',
+              () => Navigator.pop(context),
+              filled: true,
+            ),
+            const SizedBox(width: 12),
+            _navTextChip(
+              widget.item.categoryName ?? 'Kategori',
+              AppColors.primary,
+            ),
+            const SizedBox(width: 12),
+            Consumer<AppProvider>(
+              builder: (context, provider, _) => _navTextChip(
+                'Cabang ${provider.branchName}',
+                Colors.white.withValues(alpha: 0.10),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _navChip(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    bool filled = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: filled ? 0.20 : 0.10),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _navTextChip(String label, Color color) {
+    final solid = color == AppColors.primary;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 48),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(999),
+        border: solid
+            ? null
+            : Border.all(color: Colors.white.withValues(alpha: 0.20)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 15,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageColumn() {
+    return Container(
+      height: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8F7),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: FutureBuilder<List<ItemPhoto>>(
+        future: Provider.of<AppProvider>(
+          context,
+          listen: false,
+        ).getItemPhotos(widget.item.id!),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
+          }
+          final photos = snapshot.data ?? [];
+          if (photos.isEmpty) {
+            return const Center(
+              child: Icon(
+                Icons.image_not_supported_outlined,
+                size: 92,
+                color: AppColors.textMuted,
+              ),
+            );
+          }
+
+          return Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: photos.length,
+                        onPageChanged: (index) =>
+                            setState(() => _currentImageIndex = index),
+                        itemBuilder: (context, index) => Image.file(
+                          File(photos[index].localPath),
+                          fit: BoxFit.contain,
+                          errorBuilder: (ctx, err, stack) => const Icon(
+                            Icons.error_outline,
+                            size: 70,
+                            color: AppColors.textMuted,
                           ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: FutureBuilder<List<ItemPhoto>>(
-                          future: Provider.of<AppProvider>(context, listen: false).getItemPhotos(widget.item.id!),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-                            }
-
-                            final photos = snapshot.data ?? [];
-
-                            if (photos.isEmpty) {
-                              return Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.image_not_supported_outlined, size: 80, color: AppColors.textMuted.withValues(alpha: 0.4)),
-                                    const SizedBox(height: 12),
-                                    const Text('Tidak ada foto', style: TextStyle(color: AppColors.textMuted)),
-                                  ],
-                                ),
-                              );
-                            }
-
-                            return Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: CarouselSlider(
-                                    options: CarouselOptions(
-                                      height: double.infinity,
-                                      viewportFraction: 1.0,
-                                      enableInfiniteScroll: photos.length > 1,
-                                      onPageChanged: (index, reason) {
-                                        setState(() {
-                                          _currentImageIndex = index;
-                                        });
-                                      },
-                                    ),
-                                    items: photos.map((photo) {
-                                      return Builder(
-                                        builder: (BuildContext context) {
-                                          return Padding(
-                                            padding: const EdgeInsets.all(16),
-                                            child: Image.file(
-                                              File(photo.localPath),
-                                              fit: BoxFit.contain,
-                                              errorBuilder: (ctx, err, stack) => const Icon(Icons.error_outline, size: 60, color: AppColors.textMuted),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                                if (photos.length > 1)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: photos.asMap().entries.map((entry) {
-                                        return AnimatedContainer(
-                                          duration: const Duration(milliseconds: 200),
-                                          width: _currentImageIndex == entry.key ? 24 : 10,
-                                          height: 10,
-                                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(5),
-                                            color: _currentImageIndex == entry.key
-                                                ? AppColors.primary
-                                                : AppColors.primary.withValues(alpha: 0.2),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
                         ),
                       ),
                     ),
-                  ),
-
-                  // Right Column (Details)
-                  Expanded(
-                    flex: 45,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(0, 32, 48, 32),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Category badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentLight,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              widget.item.categoryName ?? 'Lainnya',
-                              style: const TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Item name
-                          Text(
-                            widget.item.name,
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textDark,
-                              height: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Specs
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentLighter,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                if (widget.item.weightGram > 0)
-                                  _buildSpecRow(Icons.fitness_center, 'Berat', '${widget.item.weightGram} gram'),
-                                if (widget.item.karat != null && widget.item.karat!.isNotEmpty)
-                                  _buildSpecRow(Icons.diamond_outlined, 'Karat', widget.item.karat!),
-                                _buildSpecRow(Icons.verified_outlined, 'Kondisi', widget.item.condition),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-
-                          // Price
-                          const Text(
-                            'Harga Dasar Lelang',
-                            style: TextStyle(fontSize: 16, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            currencyFormatter.format(widget.item.basePrice),
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primary,
-                            ),
-                          ),
-
-                          if (widget.item.description != null && widget.item.description!.isNotEmpty) ...[
-                            const SizedBox(height: 28),
-                            const Text(
-                              'Deskripsi',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textDark,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.item.description!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                height: 1.6,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-
-                          // Financing Estimate Section
-                          _buildFinancingSection(currencyFormatter),
-                        ],
+                    if (photos.length > 1) ...[
+                      Positioned(
+                        left: 16,
+                        top: 0,
+                        bottom: 0,
+                        child: _imageArrow(Icons.chevron_left, photos.length, -1),
+                      ),
+                      Positioned(
+                        right: 16,
+                        top: 0,
+                        bottom: 0,
+                        child: _imageArrow(Icons.chevron_right, photos.length, 1),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Indicator below the image, styled clearly and boldly
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.20),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      'FOTO ${_currentImageIndex + 1} DARI ${photos.length}',
+                      style: const TextStyle(
+                        fontFamily: 'Outfit',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
+              if (photos.length > 1) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    photos.length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: index == _currentImageIndex ? 24 : 10,
+                      height: 10,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: index == _currentImageIndex
+                            ? AppColors.primary
+                            : AppColors.primary.withValues(alpha: 0.20),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildFinancingSection(NumberFormat currencyFormatter) {
-    if (_isFinancingLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      );
-    }
-
-    if (_financingConfig == null || _financingTenors.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final double basePrice = widget.item.basePrice;
-    final double munahRate = (_financingConfig!['munah_rate'] as num).toDouble();
-    final double adminFeeFlat = (_financingConfig!['admin_fee_flat'] as num).toDouble();
-    final double adminFeePercent = (_financingConfig!['admin_fee_percent'] as num).toDouble();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 36),
-        const Divider(),
-        const SizedBox(height: 24),
-        const Row(
-          children: [
-            Icon(Icons.calculate_outlined, color: AppColors.primary, size: 24),
-            SizedBox(width: 8),
-            Text(
-              'Estimasi Pembiayaan Syariah',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
-              ),
-            ),
-          ],
+  Widget _imageArrow(IconData icon, int count, int delta) {
+    return Center(
+      child: IconButton.filled(
+        onPressed: () {
+          final next = (_currentImageIndex + delta).clamp(0, count - 1);
+          _pageController.animateToPage(
+            next,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        },
+        icon: Icon(icon),
+        style: IconButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: AppColors.primary,
+          fixedSize: const Size(50, 50),
         ),
-        const SizedBox(height: 16),
+      ),
+    );
+  }
 
-        // DP selector chips
-        const Text(
-          'Pilihan Down Payment (DP):',
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: _dpOptions.map((dp) {
-            final isSelected = _selectedDpPercent == dp;
-            final dpVal = basePrice * (dp / 100.0);
-            return ChoiceChip(
-              label: Text('$dp% (${currencyFormatter.format(dpVal)})'),
-              selected: isSelected,
-              selectedColor: AppColors.primary,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-              backgroundColor: AppColors.background,
-              side: BorderSide(color: isSelected ? AppColors.primary : AppColors.cardBorder),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              showCheckmark: false,
-              onSelected: (val) {
-                if (val) {
-                  setState(() => _selectedDpPercent = dp);
-                }
-              },
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 20),
-
-        // Table / list of installments
-        if (_selectedDpPercent != null) ...[
+  Widget _buildDetails(NumberFormat currencyFormatter) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.cardBorder),
+              color: AppColors.muted,
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: const BoxDecoration(
-                    color: AppColors.accentLight,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
                   ),
-                  child: const Row(
-                    children: [
-                      Expanded(child: Text('Tenor', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.primary))),
-                      Expanded(child: Text('Plafond', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.primary))),
-                      Expanded(child: Text('Angsuran/Bulan', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.primary))),
-                    ],
+                  decoration: BoxDecoration(
+                    color: AppColors.categoryBadgeBg(widget.item.categoryName),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    widget.item.categoryName ?? 'Lainnya',
+                    style: TextStyle(
+                      color: AppColors.categoryBadgeText(
+                        widget.item.categoryName,
+                      ),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-
-                // Rows
-                ...List.generate(_financingTenors.length, (index) {
-                  final tenor = _financingTenors[index];
-                  final months = tenor['months'] as int;
-                  final otherFee = (tenor['other_fee'] as num?)?.toDouble() ?? 0.0;
-
-                  final dpAmount = basePrice * (_selectedDpPercent! / 100.0);
-                  final plafond = basePrice - dpAmount;
-
-                  final installment = _calculateInstallment(
-                    basePrice: basePrice,
-                    dpPercent: _selectedDpPercent!,
-                    munahRate: munahRate,
-                    adminFeeFlat: adminFeeFlat,
-                    adminFeePercent: adminFeePercent,
-                    tenorMonths: months,
-                    otherFee: otherFee,
-                  );
-
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const SizedBox(height: 10),
+                Text(
+                  widget.item.name,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textDark,
+                    height: 1.15,
+                  ),
+                ),
+                if (widget.item.description != null &&
+                    widget.item.description!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.item.description!,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            childAspectRatio: 2.8,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _specCard(
+                Icons.scale_outlined,
+                'Berat',
+                widget.item.weightGram > 0
+                    ? '${widget.item.weightGram} gram'
+                    : '-',
+              ),
+              _specCard(
+                Icons.diamond_outlined,
+                'Karat',
+                widget.item.karat?.isNotEmpty == true
+                    ? widget.item.karat!
+                    : '-',
+              ),
+              _specCard(
+                Icons.verified_outlined,
+                'Kondisi',
+                widget.item.condition,
+              ),
+              _specCard(
+                Icons.category_outlined,
+                'Kategori',
+                widget.item.categoryName ?? '-',
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFDF5),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFF3D27A), width: 1.0),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'HARGA DASAR LELANG',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF8A5A00),
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    currencyFormatter.format(widget.item.basePrice),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.accent,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Consumer<AppProvider>(
+                  builder: (context, provider, _) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      border: index < _financingTenors.length - 1
-                          ? const Border(bottom: BorderSide(color: AppColors.cardBorder))
-                          : null,
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
                     ),
                     child: Row(
                       children: [
-                        Expanded(
-                          child: Text(
-                            '$months Bulan',
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textDark),
-                          ),
+                        const Icon(
+                          Icons.diamond_outlined,
+                          color: AppColors.accent,
+                          size: 18,
                         ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            currencyFormatter.format(plafond),
-                            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            currencyFormatter.format(installment.round()),
+                            'Referensi emas: ${currencyFormatter.format(provider.goldPricePerGram)} / gram',
                             style: const TextStyle(
+                              fontSize: 14,
                               fontWeight: FontWeight.w800,
-                              fontSize: 15,
-                              color: AppColors.primary,
+                              color: AppColors.textDark,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  );
-                }),
+                  ),
+                ),
+                if (!_isFinancingLoading &&
+                    _financingConfig != null &&
+                    _financingTenors.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showFinancingDialog(currencyFormatter),
+                      icon: const Icon(Icons.calculate_outlined, size: 20),
+                      label: const Text(
+                        'Lihat Simulasi Pembiayaan',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            '* Estimasi angsuran di atas sudah mencakup biaya administrasi & Mu\'nah bulanan.',
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted, fontStyle: FontStyle.italic),
-          ),
         ],
-      ],
-    );
-  }
-
-  Widget _buildBreadcrumbChip({IconData? icon, required String label, VoidCallback? onTap, bool isBack = false}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isBack ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: Colors.white, size: 18),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildSpecRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+  Widget _specCard(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.muted,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.primary),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 80,
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(icon, color: AppColors.primary, size: 18),
           ),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textDark),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  void _showFinancingDialog(NumberFormat currencyFormatter) {
+    showDialog(
+      context: context,
+      barrierColor: AppColors.muted.withValues(alpha: 0.88),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final config = _financingConfig!;
+          final basePrice = widget.item.basePrice;
+          final dpPercent = _selectedDpPercent ?? _dpOptions.first;
+          final tenorMonths =
+              _selectedTenorMonths ?? _financingTenors.first['months'] as int;
+          final tenor = _financingTenors.firstWhere(
+            (t) => t['months'] == tenorMonths,
+            orElse: () => _financingTenors.first,
+          );
+          final otherFee = (tenor['other_fee'] as num?)?.toDouble() ?? 0;
+          final munahRate = (config['munah_rate'] as num).toDouble();
+          final adminFlat = (config['admin_fee_flat'] as num).toDouble();
+          final adminPercent = (config['admin_fee_percent'] as num).toDouble();
+          final dpAmount = basePrice * (dpPercent / 100);
+          final plafond = basePrice - dpAmount;
+          final installment = _calculateInstallment(
+            basePrice: basePrice,
+            dpPercent: dpPercent,
+            munahRate: munahRate,
+            adminFeeFlat: adminFlat,
+            adminFeePercent: adminPercent,
+            tenorMonths: tenorMonths,
+            otherFee: otherFee,
+          );
+
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 48,
+              vertical: 32,
+            ),
+            backgroundColor: Colors.transparent,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1040),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: Material(
+                  color: Colors.white,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(28),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Simulasi Pembiayaan Syariah',
+                                    style: TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  SizedBox(height: 6),
+                                  Text(
+                                    'Estimasi mengikuti parameter pembiayaan aktif di database lokal.',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton.filledTonal(
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(Icons.close),
+                              style: IconButton.styleFrom(
+                                backgroundColor: AppColors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: AppColors.goldBg,
+                                  borderRadius: BorderRadius.circular(28),
+                                  border: Border.all(
+                                    color: const Color(0xFFF3D27A),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Estimasi angsuran',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF8A5A00),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      currencyFormatter.format(
+                                        installment.round(),
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 38,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.accent,
+                                      ),
+                                    ),
+                                    const Text(
+                                      '/ bulan',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF8A5A00),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 22),
+                                    _breakdown(
+                                      'Harga barang',
+                                      currencyFormatter.format(basePrice),
+                                    ),
+                                    _breakdown(
+                                      'DP $dpPercent%',
+                                      currencyFormatter.format(dpAmount),
+                                    ),
+                                    _breakdown(
+                                      'Plafond',
+                                      currencyFormatter.format(plafond),
+                                    ),
+                                    _breakdown(
+                                      "Mu'nah / 10 hari",
+                                      '${munahRate.toStringAsFixed(2)}%',
+                                    ),
+                                    _breakdown('Tenor', '$tenorMonths bulan'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 22),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _selectorPanel(
+                                    title: 'Down Payment',
+                                    children: _dpOptions.map((dp) {
+                                      final selected = dp == dpPercent;
+                                      return _choice('$dp%', selected, () {
+                                        setState(() => _selectedDpPercent = dp);
+                                        setDialogState(() {});
+                                      });
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  _selectorPanel(
+                                    title: 'Tenor',
+                                    children: _financingTenors.map((t) {
+                                      final months = t['months'] as int;
+                                      return _choice(
+                                        '$months bulan',
+                                        months == tenorMonths,
+                                        () {
+                                          setState(
+                                            () => _selectedTenorMonths = months,
+                                          );
+                                          setDialogState(() {});
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Text(
+                                    'Estimasi angsuran dapat berubah sesuai kebijakan outlet dan hasil verifikasi barang.',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary.withValues(
+                                        alpha: 0.85,
+                                      ),
+                                      height: 1.45,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _selectorPanel({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.muted,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(spacing: 10, runSpacing: 10, children: children),
+        ],
+      ),
+    );
+  }
+
+  Widget _choice(String label, bool selected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.textSecondary,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _breakdown(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF8A5A00),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 }

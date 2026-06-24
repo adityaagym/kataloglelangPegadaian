@@ -32,14 +32,20 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     // Search filter
     if (_searchController.text.isNotEmpty) {
-      items = items.where((item) =>
-        item.name.toLowerCase().contains(_searchController.text.toLowerCase())
-      ).toList();
+      items = items
+          .where(
+            (item) => item.name.toLowerCase().contains(
+              _searchController.text.toLowerCase(),
+            ),
+          )
+          .toList();
     }
 
     // Category filter
     if (_filterCategoryId != null) {
-      items = items.where((item) => item.categoryId == _filterCategoryId).toList();
+      items = items
+          .where((item) => item.categoryId == _filterCategoryId)
+          .toList();
     }
 
     // Sort
@@ -47,10 +53,10 @@ class _ItemListScreenState extends State<ItemListScreen> {
       case 'Terbaru':
         items.sort((a, b) => (b.createdAt ?? '').compareTo(a.createdAt ?? ''));
         break;
-      case 'Harga ↑':
+      case 'Harga naik':
         items.sort((a, b) => a.basePrice.compareTo(b.basePrice));
         break;
-      case 'Harga ↓':
+      case 'Harga turun':
         items.sort((a, b) => b.basePrice.compareTo(a.basePrice));
         break;
       case 'Nama A-Z':
@@ -64,34 +70,104 @@ class _ItemListScreenState extends State<ItemListScreen> {
   void _confirmDelete(BuildContext context, AuctionItem item) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Hapus Barang Lelang?', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: Text("Apakah Anda yakin ingin menghapus '${item.name}'?\nTindakan ini tidak dapat dibatalkan."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        child: Container(
+          width: 460,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              Provider.of<AppProvider>(context, listen: false).deleteItem(item.id!);
-              Navigator.pop(ctx);
-            },
-            child: const Text('Ya, Hapus Permanen', style: TextStyle(color: Colors.white)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.destructive,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 68,
+                      height: 68,
+                      decoration: BoxDecoration(
+                        color: AppColors.destructive.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.destructive,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Hapus Barang Lelang?',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Data '${item.name}' akan dihapus dari database lokal dan tidak dapat dikembalikan.",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.5,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Batal'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.destructive,
+                            ),
+                            onPressed: () {
+                              Provider.of<AppProvider>(
+                                context,
+                                listen: false,
+                              ).deleteItem(item.id!);
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text('Hapus'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
 
     return Padding(
       padding: const EdgeInsets.all(32.0),
@@ -101,7 +177,11 @@ class _ItemListScreenState extends State<ItemListScreen> {
           // Title
           const Text(
             'Daftar Barang Lelang',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textDark),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -122,15 +202,18 @@ class _ItemListScreenState extends State<ItemListScreen> {
                   decoration: InputDecoration(
                     hintText: 'Cari berdasarkan nama...',
                     hintStyle: const TextStyle(color: AppColors.textMuted),
-                    prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppColors.textMuted,
+                    ),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(999),
                       borderSide: const BorderSide(color: AppColors.cardBorder),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(999),
                       borderSide: const BorderSide(color: AppColors.cardBorder),
                     ),
                   ),
@@ -146,21 +229,31 @@ class _ItemListScreenState extends State<ItemListScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(999),
                         border: Border.all(color: AppColors.cardBorder),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<int?>(
                           value: _filterCategoryId,
                           isExpanded: true,
-                          hint: const Text('Kategori', style: TextStyle(color: AppColors.textMuted)),
+                          hint: const Text(
+                            'Kategori',
+                            style: TextStyle(color: AppColors.textMuted),
+                          ),
                           items: [
-                            const DropdownMenuItem<int?>(value: null, child: Text('Semua Kategori')),
-                            ...provider.categories.map((c) =>
-                              DropdownMenuItem<int?>(value: c.id, child: Text(c.name)),
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Semua Kategori'),
+                            ),
+                            ...provider.categories.map(
+                              (c) => DropdownMenuItem<int?>(
+                                value: c.id,
+                                child: Text(c.name),
+                              ),
                             ),
                           ],
-                          onChanged: (val) => setState(() => _filterCategoryId = val),
+                          onChanged: (val) =>
+                              setState(() => _filterCategoryId = val),
                         ),
                       ),
                     );
@@ -173,13 +266,13 @@ class _ItemListScreenState extends State<ItemListScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: AppColors.cardBorder),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _sortBy,
-                    items: ['Terbaru', 'Harga ↑', 'Harga ↓', 'Nama A-Z']
+                    items: ['Terbaru', 'Harga naik', 'Harga turun', 'Nama A-Z']
                         .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                         .toList(),
                     onChanged: (val) => setState(() => _sortBy = val!),
@@ -195,7 +288,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: AppColors.cardBorder),
               ),
               child: Consumer<AppProvider>(
@@ -207,10 +300,19 @@ class _ItemListScreenState extends State<ItemListScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.inventory_2_outlined, size: 64, color: AppColors.textMuted.withValues(alpha: 0.4)),
+                          Icon(
+                            Icons.inventory_2_outlined,
+                            size: 64,
+                            color: AppColors.textMuted.withValues(alpha: 0.4),
+                          ),
                           const SizedBox(height: 12),
-                          const Text('Belum ada data barang lelang.',
-                            style: TextStyle(color: AppColors.textMuted, fontSize: 16)),
+                          const Text(
+                            'Belum ada data barang lelang.',
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 16,
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -220,20 +322,86 @@ class _ItemListScreenState extends State<ItemListScreen> {
                     children: [
                       // Table header
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          color: AppColors.muted,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
                         ),
                         child: const Row(
                           children: [
-                            SizedBox(width: 50, child: Text('NO', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
-                            SizedBox(width: 70, child: Text('THUMBNAIL', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
+                            SizedBox(
+                              width: 50,
+                              child: Text(
+                                'NO',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 70,
+                              child: Text(
+                                'THUMBNAIL',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
                             SizedBox(width: 16),
-                            Expanded(flex: 3, child: Text('NAMA BARANG', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
-                            Expanded(flex: 2, child: Text('KATEGORI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
-                            Expanded(flex: 2, child: Text('HARGA DASAR', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary))),
-                            SizedBox(width: 120, child: Text('AKSI', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textSecondary), textAlign: TextAlign.center)),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                'NAMA BARANG',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                'KATEGORI',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                'HARGA DASAR',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 120,
+                              child: Text(
+                                'AKSI',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -242,16 +410,25 @@ class _ItemListScreenState extends State<ItemListScreen> {
                       Expanded(
                         child: ListView.separated(
                           itemCount: items.length,
-                          separatorBuilder: (context, index) => const Divider(height: 1),
+                          separatorBuilder: (context, index) =>
+                              const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final item = items[index];
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
                               child: Row(
                                 children: [
                                   SizedBox(
                                     width: 50,
-                                    child: Text('${index + 1}', style: const TextStyle(color: AppColors.textSecondary)),
+                                    child: Text(
+                                      '${index + 1}',
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ),
                                   // Thumbnail
                                   SizedBox(
@@ -259,13 +436,25 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                     child: FutureBuilder(
                                       future: provider.getItemPhotos(item.id!),
                                       builder: (context, snapshot) {
-                                        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                                        if (snapshot.hasData &&
+                                            snapshot.data!.isNotEmpty) {
                                           return ClipRRect(
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                             child: Image.file(
-                                              File(snapshot.data!.first.localPath),
-                                              width: 50, height: 50, fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) => _placeholderThumb(),
+                                              File(
+                                                snapshot.data!.first.localPath,
+                                              ),
+                                              width: 50,
+                                              height: 50,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => _placeholderThumb(),
                                             ),
                                           );
                                         }
@@ -279,15 +468,41 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                     flex: 3,
                                     child: Text(
                                       item.name,
-                                      style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textDark),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textDark,
+                                      ),
                                     ),
                                   ),
                                   // Category
                                   Expanded(
                                     flex: 2,
-                                    child: Text(
-                                      item.categoryName ?? '-',
-                                      style: const TextStyle(color: AppColors.textSecondary),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 7,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.categoryBadgeBg(
+                                            item.categoryName,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            999,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          item.categoryName ?? '-',
+                                          style: TextStyle(
+                                            color: AppColors.categoryBadgeText(
+                                              item.categoryName,
+                                            ),
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   // Price
@@ -305,7 +520,8 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                   SizedBox(
                                     width: 120,
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         _buildActionButton(
                                           Icons.edit_outlined,
@@ -314,7 +530,11 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (_) => Scaffold(body: ItemFormScreen(itemToEdit: item)),
+                                                builder: (_) => Scaffold(
+                                                  body: ItemFormScreen(
+                                                    itemToEdit: item,
+                                                  ),
+                                                ),
                                               ),
                                             );
                                           },
@@ -347,26 +567,28 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
   Widget _placeholderThumb() {
     return Container(
-      width: 50, height: 50,
+      width: 50,
+      height: 50,
       decoration: BoxDecoration(
         color: AppColors.accentLighter,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: const Icon(Icons.image_outlined, color: AppColors.textMuted, size: 24),
+      child: const Icon(
+        Icons.image_outlined,
+        color: AppColors.textMuted,
+        size: 24,
+      ),
     );
   }
 
   Widget _buildActionButton(IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(999),
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: color, size: 18),
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        child: Icon(icon, color: Colors.white, size: 18),
       ),
     );
   }
