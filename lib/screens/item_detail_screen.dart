@@ -778,7 +778,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 Icon(Icons.money_outlined, color: AppColors.successGreen, size: 24),
                 SizedBox(width: 8),
                 Text(
-                  '💵 PEMBELIAN TUNAI',
+                  ' PEMBELIAN TUNAI',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -843,7 +843,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 Icon(Icons.credit_card_outlined, color: AppColors.info, size: 24),
                 SizedBox(width: 8),
                 Text(
-                  '💳 KCA — Kredit Cicilan Angsuran',
+                  'KCA — Kredit Cicilan Angsuran',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -864,7 +864,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 const Icon(Icons.timer_outlined, color: AppColors.info, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  '⏱️ TEMPO: ${result.tempoKca} BULAN',
+                  'TEMPO: ${result.tempoKca} BULAN',
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w900,
@@ -941,7 +941,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 Icon(Icons.bar_chart_outlined, color: AppColors.accent, size: 24),
                 SizedBox(width: 8),
                 Text(
-                  '📊 KRASIDA — Kredit Gadai Angsuran',
+                  'KRASIDA — Kredit Gadai Angsuran',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -1037,7 +1037,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             const SizedBox(height: 12),
             
             const Text(
-              '📊 PERBANDINGAN SEMUA TENOR:',
+              ' PERBANDINGAN SEMUA TENOR:',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
