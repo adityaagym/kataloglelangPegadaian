@@ -171,25 +171,43 @@ class _ItemListScreenState extends State<ItemListScreen> {
     );
     final isPortrait = MediaQuery.of(context).size.width < 900;
 
-    final searchField = TextField(
-      controller: _searchController,
-      onChanged: (_) => setState(() {}),
-      decoration: InputDecoration(
-        hintText: 'Cari nama atau nomor akad...',
-        hintStyle: const TextStyle(color: AppColors.textMuted),
-        prefixIcon: const Icon(
-          Icons.search,
-          color: AppColors.textMuted,
+    final searchField = SizedBox(
+      height: 56,
+      child: TextField(
+        controller: _searchController,
+        onChanged: (_) => setState(() {}),
+        style: const TextStyle(
+          color: AppColors.textDark,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
         ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(999),
-          borderSide: const BorderSide(color: AppColors.cardBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(999),
-          borderSide: const BorderSide(color: AppColors.cardBorder),
+        decoration: InputDecoration(
+          hintText: 'Cari nama atau nomor akad...',
+          hintStyle: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 14,
+            fontWeight: FontWeight.normal,
+          ),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: AppColors.textMuted,
+            size: 22,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: AppColors.cardBorder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: AppColors.cardBorder),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
         ),
       ),
     );
@@ -197,19 +215,29 @@ class _ItemListScreenState extends State<ItemListScreen> {
     final categoryDropdown = Consumer<AppProvider>(
       builder: (context, provider, _) {
         return Container(
+          height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.cardBorder),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int?>(
               value: _filterCategoryId,
               isExpanded: true,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
               hint: const Text(
                 'Kategori',
-                style: TextStyle(color: AppColors.textMuted),
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontWeight: FontWeight.normal,
+                  fontSize: 14,
+                ),
               ),
               items: [
                 const DropdownMenuItem<int?>(
@@ -232,16 +260,22 @@ class _ItemListScreenState extends State<ItemListScreen> {
     );
 
     final sortDropdown = Container(
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _sortBy,
-          isExpanded: isPortrait,
+          isExpanded: true,
+          style: const TextStyle(
+            color: AppColors.textDark,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
           items: ['Terbaru', 'Harga naik', 'Harga turun', 'Nama A-Z']
               .map((s) => DropdownMenuItem(value: s, child: Text(s)))
               .toList(),
@@ -288,20 +322,20 @@ class _ItemListScreenState extends State<ItemListScreen> {
                 )
               : Row(
                   children: [
-                    // Search
                     Expanded(
-                      flex: 3,
+                      flex: 4,
                       child: searchField,
                     ),
                     const SizedBox(width: 16),
-                    // Category dropdown
                     Expanded(
-                      flex: 2,
+                      flex: 3,
                       child: categoryDropdown,
                     ),
                     const SizedBox(width: 16),
-                    // Sort dropdown
-                    sortDropdown,
+                    Expanded(
+                      flex: 3,
+                      child: sortDropdown,
+                    ),
                   ],
                 ),
           const SizedBox(height: 24),
@@ -313,6 +347,13 @@ class _ItemListScreenState extends State<ItemListScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: AppColors.cardBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Consumer<AppProvider>(
                 builder: (context, provider, child) {
@@ -346,12 +387,12 @@ class _ItemListScreenState extends State<ItemListScreen> {
                       // Table header
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 14,
+                          horizontal: 24,
+                          vertical: 16,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.muted,
-                          borderRadius: const BorderRadius.vertical(
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: BorderRadius.vertical(
                             top: Radius.circular(24),
                           ),
                         ),
@@ -362,32 +403,35 @@ class _ItemListScreenState extends State<ItemListScreen> {
                               child: Text(
                                 'NO',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ),
                             SizedBox(
                               width: 70,
                               child: Text(
-                                'THUMBNAIL',
+                                'FOTO',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ),
                             SizedBox(width: 16),
                             Expanded(
-                              flex: 3,
+                              flex: 4,
                               child: Text(
                                 'NAMA BARANG',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ),
@@ -396,9 +440,10 @@ class _ItemListScreenState extends State<ItemListScreen> {
                               child: Text(
                                 'NO AKAD',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ),
@@ -407,20 +452,22 @@ class _ItemListScreenState extends State<ItemListScreen> {
                               child: Text(
                                 'KATEGORI',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ),
                             Expanded(
-                              flex: 2,
+                              flex: 3,
                               child: Text(
                                 'HARGA DASAR',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ),
@@ -429,9 +476,10 @@ class _ItemListScreenState extends State<ItemListScreen> {
                               child: Text(
                                 'AKSI',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: AppColors.primaryDark,
+                                  letterSpacing: 0.8,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -445,15 +493,16 @@ class _ItemListScreenState extends State<ItemListScreen> {
                         child: ListView.separated(
                           itemCount: items.length,
                           separatorBuilder: (context, index) =>
-                              const Divider(height: 1),
+                              const Divider(height: 1, color: AppColors.cardBorder),
                           itemBuilder: (context, index) {
                             final item = items[index];
                             return Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
+                                horizontal: 24,
+                                vertical: 12,
                               ),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   SizedBox(
                                     width: 50,
@@ -461,6 +510,8 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                       '${index + 1}',
                                       style: const TextStyle(
                                         color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
@@ -473,22 +524,17 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                         if (snapshot.hasData &&
                                             snapshot.data!.isNotEmpty) {
                                           return ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
+                                            borderRadius: BorderRadius.circular(12),
                                             child: Image.file(
                                               File(
                                                 snapshot.data!.first.localPath,
                                               ),
-                                              width: 50,
-                                              height: 50,
+                                              width: 48,
+                                              height: 48,
                                               fit: BoxFit.cover,
                                               errorBuilder:
-                                                  (
-                                                    context,
-                                                    error,
-                                                    stackTrace,
-                                                  ) => _placeholderThumb(),
+                                                  (context, error, stackTrace) =>
+                                                      _placeholderThumb(),
                                             ),
                                           );
                                         }
@@ -499,44 +545,52 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                   const SizedBox(width: 16),
                                   // Name
                                   Expanded(
-                                    flex: 3,
+                                    flex: 4,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
                                           item.name,
                                           style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.bold,
                                             color: AppColors.textDark,
+                                            fontSize: 14,
                                           ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        if ((item.creditNumber ?? '')
-                                            .isNotEmpty)
+                                        if (item.description != null &&
+                                            item.description!.trim().isNotEmpty) ...[
                                           const SizedBox(height: 3),
-                                        if ((item.creditNumber ?? '')
-                                            .isNotEmpty)
-                                          const Text(
-                                            'Bagian dari akad yang dapat berisi beberapa barang',
+                                          Text(
+                                            item.description!,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: AppColors.textMuted,
                                               fontSize: 11,
                                             ),
                                           ),
+                                        ],
                                       ],
                                     ),
                                   ),
+                                  // No Akad
                                   Expanded(
                                     flex: 2,
-                                    child: Text(
-                                      item.creditNumber?.isNotEmpty == true
-                                          ? item.creditNumber!
-                                          : '-',
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w700,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 8.0),
+                                      child: Text(
+                                        item.creditNumber?.isNotEmpty == true
+                                            ? item.creditNumber!
+                                            : '-',
+                                        style: const TextStyle(
+                                          color: AppColors.textDark,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -547,16 +601,14 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                       alignment: Alignment.centerLeft,
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 7,
+                                          horizontal: 10,
+                                          vertical: 5,
                                         ),
                                         decoration: BoxDecoration(
                                           color: AppColors.categoryBadgeBg(
                                             item.categoryName,
                                           ),
-                                          borderRadius: BorderRadius.circular(
-                                            999,
-                                          ),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(
                                           item.categoryName ?? '-',
@@ -565,7 +617,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                               item.categoryName,
                                             ),
                                             fontWeight: FontWeight.w800,
-                                            fontSize: 12,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ),
@@ -573,12 +625,13 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                   ),
                                   // Price
                                   Expanded(
-                                    flex: 2,
+                                    flex: 3,
                                     child: Text(
                                       currencyFormatter.format(item.basePrice),
                                       style: const TextStyle(
                                         color: AppColors.primary,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
                                       ),
                                     ),
                                   ),
@@ -591,6 +644,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                       children: [
                                         _buildActionButton(
                                           Icons.edit_outlined,
+                                          const Color(0xFFE3F2FD),
                                           AppColors.info,
                                           () {
                                             Navigator.push(
@@ -608,6 +662,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                         const SizedBox(width: 8),
                                         _buildActionButton(
                                           Icons.delete_outline,
+                                          const Color(0xFFFFEBEE),
                                           AppColors.error,
                                           () => _confirmDelete(context, item),
                                         ),
@@ -633,31 +688,35 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
   Widget _placeholderThumb() {
     return Container(
-      width: 50,
-      height: 50,
+      width: 48,
+      height: 48,
       decoration: BoxDecoration(
         color: AppColors.accentLighter,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: const Icon(
         Icons.image_outlined,
         color: AppColors.textMuted,
-        size: 24,
+        size: 20,
       ),
     );
   }
 
-  Widget _buildActionButton(IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(IconData icon, Color bgColor, Color iconColor, VoidCallback onTap) {
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        child: Icon(icon, color: Colors.white, size: 18),
+        decoration: BoxDecoration(
+          color: bgColor,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: iconColor, size: 18),
       ),
     );
   }
+
 
   @override
   void dispose() {

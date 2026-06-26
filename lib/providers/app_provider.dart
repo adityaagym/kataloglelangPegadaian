@@ -12,12 +12,14 @@ class AppProvider with ChangeNotifier {
   List<AuctionItem> _filteredItems = [];
   double _goldPricePerGram = 1120000;
   String? _goldPriceUpdatedAt;
+  String? _lastItemUpdatedAt;
 
   List<Category> get categories => _categories;
   List<AuctionItem> get items => _filteredItems;
   List<AuctionItem> get allItems => _allItems;
   double get goldPricePerGram => _goldPricePerGram;
   String? get goldPriceUpdatedAt => _goldPriceUpdatedAt;
+  String? get lastItemUpdatedAt => _lastItemUpdatedAt;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -38,6 +40,7 @@ class AppProvider with ChangeNotifier {
     _allItems = await _dbHelper.readAllAuctionItems(activeOnly: true);
     _filteredItems = List.from(_allItems);
     await _loadGoldPrice();
+    await _loadLastItemUpdateTime();
 
     _isLoading = false;
     notifyListeners();
@@ -48,6 +51,18 @@ class AppProvider with ChangeNotifier {
     final record = await _dbHelper.getLatestGoldPriceRecord();
     if (record != null) {
       _goldPriceUpdatedAt = record['updated_at'] as String?;
+    }
+  }
+
+  Future<void> _loadLastItemUpdateTime() async {
+    final db = await _dbHelper.database;
+    final result = await db.rawQuery(
+      'SELECT MAX(created_at) as max_date FROM auction_items',
+    );
+    if (result.isNotEmpty && result.first['max_date'] != null) {
+      _lastItemUpdatedAt = result.first['max_date'] as String;
+    } else {
+      _lastItemUpdatedAt = null;
     }
   }
 
@@ -87,6 +102,7 @@ class AppProvider with ChangeNotifier {
     _filteredItems = List.from(_allItems);
     _categories = await _dbHelper.readAllCategories();
     await _loadGoldPrice();
+    await _loadLastItemUpdateTime();
     notifyListeners();
   }
 
@@ -95,6 +111,7 @@ class AppProvider with ChangeNotifier {
     _filteredItems = List.from(_allItems);
     _categories = await _dbHelper.readAllCategories();
     await _loadGoldPrice();
+    await _loadLastItemUpdateTime();
     notifyListeners();
   }
 

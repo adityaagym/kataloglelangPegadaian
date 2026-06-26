@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -239,23 +240,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       isDrawer: isDrawer,
                     ),
                     _buildNavItem(
-                      Icons.inventory_2_outlined,
-                      Icons.inventory_2,
-                      'Kelola Barang',
-                      1,
-                      isDrawer: isDrawer,
-                    ),
-                    _buildNavItem(
-                      Icons.add_box_outlined,
-                      Icons.add_box,
-                      'Tambah Barang',
-                      2,
-                      isDrawer: isDrawer,
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    _buildNavItem(
                       Icons.diamond_outlined,
                       Icons.diamond,
                       'Harga Emas',
@@ -263,17 +247,37 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       isDrawer: isDrawer,
                     ),
                     _buildNavItem(
-                      Icons.backup_outlined,
-                      Icons.backup,
-                      'Backup Data',
-                      4,
-                      isDrawer: isDrawer,
-                    ),
-                    _buildNavItem(
                       Icons.account_balance_outlined,
                       Icons.account_balance,
                       'Pembiayaan',
                       5,
+                      isDrawer: isDrawer,
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    _buildNavItem(
+                      Icons.add_box_outlined,
+                      Icons.add_box,
+                      'Tambah Barang',
+                      2,
+                      isDrawer: isDrawer,
+                    ),
+                    _buildNavItem(
+                      Icons.inventory_2_outlined,
+                      Icons.inventory_2,
+                      'Kelola Barang',
+                      1,
+                      isDrawer: isDrawer,
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    _buildNavItem(
+                      Icons.backup_outlined,
+                      Icons.backup,
+                      'Backup Data',
+                      4,
                       isDrawer: isDrawer,
                     ),
                   ],
@@ -402,11 +406,27 @@ class _DashboardOverviewState extends State<DashboardOverview> {
   Map<String, dynamic>? _topCategory;
   List<Map<String, dynamic>> _recentItems = [];
   bool _isLoading = true;
+  DateTime _currentDeviceTime = DateTime.now();
+  Timer? _timeTimer;
 
   @override
   void initState() {
     super.initState();
+    _currentDeviceTime = DateTime.now();
+    _timeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _currentDeviceTime = DateTime.now();
+        });
+      }
+    });
     _loadStats();
+  }
+
+  @override
+  void dispose() {
+    _timeTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadStats() async {
@@ -432,8 +452,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
       symbol: 'Rp ',
       decimalDigits: 0,
     );
-    final now = DateTime.now();
-    final timeStr = DateFormat('HH:mm').format(now);
+    final timeStr = DateFormat('HH:mm').format(_currentDeviceTime);
     final isPortrait = MediaQuery.of(context).size.width < 900;
 
     if (_isLoading) {
@@ -704,13 +723,22 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                     Consumer<AppProvider>(
                       builder: (context, provider, _) {
                         String updateTime = 'Belum ada';
-                        if (provider.goldPriceUpdatedAt != null) {
+                        if (provider.lastItemUpdatedAt != null) {
                           try {
-                            final dt = DateTime.parse(provider.goldPriceUpdatedAt!);
-                            updateTime =
-                                'Hari Ini, ${DateFormat('HH:mm').format(dt)}';
+                            final dt = DateTime.parse(provider.lastItemUpdatedAt!);
+                            final now = DateTime.now();
+                            final isToday = dt.year == now.year &&
+                                dt.month == now.month &&
+                                dt.day == now.day;
+                            if (isToday) {
+                              updateTime =
+                                  'Hari Ini, ${DateFormat('HH:mm').format(dt)}';
+                            } else {
+                              updateTime =
+                                  DateFormat('dd MMM, HH:mm').format(dt);
+                            }
                           } catch (_) {
-                            updateTime = 'Hari Ini';
+                            updateTime = 'Baru saja';
                           }
                         }
                         return _buildStatCard(
@@ -754,13 +782,22 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                         child: Consumer<AppProvider>(
                           builder: (context, provider, _) {
                             String updateTime = 'Belum ada';
-                            if (provider.goldPriceUpdatedAt != null) {
+                            if (provider.lastItemUpdatedAt != null) {
                               try {
-                                final dt = DateTime.parse(provider.goldPriceUpdatedAt!);
-                                updateTime =
-                                    'Hari Ini,\n${DateFormat('HH:mm').format(dt)}';
+                                final dt = DateTime.parse(provider.lastItemUpdatedAt!);
+                                final now = DateTime.now();
+                                final isToday = dt.year == now.year &&
+                                    dt.month == now.month &&
+                                    dt.day == now.day;
+                                if (isToday) {
+                                  updateTime =
+                                      'Hari Ini,\n${DateFormat('HH:mm').format(dt)}';
+                                } else {
+                                  updateTime =
+                                      DateFormat('dd MMM,\nHH:mm').format(dt);
+                                }
                               } catch (_) {
-                                updateTime = 'Hari Ini';
+                                updateTime = 'Baru saja';
                               }
                             }
                             return _buildStatCard(

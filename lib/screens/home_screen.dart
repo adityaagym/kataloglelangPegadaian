@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
@@ -18,10 +19,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   int? _selectedCategoryId;
+  DateTime _currentDeviceTime = DateTime.now();
+  Timer? _timeTimer;
 
   @override
   void initState() {
     super.initState();
+    _currentDeviceTime = DateTime.now();
+    _timeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _currentDeviceTime = DateTime.now();
+        });
+      }
+    });
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -187,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 12),
               _headerPill(
                 Icons.access_time,
-                DateFormat('HH:mm').format(DateTime.now()),
+                DateFormat('HH:mm').format(_currentDeviceTime),
                 null,
                 isCompact: false,
               ),
@@ -623,7 +634,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               SizedBox(height: 6),
                               Text(
-                                'Kartu dibuat lebih besar agar nyaman dibaca nasabah lanjut usia.',
+                                'Temukan dan beli barang lelang pilihan anda  .',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -764,6 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _timeTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }

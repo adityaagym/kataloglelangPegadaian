@@ -256,8 +256,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         basePrice: _basePrice,
         description: _description,
         isActive: _isActive,
-        createdAt:
-            widget.itemToEdit?.createdAt ?? DateTime.now().toIso8601String(),
+        createdAt: DateTime.now().toIso8601String(),
       );
 
       if (widget.itemToEdit == null) {
