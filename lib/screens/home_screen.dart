@@ -86,11 +86,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         _buildHero(currencyFormatter),
                         _buildCatalogGrid(),
+                        _buildFooter(),
                       ],
                     ),
                   ),
                 ),
-                _buildFooter(),
               ],
             ),
           ),

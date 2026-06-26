@@ -130,25 +130,28 @@ class FinancingCalculator {
     double? appraisalValue,
     required Map<String, dynamic> config,
   }) {
-    final adminFee = (config['admin_fee_flat'] as num?)?.toInt() ?? 70000;
+    final adminFee = (config['admin_fee_flat'] as num?)?.toInt() ?? 15000;
+    final double umPercentageKca = (config['um_percentage_kca'] as num?)?.toDouble() ?? 0.192;
+    final int minimumUpKca = (config['minimum_up_kca'] as num?)?.toInt() ?? 500000;
+    final double bungaKca = (config['bunga_kca'] as num?)?.toDouble() ?? 0.0125;
+    final int tempoKca = (config['tempo_kca'] as num?)?.toInt() ?? 4;
 
-    final double appVal = appraisalValue ?? hargaLelang.toDouble();
-    
-    // KCA Loan Ratio rules:
-    // jika <550000 adalah 93%, jika <20100000 adalah 92 % dan untuk >20100000 adalah 93%
-    double loanRatio = 0.93;
-    if (appVal < 550000) {
-      loanRatio = 0.93;
-    } else if (appVal < 20100000) {
-      loanRatio = 0.92;
-    } else {
-      loanRatio = 0.93;
+    int uangMuka = roundDown(hargaLelang * umPercentageKca, 1000);
+    int uangPinjaman = hargaLelang - uangMuka;
+
+    if (uangPinjaman < minimumUpKca) {
+      return SimulasiResult(
+        skema: SkemaType.kca,
+        hargaLelang: hargaLelang,
+        uangMuka: uangMuka,
+        uangPinjaman: uangPinjaman,
+        eligible: false,
+        message: 'Uang pinjaman KCA (Rp $uangPinjaman) kurang dari batas minimum (Rp $minimumUpKca). Hanya tersedia untuk pembelian tunai.',
+      );
     }
 
-    int uangPinjaman = roundDown(appVal * loanRatio, 100000);
-    int uangMuka = (hargaLelang - uangPinjaman).clamp(0, hargaLelang);
-
-    int totalPelunasan = uangPinjaman + adminFee;
+    int bungaTotal = (uangPinjaman * bungaKca * tempoKca).round();
+    int totalPelunasan = uangPinjaman + bungaTotal + adminFee;
 
     return SimulasiResult(
       skema: SkemaType.kca,
@@ -156,8 +159,8 @@ class FinancingCalculator {
       uangMuka: uangMuka,
       uangPinjaman: uangPinjaman,
       eligible: true,
-      tempoKca: 4,
-      bungaTotalKca: 0,
+      tempoKca: tempoKca,
+      bungaTotalKca: bungaTotal,
       adminFee: adminFee,
       totalPelunasanKca: totalPelunasan,
     );
@@ -171,13 +174,22 @@ class FinancingCalculator {
     required List<Map<String, dynamic>> tenors,
     required int tenorMonths,
   }) {
-    final double appVal = appraisalValue ?? hargaLelang.toDouble();
-    
-    // Krasida Loan Ratio is always 95%
-    double loanRatio = 0.95;
+    final double umPercentageKrasida = (config['um_percentage_krasida'] as num?)?.toDouble() ?? 0.185;
+    final int minimumUpKrasida = (config['minimum_up_krasida'] as num?)?.toInt() ?? 500000;
 
-    int uangPinjaman = roundDown(appVal * loanRatio, 100000);
-    int uangMuka = (hargaLelang - uangPinjaman).clamp(0, hargaLelang);
+    int uangMuka = roundDown(hargaLelang * umPercentageKrasida, 1000);
+    int uangPinjaman = hargaLelang - uangMuka;
+
+    if (uangPinjaman < minimumUpKrasida) {
+      return SimulasiResult(
+        skema: SkemaType.krasida,
+        hargaLelang: hargaLelang,
+        uangMuka: uangMuka,
+        uangPinjaman: uangPinjaman,
+        eligible: false,
+        message: 'Uang pinjaman KRASIDA (Rp $uangPinjaman) kurang dari batas minimum (Rp $minimumUpKrasida). Hanya tersedia untuk pembelian tunai.',
+      );
+    }
 
     final tenorObj = tenors.firstWhere(
       (t) => t['months'] == tenorMonths,
@@ -216,7 +228,7 @@ class FinancingCalculator {
       bungaPerBulan: 0.0,
       angsuranPerBulan: angsuran,
       totalBayar: totalBayar,
-      bungaTotalKrasida: 0,
+      bungaTotalKrasida: totalBayar - uangPinjaman,
       perbandinganTenor: perbandingan,
     );
   }
