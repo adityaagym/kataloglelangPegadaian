@@ -35,6 +35,46 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   String? _description;
   bool _isActive = true;
 
+  // Track original values to show floating save button when modified
+  int _originalPhotosLength = 0;
+  int _originalPrimaryPhotoIndex = 0;
+
+  bool get _hasChanges {
+    final currentBasePriceText = _basePriceController.text.replaceAll('.', '');
+    final currentBasePrice = double.tryParse(currentBasePriceText) ?? 0.0;
+
+    if (widget.itemToEdit == null) {
+      // For adding a new item, check if anything is modified from blank defaults
+      return (_creditNumber != null && _creditNumber!.trim().isNotEmpty) ||
+          _name.isNotEmpty ||
+          _categoryId != null ||
+          _weightGram != 0.0 ||
+          _karat != null ||
+          _condition != 'Baik' ||
+          currentBasePrice != 0.0 ||
+          (_description != null && _description!.trim().isNotEmpty) ||
+          !_isActive ||
+          _newPhotos.isNotEmpty;
+    }
+    
+    // For editing an existing item
+    final orig = widget.itemToEdit!;
+    if ((_creditNumber ?? '') != (orig.creditNumber ?? '')) return true;
+    if (_name != orig.name) return true;
+    if (_categoryId != orig.categoryId) return true;
+    if (_weightGram != orig.weightGram) return true;
+    if ((_karat ?? '') != (orig.karat ?? '')) return true;
+    if (_condition != orig.condition) return true;
+    if (currentBasePrice != orig.basePrice) return true;
+    if ((_description ?? '') != (orig.description ?? '')) return true;
+    if (_isActive != orig.isActive) return true;
+    if (_newPhotos.isNotEmpty) return true;
+    if (_existingPhotos.length != _originalPhotosLength) return true;
+    if (_primaryPhotoIndex != _originalPrimaryPhotoIndex) return true;
+    
+    return false;
+  }
+
   final List<File> _newPhotos = [];
   List<ItemPhoto> _existingPhotos = [];
 
@@ -148,6 +188,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       _existingPhotos = photos;
       final primaryIdx = photos.indexWhere((p) => p.isPrimary);
       if (primaryIdx >= 0) _primaryPhotoIndex = primaryIdx;
+      
+      _originalPhotosLength = photos.length;
+      _originalPrimaryPhotoIndex = _primaryPhotoIndex;
     });
   }
 
@@ -345,37 +388,39 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 ],
               ),
             )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.itemToEdit == null) ...[
-                    const Text(
-                      'Tambah Barang Lelang',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Input data barang baru ke database offline cabang.',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                  ],
+          : Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(32, 32, 32, 120),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.itemToEdit == null) ...[
+                        const Text(
+                          'Tambah Barang Lelang',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Input data barang baru ke database offline cabang.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                      ],
 
-                  ResponsiveRowColumn(
-                    isPortrait: isPortrait,
-                    spacing: 40,
-                    left: Form(
-                      key: _formKey,
-                      child: Column(
+                      ResponsiveRowColumn(
+                        isPortrait: isPortrait,
+                        spacing: 40,
+                        left: Form(
+                          key: _formKey,
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Card 1: Informasi Dasar
@@ -392,6 +437,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                       helperText: 'Boleh sama untuk beberapa barang dalam satu akad.',
                                     ),
                                     textCapitalization: TextCapitalization.characters,
+                                    onChanged: (val) => setState(() => _creditNumber = val),
                                     onSaved: (val) => _creditNumber = val,
                                   ),
                                   const SizedBox(height: 20),
@@ -406,6 +452,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                     validator: (val) => val == null || val.isEmpty
                                         ? 'Wajib diisi'
                                         : null,
+                                    onChanged: (val) => setState(() => _name = val),
                                     onSaved: (val) => _name = val!,
                                   ),
                                   const SizedBox(height: 20),
@@ -611,6 +658,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                       'Deskripsi tambahan...',
                                     ),
                                     maxLines: 4,
+                                    onChanged: (val) => setState(() => _description = val),
                                     onSaved: (val) => _description = val,
                                   ),
                                   const SizedBox(height: 20),
@@ -618,34 +666,55 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
-                                      vertical: 4,
+                                      vertical: 12,
                                     ),
                                     decoration: BoxDecoration(
                                       color: AppColors.background,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: SwitchListTile(
-                                      title: const Text(
-                                        'Status Aktif',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Status Aktif',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 14,
+                                                  color: AppColors.textDark,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                _isActive
+                                                    ? 'Barang tampil di katalog'
+                                                    : 'Barang disembunyikan',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.textSecondary,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      subtitle: Text(
-                                        _isActive ? 'Barang tampil di katalog' : 'Barang disembunyikan',
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                      value: _isActive,
-                                      activeThumbColor: AppColors.primary,
-                                      onChanged: (val) => setState(() => _isActive = val),
+                                        Switch(
+                                          value: _isActive,
+                                          activeThumbColor: AppColors.primary,
+                                          onChanged: (val) => setState(() => _isActive = val),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ],
+                          ),
                         ),
-                      ),
-                      right: Column(
+                        right: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Photos Card
@@ -889,49 +958,165 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                             const SizedBox(height: 32),
 
                             // Action buttons
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () => Navigator.pop(context),
-                                    icon: const Icon(Icons.close, size: 18),
-                                    label: const Text('Batal'),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.textSecondary,
-                                      side: const BorderSide(color: AppColors.border),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                    ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: () => Navigator.pop(context),
+                                icon: const Icon(Icons.close, size: 18),
+                                label: const Text('Batal & Kembali'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.textSecondary,
+                                  side: const BorderSide(color: AppColors.border),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: _saveItem,
-                                    icon: const Icon(Icons.check, size: 18),
-                                    label: const Text('Simpan Barang'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primary,
-                                      foregroundColor: Colors.white,
-                                      elevation: 2,
-                                      shadowColor: AppColors.primary.withValues(alpha: 0.3),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
-                    ),
-                ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (_hasChanges)
+                  Positioned(
+                    left: 32,
+                    right: 32,
+                    bottom: 24,
+                    child: _buildFloatingSaveButton(),
+                  ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildFloatingSaveButton() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = MediaQuery.of(context).size.width > 650;
+        final button = ElevatedButton.icon(
+          onPressed: _isSaving ? null : _saveItem,
+          icon: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.check_circle_outline_rounded, size: 22),
+          label: Text(
+            _isSaving ? 'Menyimpan...' : 'Simpan Barang',
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            elevation: 4,
+            shadowColor: AppColors.primary.withValues(alpha: 0.4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32,
+              vertical: 20,
+            ),
+          ),
+        );
+
+        final notificationIcon = Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.primary,
+            size: 24,
+          ),
+        );
+
+        final textColumn = const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Perubahan Terdeteksi',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                color: AppColors.textDark,
               ),
             ),
+            Text(
+              'Ada data barang baru/perubahan yang belum disimpan.',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        );
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                blurRadius: 30,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: isWide
+              ? Row(
+                  children: [
+                    notificationIcon,
+                    const SizedBox(width: 16),
+                    Expanded(child: textColumn),
+                    const SizedBox(width: 16),
+                    button,
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        notificationIcon,
+                        const SizedBox(width: 16),
+                        Expanded(child: textColumn),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: button,
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 

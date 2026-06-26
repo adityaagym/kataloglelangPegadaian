@@ -11,6 +11,7 @@ import 'item_form_screen.dart';
 import 'gold_price_screen.dart';
 import 'backup_screen.dart';
 import 'financing_screen.dart';
+import 'contact_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -36,6 +37,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return 'Backup Data';
       case 5:
         return 'Pembiayaan';
+      case 6:
+        return 'Informasi Kontak';
       default:
         return 'Panel Admin';
     }
@@ -67,6 +70,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         break;
       case 5:
         content = const FinancingScreen();
+        break;
+      case 6:
+        content = const ContactScreen();
         break;
       default:
         content = DashboardOverview(
@@ -173,7 +179,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 // Panel Admin label
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
+                    horizontal: 70,
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
@@ -278,6 +284,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       Icons.backup,
                       'Backup Data',
                       4,
+                      isDrawer: isDrawer,
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    _buildNavItem(
+                      Icons.info_outline,
+                      Icons.info,
+                      'Informasi Kontak',
+                      6,
                       isDrawer: isDrawer,
                     ),
                   ],
