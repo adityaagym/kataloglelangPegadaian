@@ -556,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4,
-                  childAspectRatio: 0.45,
+                  childAspectRatio: 0.49,
                   crossAxisSpacing: 28,
                   mainAxisSpacing: 28,
                 ),

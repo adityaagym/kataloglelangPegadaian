@@ -1027,110 +1027,251 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        // 1. HARGA DASAR LELANG CARD (Clean & Fresh White Card)
+        const SizedBox(height: 16),
+        // UNIFIED HARGA & TRANSAKSI CARD (Sleek, Clean & Fresh)
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'HARGA DASAR LELANG',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 1.0,
+              // Price Header & Badge
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'HARGA DASAR LELANG',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textSecondary,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        if (_isGoldItem(widget.item))
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.workspace_premium_outlined, color: AppColors.accent, size: 14),
+                                SizedBox(width: 4),
+                                Text(
+                                  'EMAS',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                  if (_isGoldItem(widget.item))
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFFD95A)),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.star, color: AppColors.accent, size: 14),
-                          SizedBox(width: 4),
-                          Text(
-                            'EMAS',
-                            style: TextStyle(
-                              fontSize: 11,
+                    const SizedBox(height: 6),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Consumer<AppProvider>(
+                        builder: (context, provider, _) {
+                          double displayPrice = widget.item.basePrice;
+                          if (_isGoldItem(widget.item)) {
+                            final hdlePrice = provider.goldPricePerGram.toDouble();
+                            final karatVal = FinancingCalculator.parseKarat(widget.item.karat);
+                            final rawItemPrice = hdlePrice * widget.item.weightGram * (karatVal / 24.0);
+                            displayPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+                          }
+                          return Text(
+                            currencyFormatter.format(displayPrice),
+                            style: const TextStyle(
+                              fontSize: 36,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFF8A5A00),
+                              color: AppColors.primary,
+                              letterSpacing: -1.0,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Gold Reference Banner (inside the card)
+              if (_isGoldItem(widget.item)) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Consumer<AppProvider>(
+                    builder: (context, provider, _) => Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.15)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.trending_up,
+                              color: AppColors.accent,
+                              size: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Harga Acuan Emas Hari Ini',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${currencyFormatter.format(provider.goldPricePerGram)} / gram',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.textDark,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Consumer<AppProvider>(
-                  builder: (context, provider, _) {
-                    double displayPrice = widget.item.basePrice;
-                    if (_isGoldItem(widget.item)) {
-                      final hdlePrice = provider.goldPricePerGram.toDouble();
-                      final karatVal = FinancingCalculator.parseKarat(widget.item.karat);
-                      final rawItemPrice = hdlePrice * widget.item.weightGram * (karatVal / 24.0);
-                      displayPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
-                    }
-                    return Text(
-                      currencyFormatter.format(displayPrice),
-                      style: const TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.primary,
-                        letterSpacing: -0.5,
-                      ),
-                    );
-                  },
+                  ),
                 ),
-              ),
-              if (_isGoldItem(widget.item)) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+              ],
+
+              // Divider separating Price and Action Panel
+              if (!_isFinancingLoading &&
+                  _financingConfig != null &&
+                  _financingTenors.isNotEmpty) ...[
                 const Divider(height: 1, color: AppColors.border),
-                const SizedBox(height: 12),
-                Consumer<AppProvider>(
-                  builder: (context, provider, _) => Row(
+                
+                // Bottom section (Mode & Buttons)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  color: AppColors.primary.withValues(alpha: 0.02),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.diamond_outlined,
-                        color: AppColors.accent,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Harga Acuan Emas Hari Ini:  ${currencyFormatter.format(provider.goldPricePerGram)} / gram',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textDark,
-                          ),
+                      // Mode selection (Package vs Single)
+                      if (_packageItems.length > 1) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'MODE SIMULASI',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textSecondary,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              padding: const EdgeInsets.all(3),
+                              child: Row(
+                                children: [
+                                  _choiceTab(
+                                    'Barang Ini',
+                                    !_simulatePackage,
+                                    () => setState(() => _simulatePackage = false),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  _choiceTab(
+                                    'Paket Akad',
+                                    _simulatePackage,
+                                    () => setState(() => _simulatePackage = true),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      const Text(
+                        'PILIH CARA PEMBELIAN',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _pembelianButton(
+                              'TUNAI',
+                              Icons.payments_outlined,
+                              AppColors.primary,
+                              () => _showSimulationDialog(SkemaType.tunai),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _pembelianButton(
+                              'KCA',
+                              Icons.credit_card_outlined,
+                              AppColors.info,
+                              () => _showSimulationDialog(SkemaType.kca),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _pembelianButton(
+                              'KRASIDA',
+                              Icons.bar_chart_outlined,
+                              AppColors.accent,
+                              () => _showSimulationDialog(SkemaType.krasida),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1139,102 +1280,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ],
           ),
         ),
-        
-        // 2. SIMULASI & CARA PEMBELIAN CARD (Soft Branded Green Card)
-        if (!_isFinancingLoading &&
-            _financingConfig != null &&
-            _financingTenors.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.15), width: 1.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Cakupan simulasi (Barang ini / Paket akad)
-                if (_packageItems.length > 1) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'MODE SIMULASI:',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          _choiceChip(
-                            'Barang ini',
-                            !_simulatePackage,
-                            () => setState(() => _simulatePackage = false),
-                          ),
-                          const SizedBox(width: 8),
-                          _choiceChip(
-                            'Paket Akad',
-                            _simulatePackage,
-                            () => setState(() => _simulatePackage = true),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-                ],
-                const Text(
-                  'PILIH CARA PEMBELIAN:',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _pembelianButton(
-                        'TUNAI',
-                        Icons.payments_outlined,
-                        AppColors.primary,
-                        () => _showSimulationDialog(SkemaType.tunai),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _pembelianButton(
-                        'KCA',
-                        Icons.credit_card_outlined,
-                        AppColors.info,
-                        () => _showSimulationDialog(SkemaType.kca),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _pembelianButton(
-                        'KRASIDA',
-                        Icons.bar_chart_outlined,
-                        AppColors.accent,
-                        () => _showSimulationDialog(SkemaType.krasida),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
       ],
     );
 
@@ -1297,25 +1342,32 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   }
 
 
-  Widget _choiceChip(String label, bool selected, VoidCallback onTap) {
+  Widget _choiceTab(String label, bool selected, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      borderRadius: BorderRadius.circular(30),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-          ),
+          color: selected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
             color: selected ? Colors.white : AppColors.textSecondary,
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
           ),
         ),
       ),

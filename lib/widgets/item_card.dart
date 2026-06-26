@@ -33,12 +33,12 @@ class ItemCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: const Color(0xFFD2D2D2)),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: AppColors.textDark.withValues(alpha: 0.055),
-                blurRadius: 26,
-                offset: const Offset(0, 10),
+                color: AppColors.textDark.withValues(alpha: 0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -131,14 +131,14 @@ class ItemCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                        horizontal: 12,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.categoryBadgeBg(category),
@@ -150,61 +150,79 @@ class ItemCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: AppColors.categoryBadgeText(category),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     SizedBox(
-                      height: 56,
+                      height: 44,
                       child: Text(
                         item.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 21,
+                          fontSize: 16,
                           fontWeight: FontWeight.w900,
                           color: AppColors.textDark,
                           height: 1.25,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.muted,
-                        borderRadius: BorderRadius.circular(20),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'HARGA DASAR LELANG',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textSecondary,
+                        letterSpacing: 1.0,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'HARGA AWAL',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 1.1,
-                            ),
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        currencyFormatter.format(item.basePrice),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 1,
+                          shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(height: 4),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              currencyFormatter.format(item.basePrice),
-                              style: const TextStyle(
-                                fontSize: 31,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.primary,
-                                height: 1.05,
-                              ),
-                            ),
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ItemDetailScreen(item: item),
                           ),
-                        ],
+                        ),
+                        icon: const Icon(Icons.calculate_outlined, size: 18),
+                        label: const Text(
+                          'PEMBIAYAAN',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ],
