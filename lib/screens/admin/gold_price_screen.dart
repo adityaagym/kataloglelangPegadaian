@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
@@ -31,7 +32,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
     if (mounted) {
       setState(() {
         _goldItems = items;
-        _priceController.text = provider.goldPricePerGram.toStringAsFixed(0);
+        _priceController.text = NumberFormat.decimalPattern('id').format(provider.goldPricePerGram.round());
         _isLoading = false;
       });
     }
@@ -115,7 +116,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Update Harga Emas Hari Ini',
+            'Update HDLE Hari Ini',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
@@ -124,7 +125,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Harga barang kategori emas di katalog otomatis mengikuti harga per gram yang tersimpan.',
+            'Harga barang kategori emas di katalog otomatis mengikuti HDLE per gram yang tersimpan.',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
           const SizedBox(height: 28),
@@ -161,7 +162,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                       ),
                       const SizedBox(height: 20),
                       const Text(
-                        'Harga Emas per Gram',
+                        'Harga Dasar Lelang Emas (HDLE) per Gram',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
@@ -170,7 +171,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        'Masukkan harga emas terbaru untuk simulasi harga dasar lelang pada seluruh barang emas.',
+                        'Masukkan HDLE terbaru untuk simulasi harga dasar lelang pada seluruh barang emas.',
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
@@ -181,7 +182,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
 
                       // Input field
                       const Text(
-                        'Harga Hari Ini',
+                        'HDLE Hari Ini',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: AppColors.textDark,
@@ -199,6 +200,10 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                       TextField(
                         controller: _priceController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          _ThousandsSeparatorFormatter(),
+                        ],
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -243,7 +248,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
-                          'Contoh: jika harga 1 gram emas murni hari ini adalah Rp 1.120.000, masukkan angka 1120000.',
+                          'Contoh: jika HDLE per gram emas murni hari ini adalah Rp 1.120.000, masukkan angka 1.120.000.',
                           style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 12,
@@ -252,7 +257,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
+ 
                       // Save button
                       SizedBox(
                         width: double.infinity,
@@ -275,7 +280,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                                   ),
                                 )
                               : const Text(
-                                  'Simpan Harga Emas',
+                                  'Simpan HDLE',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
@@ -438,5 +443,33 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
   void dispose() {
     _priceController.dispose();
     super.dispose();
+  }
+}
+
+class _ThousandsSeparatorFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+
+    String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleaned.isEmpty) return const TextEditingValue();
+
+    final number = int.parse(cleaned);
+    final formatter = NumberFormat.decimalPattern('id');
+    final formatted = formatter.format(number);
+
+    int cursorPosition =
+        formatted.length -
+        (newValue.text.length - newValue.selection.baseOffset);
+    if (cursorPosition < 0) cursorPosition = 0;
+    if (cursorPosition > formatted.length) cursorPosition = formatted.length;
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: cursorPosition),
+    );
   }
 }

@@ -582,10 +582,11 @@ class DatabaseHelper {
         }
       }
 
-      final newPrice = goldPrice * (karatVal / 24.0) * weight;
+      final rawPrice = goldPrice * (karatVal / 24.0) * weight;
+      final newPrice = ((rawPrice + 10000 - 1) ~/ 10000) * 10000;
       await db.update(
         'auction_items',
-        {'base_price': newPrice},
+        {'base_price': newPrice.toDouble()},
         where: 'id = ?',
         whereArgs: [item['id']],
       );

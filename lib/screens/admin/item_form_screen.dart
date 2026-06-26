@@ -127,7 +127,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       }
     }
 
-    _basePrice = provider.goldPricePerGram * (karatVal / 24.0) * _weightGram;
+    final rawPrice = provider.goldPricePerGram * _weightGram * (karatVal / 24.0);
+    _basePrice = FinancingCalculator.roundUp(rawPrice, 10000).toDouble();
     if (_basePrice > 0) {
       _basePriceController.text = NumberFormat.decimalPattern(
         'id',
@@ -1227,7 +1228,23 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       decimalDigits: 0,
     );
 
+    final provider = Provider.of<AppProvider>(context, listen: false);
     final hargaInt = _basePrice.round();
+
+    double appraisalValue = hargaInt.toDouble();
+    if (_isGoldCategory(provider)) {
+      double stlPrice = (_financingConfig?['stl_price'] as num?)?.toDouble() ?? 502894;
+      double karatVal = 24.0;
+      if (_karat != null && _karat!.isNotEmpty) {
+        final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
+        final match = regExp.firstMatch(_karat!);
+        if (match != null) {
+          final parsed = double.tryParse(match.group(1)!) ?? 24.0;
+          karatVal = parsed > 24.0 ? 24.0 : (parsed < 0 ? 0 : parsed);
+        }
+      }
+      appraisalValue = stlPrice * _weightGram * (karatVal / 24.0);
+    }
 
     // 1. Tunai
     final tunaiRes = FinancingCalculator.simulasiTunai(hargaLelang: hargaInt);
@@ -1235,6 +1252,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     // 2. KCA
     final kcaRes = FinancingCalculator.simulasiKca(
       hargaLelang: hargaInt,
+      appraisalValue: appraisalValue,
       config: _financingConfig!,
     );
 
@@ -1244,6 +1262,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         : 12;
     final krasidaRes = FinancingCalculator.simulasiKrasida(
       hargaLelang: hargaInt,
+      appraisalValue: appraisalValue,
       config: _financingConfig!,
       tenors: _financingTenors,
       tenorMonths: defaultTenor,
@@ -1380,7 +1399,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                   const SizedBox(height: 12),
                   _buildPreviewDetailRow('Uang Muka (DP)', currencyFormatter.format(kcaRes.uangMuka)),
                   _buildPreviewDetailRow('Uang Pinjaman', currencyFormatter.format(kcaRes.uangPinjaman)),
-                  _buildPreviewDetailRow('Bunga Total (${kcaRes.tempoKca} Bln)', currencyFormatter.format(kcaRes.bungaTotalKca!)),
                   _buildPreviewDetailRow('Biaya Admin', currencyFormatter.format(kcaRes.adminFee!)),
                   const Divider(height: 16),
                   _buildPreviewDetailRow(
@@ -1502,30 +1520,39 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Tenor ${t.tenor} Bulan',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textDark,
+                            Expanded(
+                              child: Text(
+                                'Tenor ${t.tenor} Bulan',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textDark,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(
-                                  '${currencyFormatter.format(t.angsuranPerBulan)} / bln',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.categoryAmberText,
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    '${currencyFormatter.format(t.angsuranPerBulan)} / bln',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.categoryAmberText,
+                                    ),
                                   ),
                                 ),
-                                Text(
-                                  'Total bayar: ${currencyFormatter.format(t.totalBayar)}',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: AppColors.textSecondary,
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'Total bayar: ${currencyFormatter.format(t.totalBayar)}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.textSecondary,
+                                    ),
                                   ),
                                 ),
                               ],

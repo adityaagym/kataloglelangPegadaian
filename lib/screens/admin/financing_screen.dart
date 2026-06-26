@@ -21,26 +21,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
   bool _isActive = true;
 
   double _stlPrice = 502894;
-  double _hdlePrice = 550000;
-  double _loanRatio = 0.95;
-  double _umPercentageKca = 0.192;
-  double _umPercentageKrasida = 0.185;
-  double _bungaKca = 0.0125;
-  int _tempoKca = 4;
-  int _minimumUpKca = 500000;
-  int _minimumUpKrasida = 500000;
 
   // Controllers for editable fields
   late TextEditingController _stlController;
-  late TextEditingController _hdleController;
-  late TextEditingController _loanRatioController;
   late TextEditingController _adminFeeFlatController;
-  late TextEditingController _umPercentageKcaController;
-  late TextEditingController _umPercentageKrasidaController;
-  late TextEditingController _bungaKcaController;
-  late TextEditingController _tempoKcaController;
-  late TextEditingController _minimumUpKcaController;
-  late TextEditingController _minimumUpKrasidaController;
 
   // Tenors
   List<Map<String, dynamic>> _tenors = [];
@@ -53,39 +37,23 @@ class _FinancingScreenState extends State<FinancingScreen> {
   void initState() {
     super.initState();
     _stlController = TextEditingController();
-    _hdleController = TextEditingController();
-    _loanRatioController = TextEditingController();
     _adminFeeFlatController = TextEditingController();
-    _umPercentageKcaController = TextEditingController();
-    _umPercentageKrasidaController = TextEditingController();
-    _bungaKcaController = TextEditingController();
-    _tempoKcaController = TextEditingController();
-    _minimumUpKcaController = TextEditingController();
-    _minimumUpKrasidaController = TextEditingController();
     _loadConfig();
   }
 
   @override
   void dispose() {
     _stlController.dispose();
-    _hdleController.dispose();
-    _loanRatioController.dispose();
     _adminFeeFlatController.dispose();
-    _umPercentageKcaController.dispose();
-    _umPercentageKrasidaController.dispose();
-    _bungaKcaController.dispose();
-    _tempoKcaController.dispose();
-    _minimumUpKcaController.dispose();
-    _minimumUpKrasidaController.dispose();
     super.dispose();
   }
 
   Future<void> _loadConfig() async {
     final provider = Provider.of<AppProvider>(context, listen: false);
     final config = await provider.getActiveFinancingConfig();
+    final tenors = await provider.getFinancingTenors(config?['id'] as int? ?? 0);
 
     if (config != null) {
-      final tenors = await provider.getFinancingTenors(config['id'] as int);
       if (mounted) {
         setState(() {
           _dpOptions = (config['dp_options'] as String)
@@ -102,26 +70,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
           }
 
           _stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
-          _hdlePrice = (config['hdle_price'] as num?)?.toDouble() ?? 550000;
-          _loanRatio = (config['loan_ratio'] as num?)?.toDouble() ?? 0.95;
-          _umPercentageKca = (config['um_percentage_kca'] as num?)?.toDouble() ?? 0.192;
-          _umPercentageKrasida = (config['um_percentage_krasida'] as num?)?.toDouble() ?? 0.185;
-          _bungaKca = (config['bunga_kca'] as num?)?.toDouble() ?? 0.0125;
-          _tempoKca = (config['tempo_kca'] as num?)?.toInt() ?? 4;
-          _minimumUpKca = (config['minimum_up_kca'] as num?)?.toInt() ?? 500000;
-          _minimumUpKrasida = (config['minimum_up_krasida'] as num?)?.toInt() ?? 500000;
 
           // Set controller values
           _stlController.text = _stlPrice.round().toString();
-          _hdleController.text = _hdlePrice.round().toString();
-          _loanRatioController.text = (_loanRatio * 100).toStringAsFixed(0);
           _adminFeeFlatController.text = _adminFeeFlat.round().toString();
-          _umPercentageKcaController.text = (_umPercentageKca * 100).toStringAsFixed(1);
-          _umPercentageKrasidaController.text = (_umPercentageKrasida * 100).toStringAsFixed(1);
-          _bungaKcaController.text = (_bungaKca * 100).toStringAsFixed(2);
-          _tempoKcaController.text = _tempoKca.toString();
-          _minimumUpKcaController.text = _minimumUpKca.toString();
-          _minimumUpKrasidaController.text = _minimumUpKrasida.toString();
 
           _isLoading = false;
         });
@@ -130,24 +82,16 @@ class _FinancingScreenState extends State<FinancingScreen> {
       // Use defaults
       setState(() {
         _tenors = [
-          {'months': 6, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.075, 'bunga_flat': 0.0125},
-          {'months': 12, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.15, 'bunga_flat': 0.0125},
-          {'months': 18, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.234, 'bunga_flat': 0.0130},
-          {'months': 24, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.312, 'bunga_flat': 0.0130},
-          {'months': 36, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.504, 'bunga_flat': 0.0140},
+          {'months': 6, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.075, 'bunga_flat': 0.0},
+          {'months': 12, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.15, 'bunga_flat': 0.0},
+          {'months': 18, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.234, 'bunga_flat': 0.0},
+          {'months': 24, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.312, 'bunga_flat': 0.0},
+          {'months': 36, 'is_active': 1, 'other_fee': 0.0, 'multiplier': 1.504, 'bunga_flat': 0.0},
         ];
         _selectedTenorMonths = 6;
 
         _stlController.text = '502894';
-        _hdleController.text = '550000';
-        _loanRatioController.text = '95';
-        _adminFeeFlatController.text = '15000';
-        _umPercentageKcaController.text = '19.2';
-        _umPercentageKrasidaController.text = '18.5';
-        _bungaKcaController.text = '1.25';
-        _tempoKcaController.text = '4';
-        _minimumUpKcaController.text = '500000';
-        _minimumUpKrasidaController.text = '500000';
+        _adminFeeFlatController.text = '70000';
 
         _isLoading = false;
       });
@@ -157,16 +101,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
   Future<void> _saveConfig() async {
     setState(() => _isSaving = true);
     try {
+      final provider = Provider.of<AppProvider>(context, listen: false);
       final stlVal = double.tryParse(_stlController.text) ?? 502894;
-      final hdleVal = double.tryParse(_hdleController.text) ?? 550000;
-      final loanRatioVal = (double.tryParse(_loanRatioController.text) ?? 95) / 100;
-      final adminFlatVal = double.tryParse(_adminFeeFlatController.text) ?? 15000;
-      final umKcaVal = (double.tryParse(_umPercentageKcaController.text) ?? 19.2) / 100;
-      final umKrasidaVal = (double.tryParse(_umPercentageKrasidaController.text) ?? 18.5) / 100;
-      final bungaKcaVal = (double.tryParse(_bungaKcaController.text) ?? 1.25) / 100;
-      final tempoKcaVal = int.tryParse(_tempoKcaController.text) ?? 4;
-      final minUpKcaVal = int.tryParse(_minimumUpKcaController.text) ?? 500000;
-      final minUpKrasidaVal = int.tryParse(_minimumUpKrasidaController.text) ?? 500000;
+      final hdleVal = provider.goldPricePerGram;
+      final adminFlatVal = double.tryParse(_adminFeeFlatController.text) ?? 70000;
 
       await Provider.of<AppProvider>(
         context,
@@ -180,13 +118,13 @@ class _FinancingScreenState extends State<FinancingScreen> {
         tenors: _tenors,
         stlPrice: stlVal,
         hdlePrice: hdleVal,
-        loanRatio: loanRatioVal,
-        umPercentageKca: umKcaVal,
-        umPercentageKrasida: umKrasidaVal,
-        bungaKca: bungaKcaVal,
-        tempoKca: tempoKcaVal,
-        minimumUpKca: minUpKcaVal,
-        minimumUpKrasida: minUpKrasidaVal,
+        loanRatio: 0.95,
+        umPercentageKca: 0.192,
+        umPercentageKrasida: 0.185,
+        bungaKca: 0.0,
+        tempoKca: 4,
+        minimumUpKca: 0,
+        minimumUpKrasida: 0,
       );
 
       await _loadConfig();
@@ -234,7 +172,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 24), // Lower the header as requested
+          const SizedBox(height: 24), 
           
           // Title row
           Row(
@@ -308,32 +246,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
                       title: 'Parameter Emas & Nilai Taksir',
                       icon: Icons.gavel_outlined,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'STL per Gram (24K)',
-                                controller: _stlController,
-                                suffixText: 'Rp',
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'HDLE per Gram (24K)',
-                                controller: _hdleController,
-                                suffixText: 'Rp',
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'Loan Ratio (%)',
-                                controller: _loanRatioController,
-                                suffixText: '%',
-                              ),
-                            ),
-                          ],
+                        _buildParamInputField(
+                          label: 'STL per Gram (24K)',
+                          controller: _stlController,
+                          suffixText: 'Rp',
                         ),
                       ],
                     ),
@@ -347,95 +263,6 @@ class _FinancingScreenState extends State<FinancingScreen> {
                           label: 'Biaya Administrasi Flat (Rp)',
                           controller: _adminFeeFlatController,
                           suffixText: 'Rp',
-                        ),
-                      ],
-                    ),
-
-                    // Card 3: Skema Pembiayaan (KCA & KRASIDA)
-                    _buildConfigCard(
-                      title: 'Skema Pembiayaan KCA & KRASIDA',
-                      icon: Icons.tune_outlined,
-                      children: [
-                        const Text(
-                          'SKEMA KCA (Kredit Cepat Aman)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'DP KCA (%)',
-                                controller: _umPercentageKcaController,
-                                suffixText: '%',
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'Bunga KCA / Bln (%)',
-                                controller: _bungaKcaController,
-                                suffixText: '%',
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'Tempo KCA (Bulan)',
-                                controller: _tempoKcaController,
-                                suffixText: 'bln',
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'Minimum UP KCA (Rp)',
-                                controller: _minimumUpKcaController,
-                                suffixText: 'Rp',
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        const Divider(),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'SKEMA KRASIDA (Kredit Gadai Angsuran)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'DP KRASIDA (%)',
-                                controller: _umPercentageKrasidaController,
-                                suffixText: '%',
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildParamInputField(
-                                label: 'Minimum UP KRASIDA (Rp)',
-                                controller: _minimumUpKrasidaController,
-                                suffixText: 'Rp',
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
@@ -603,17 +430,6 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                         ),
                                       ),
                                       Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          'Bunga',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 11,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
                                         flex: 1,
                                         child: Text(
                                           'Edit',
@@ -634,8 +450,6 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                   final isActive = tenor['is_active'] == 1;
                                   final multiplier =
                                       (tenor['multiplier'] as num?)?.toDouble() ?? 1.0;
-                                  final bungaFlat =
-                                      (tenor['bunga_flat'] as num?)?.toDouble() ?? 0.0125;
 
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
@@ -656,6 +470,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                         Expanded(
                                           flex: 2,
                                           child: Row(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Checkbox(
                                                 value: isActive,
@@ -667,14 +482,20 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                                   });
                                                 },
                                               ),
-                                              Text(
-                                                isActive ? 'On' : 'Off',
-                                                style: TextStyle(
-                                                  color: isActive
-                                                      ? AppColors.textDark
-                                                      : AppColors.textMuted,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
+                                              Expanded(
+                                                child: FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Text(
+                                                    isActive ? 'On' : 'Off',
+                                                    style: TextStyle(
+                                                      color: isActive
+                                                          ? AppColors.textDark
+                                                          : AppColors.textMuted,
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -682,33 +503,30 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                         ),
                                         Expanded(
                                           flex: 2,
-                                          child: Text(
-                                            '$months bln',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 13,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              '$months bln',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 13,
+                                              ),
                                             ),
                                           ),
                                         ),
                                         Expanded(
                                           flex: 2,
-                                          child: Text(
-                                            multiplier.toStringAsFixed(3),
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.textDark,
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            '${(bungaFlat * 100).toStringAsFixed(2)}%',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.textDark,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              multiplier.toStringAsFixed(3),
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textDark,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -884,10 +702,8 @@ class _FinancingScreenState extends State<FinancingScreen> {
     final tenor = _tenors[index];
     final months = tenor['months'] as int;
     final multiplier = (tenor['multiplier'] as num?)?.toDouble() ?? 1.0;
-    final bungaFlat = (tenor['bunga_flat'] as num?)?.toDouble() ?? 0.0125;
 
     final multiplierCtrl = TextEditingController(text: multiplier.toStringAsFixed(3));
-    final bungaCtrl = TextEditingController(text: (bungaFlat * 100).toStringAsFixed(2));
 
     showDialog(
       context: context,
@@ -901,12 +717,6 @@ class _FinancingScreenState extends State<FinancingScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(labelText: 'Multiplier (Faktor Excel)'),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: bungaCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Bunga Flat per Bulan (%)'),
-            ),
           ],
         ),
         actions: [
@@ -917,10 +727,8 @@ class _FinancingScreenState extends State<FinancingScreen> {
           ElevatedButton(
             onPressed: () {
               final multVal = double.tryParse(multiplierCtrl.text) ?? multiplier;
-              final bungaVal = (double.tryParse(bungaCtrl.text) ?? (bungaFlat * 100)) / 100;
               setState(() {
                 _tenors[index]['multiplier'] = multVal;
-                _tenors[index]['bunga_flat'] = bungaVal;
               });
               Navigator.pop(ctx);
             },
@@ -940,43 +748,41 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
     // Mock item price from excel reference
     const mockPrice = 6580000;
+    final adminFlat = double.tryParse(_adminFeeFlatController.text) ?? 70000;
 
-    // Read current form values
-    final umKcaPercentage = (double.tryParse(_umPercentageKcaController.text) ?? 19.2) / 100;
-    final bungaKca = (double.tryParse(_bungaKcaController.text) ?? 1.25) / 100;
-    final tempoKca = int.tryParse(_tempoKcaController.text) ?? 4;
-    final minUpKca = int.tryParse(_minimumUpKcaController.text) ?? 500000;
-    final adminFlat = double.tryParse(_adminFeeFlatController.text) ?? 15000;
+    final config = {
+      'admin_fee_flat': adminFlat,
+    };
 
-    final umKrasidaPercentage = (double.tryParse(_umPercentageKrasidaController.text) ?? 18.5) / 100;
-    final minUpKrasida = int.tryParse(_minimumUpKrasidaController.text) ?? 500000;
-
-    // Run mock calculations locally
     // 1. Tunai
     final tunaiTotal = mockPrice;
 
     // 2. KCA
-    final kcaUm = FinancingCalculator.roundDown(mockPrice * umKcaPercentage, 1000);
-    final kcaUp = mockPrice - kcaUm;
-    final kcaEligible = kcaUp >= minUpKca;
-    final kcaBungaTotal = (kcaUp * bungaKca * tempoKca).round();
-    final kcaPelunasan = kcaUp + kcaBungaTotal + adminFlat.round();
+    final kcaRes = FinancingCalculator.simulasiKca(
+      hargaLelang: mockPrice,
+      appraisalValue: mockPrice.toDouble(),
+      config: config,
+    );
+
+    final kcaUm = kcaRes.uangMuka;
+    final kcaUp = kcaRes.uangPinjaman;
+    final kcaPelunasan = kcaRes.totalPelunasanKca!;
+    final tempoKca = kcaRes.tempoKca!;
 
     // 3. KRASIDA
     final tenorMonths = _selectedTenorMonths ?? (_tenors.isNotEmpty ? _tenors.first['months'] as int : 12);
-    Map<String, dynamic>? tenorObj;
-    try {
-      tenorObj = _tenors.firstWhere((t) => t['months'] == tenorMonths);
-    } catch (_) {}
+    final krasidaRes = FinancingCalculator.simulasiKrasida(
+      hargaLelang: mockPrice,
+      appraisalValue: mockPrice.toDouble(),
+      config: config,
+      tenors: _tenors,
+      tenorMonths: tenorMonths,
+    );
 
-    final krasidaUm = FinancingCalculator.roundDown(mockPrice * umKrasidaPercentage, 1000);
-    final krasidaUp = mockPrice - krasidaUm;
-    final krasidaEligible = krasidaUp >= minUpKrasida;
-
-    final multiplier = tenorObj != null ? (tenorObj['multiplier'] as num).toDouble() : 1.15;
-    final krasidaAngsuran = FinancingCalculator.roundUp((krasidaUp * multiplier) / tenorMonths, 100);
-    final krasidaTotal = krasidaAngsuran * tenorMonths;
-    final krasidaBunga = krasidaTotal - krasidaUp;
+    final krasidaUm = krasidaRes.uangMuka;
+    final krasidaUp = krasidaRes.uangPinjaman;
+    final krasidaAngsuran = krasidaRes.angsuranPerBulan!;
+    final krasidaTotal = krasidaRes.totalBayar!;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -1077,177 +883,91 @@ class _FinancingScreenState extends State<FinancingScreen> {
           const SizedBox(height: 16),
 
           // KCA CARD
-          if (kcaEligible)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE3F2FD), // Light blue tint
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFBBDEFB)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'KCA — Tempo $tempoKca Bulan',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.categoryBlueText,
-                          ),
-                          softWrap: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(kcaUm)),
-                  _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(kcaUp)),
-                  _buildImpactDetailRow('Bunga Total ($tempoKca Bln)', currencyFormatter.format(kcaBungaTotal)),
-                  _buildImpactDetailRow('Biaya Admin', currencyFormatter.format(adminFlat.round())),
-                  const Divider(height: 16),
-                  _buildImpactDetailRow(
-                    'Total Pelunasan',
-                    currencyFormatter.format(kcaPelunasan),
-                    isBold: true,
-                    textColor: AppColors.categoryBlueText,
-                  ),
-                ],
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEE), // Light red tint
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFFCDD2)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'KCA (Tidak Eligible)',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.error,
-                          ),
-                          softWrap: true,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Uang Pinjaman ${currencyFormatter.format(kcaUp)} di bawah minimum ${currencyFormatter.format(minUpKca)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE3F2FD), // Light blue tint
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFBBDEFB)),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'KCA — Tempo $tempoKca Bulan',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.categoryBlueText,
+                        ),
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(kcaUm)),
+                _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(kcaUp)),
+                _buildImpactDetailRow('Biaya Admin', currencyFormatter.format(adminFlat.round())),
+                const Divider(height: 16),
+                _buildImpactDetailRow(
+                  'Total Pelunasan',
+                  currencyFormatter.format(kcaPelunasan),
+                  isBold: true,
+                  textColor: AppColors.categoryBlueText,
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
 
           // KRASIDA CARD
-          if (krasidaEligible)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF8E1), // Light gold tint
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFFECB3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.bar_chart_outlined, color: AppColors.gold, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'KRASIDA — Tenor $tenorMonths Bulan',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.categoryAmberText,
-                          ),
-                          softWrap: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(krasidaUm)),
-                  _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(krasidaUp)),
-                  _buildImpactDetailRow('Angsuran per Bulan', '${currencyFormatter.format(krasidaAngsuran)} / bln'),
-                  _buildImpactDetailRow('Bunga Total', currencyFormatter.format(krasidaBunga)),
-                  const Divider(height: 16),
-                  _buildImpactDetailRow(
-                    'Total Bayar',
-                    currencyFormatter.format(krasidaTotal),
-                    isBold: true,
-                    textColor: AppColors.categoryAmberText,
-                  ),
-                ],
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEE), // Light red tint
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFFCDD2)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'KRASIDA (Tidak Eligible)',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.error,
-                          ),
-                          softWrap: true,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Uang Pinjaman ${currencyFormatter.format(krasidaUp)} di bawah minimum ${currencyFormatter.format(minUpKrasida)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1), // Light gold tint
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFFFECB3)),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.bar_chart_outlined, color: AppColors.gold, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'KRASIDA — Tenor $tenorMonths Bulan',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.categoryAmberText,
+                        ),
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(krasidaUm)),
+                _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(krasidaUp)),
+                _buildImpactDetailRow('Angsuran per Bulan', '${currencyFormatter.format(krasidaAngsuran)} / bln'),
+                const Divider(height: 16),
+                _buildImpactDetailRow(
+                  'Total Bayar',
+                  currencyFormatter.format(krasidaTotal),
+                  isBold: true,
+                  textColor: AppColors.categoryAmberText,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1264,20 +984,29 @@ class _FinancingScreenState extends State<FinancingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-              color: AppColors.textSecondary,
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
-              color: textColor ?? AppColors.textDark,
+          const SizedBox(width: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+                  color: textColor ?? AppColors.textDark,
+                ),
+              ),
             ),
           ),
         ],

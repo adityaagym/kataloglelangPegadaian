@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
+import '../../models/item_photo.dart';
 import '../../utils/app_colors.dart';
 import 'item_list_screen.dart';
 import 'item_form_screen.dart';
@@ -607,7 +609,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                         ),
                         child: Row(
                           children: [
-                            // Thumbnail placeholder
+                            // Thumbnail preview
                             Container(
                               width: 64,
                               height: 64,
@@ -615,10 +617,31 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                                 color: AppColors.secondary,
                                 borderRadius: BorderRadius.circular(24),
                               ),
-                              child: const Icon(
-                                Icons.image_outlined,
-                                color: AppColors.textMuted,
-                                size: 24,
+                              child: FutureBuilder<List<ItemPhoto>>(
+                                future: Provider.of<AppProvider>(context, listen: false).getItemPhotos(item['id']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                                    return ClipRRect(
+                                      borderRadius: BorderRadius.circular(24),
+                                      child: Image.file(
+                                        File(snapshot.data!.first.localPath),
+                                        width: 64,
+                                        height: 64,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => const Icon(
+                                          Icons.image_outlined,
+                                          color: AppColors.textMuted,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const Icon(
+                                    Icons.image_outlined,
+                                    color: AppColors.textMuted,
+                                    size: 24,
+                                  );
+                                },
                               ),
                             ),
                             const SizedBox(width: 14),

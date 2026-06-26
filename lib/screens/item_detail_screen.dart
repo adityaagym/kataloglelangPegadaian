@@ -498,14 +498,25 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    currencyFormatter.format(widget.item.basePrice),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.accent,
-                      letterSpacing: -0.5,
-                    ),
+                  child: Consumer<AppProvider>(
+                    builder: (context, provider, _) {
+                      double displayPrice = widget.item.basePrice;
+                      if (_isGoldItem(widget.item)) {
+                        final hdlePrice = provider.goldPricePerGram.toDouble();
+                        final karatVal = FinancingCalculator.parseKarat(widget.item.karat);
+                        final rawItemPrice = hdlePrice * widget.item.weightGram * (karatVal / 24.0);
+                        displayPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+                      }
+                      return Text(
+                        currencyFormatter.format(displayPrice),
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.accent,
+                          letterSpacing: -0.5,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -754,11 +765,62 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
+  bool _isGoldItem(AuctionItem item) {
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    try {
+      final category = provider.categories.firstWhere(
+        (c) => c.id == item.categoryId,
+      );
+      final name = category.name.toLowerCase();
+      return name.contains('emas') || name.contains('logam mulia');
+    } catch (_) {
+      if (item.categoryName != null) {
+        final name = item.categoryName!.toLowerCase();
+        return name.contains('emas') || name.contains('logam mulia');
+      }
+      return false;
+    }
+  }
+
   Widget _buildSimulationPanel(NumberFormat currencyFormatter) {
     final config = _financingConfig!;
-    final totalHarga = _simulatePackage
-        ? _packageItems.fold<double>(0.0, (sum, item) => sum + item.basePrice)
-        : widget.item.basePrice;
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final hdlePrice = provider.goldPricePerGram.toDouble();
+
+    double totalHarga = 0;
+    double appraisalValue = 0;
+
+    if (_simulatePackage) {
+      for (final item in _packageItems) {
+        if (_isGoldItem(item)) {
+          double stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
+          double karatVal = FinancingCalculator.parseKarat(item.karat);
+          
+          final rawItemPrice = hdlePrice * item.weightGram * (karatVal / 24.0);
+          final recalculatedItemPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+          totalHarga += recalculatedItemPrice;
+
+          appraisalValue += stlPrice * item.weightGram * (karatVal / 24.0);
+        } else {
+          totalHarga += item.basePrice;
+          appraisalValue += item.basePrice;
+        }
+      }
+    } else {
+      if (_isGoldItem(widget.item)) {
+        double stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
+        double karatVal = FinancingCalculator.parseKarat(widget.item.karat);
+        
+        final rawItemPrice = hdlePrice * widget.item.weightGram * (karatVal / 24.0);
+        final recalculatedItemPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+        totalHarga = recalculatedItemPrice;
+
+        appraisalValue = stlPrice * widget.item.weightGram * (karatVal / 24.0);
+      } else {
+        totalHarga = widget.item.basePrice;
+        appraisalValue = widget.item.basePrice;
+      }
+    }
 
     if (_selectedSkema == SkemaType.tunai) {
       final result = FinancingCalculator.simulasiTunai(hargaLelang: totalHarga.round());
@@ -820,6 +882,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     } else if (_selectedSkema == SkemaType.kca) {
       final result = FinancingCalculator.simulasiKca(
         hargaLelang: totalHarga.round(),
+        appraisalValue: appraisalValue,
         config: config,
       );
 
@@ -854,7 +917,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ),
             const SizedBox(height: 16),
             _breakdownRow('Harga Lelang', currencyFormatter.format(result.hargaLelang)),
-            _breakdownRow('Uang Muka (19.2%)', currencyFormatter.format(result.uangMuka)),
+            _breakdownRow('Uang Muka (DP)', currencyFormatter.format(result.uangMuka)),
             _breakdownRow('Uang Pinjaman', currencyFormatter.format(result.uangPinjaman)),
             const SizedBox(height: 8),
             const Divider(),
@@ -877,11 +940,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             _bulletPoint('Nasabah melunasi sisa pinjaman dalam 4 bulan.'),
             _bulletPoint('TIDAK ADA angsuran rutin bulanan.'),
             _bulletPoint('Bayar bebas kapan saja (bertahap/sekaligus).'),
-            _bulletPoint('Bunga 1.25% flat per bulan atas sisa pinjaman.'),
             const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 8),
-            _breakdownRow('Bunga Total (4 bln)', currencyFormatter.format(result.bungaTotalKca!)),
             _breakdownRow('Admin Fee', currencyFormatter.format(result.adminFee!)),
             const SizedBox(height: 10),
             Row(
@@ -916,6 +977,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       final tenorMonths = _selectedTenorMonths ?? _financingTenors.first['months'] as int;
       final result = FinancingCalculator.simulasiKrasida(
         hargaLelang: totalHarga.round(),
+        appraisalValue: appraisalValue,
         config: config,
         tenors: _financingTenors,
         tenorMonths: tenorMonths,
@@ -952,7 +1014,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ),
             const SizedBox(height: 16),
             _breakdownRow('Harga Lelang', currencyFormatter.format(result.hargaLelang)),
-            _breakdownRow('Uang Muka (18.5%)', currencyFormatter.format(result.uangMuka)),
+            _breakdownRow('Uang Muka (DP)', currencyFormatter.format(result.uangMuka)),
             _breakdownRow('Uang Pinjaman', currencyFormatter.format(result.uangPinjaman)),
             const SizedBox(height: 16),
             
@@ -1019,7 +1081,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'selama $tenorMonths bulan (Bunga ${(result.bungaPerBulan! * 100).toStringAsFixed(2)}% flat/bulan)',
+                    'selama $tenorMonths bulan',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -1031,7 +1093,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ),
             const SizedBox(height: 16),
             _breakdownRow('Total Bayar', currencyFormatter.format(result.totalBayar!)),
-            _breakdownRow('Bunga Total', currencyFormatter.format(result.bungaTotalKrasida!)),
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 12),
@@ -1047,10 +1108,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             const SizedBox(height: 8),
             Table(
               columnWidths: const {
-                0: FlexColumnWidth(1),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(2),
-                3: FlexColumnWidth(1.8),
+                0: FlexColumnWidth(1.2),
+                1: FlexColumnWidth(2.4),
+                2: FlexColumnWidth(2.4),
               },
               children: [
                 TableRow(
@@ -1061,7 +1121,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     _tableHeader('Bln'),
                     _tableHeader('Angsuran'),
                     _tableHeader('Total Bayar'),
-                    _tableHeader('Bunga'),
                   ],
                 ),
                 ...?result.perbandinganTenor?.map((t) {
@@ -1074,7 +1133,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       _tableCell('${t.tenor}', isSelected: t.isSelected),
                       _tableCell(currencyFormatter.format(t.angsuranPerBulan), isSelected: t.isSelected),
                       _tableCell(currencyFormatter.format(t.totalBayar), isSelected: t.isSelected),
-                      _tableCell(currencyFormatter.format(t.bungaTotal), isSelected: t.isSelected),
                     ],
                   );
                 }),
@@ -1223,13 +1281,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ),
                     ),
                   ),
-                  Text(
-                    currencyFormatter.format(item.basePrice),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isSelf ? FontWeight.w800 : FontWeight.w700,
-                      color: isSelf ? AppColors.primary : AppColors.textSecondary,
-                    ),
+                  Consumer<AppProvider>(
+                    builder: (context, provider, _) {
+                      double displayPrice = item.basePrice;
+                      if (_isGoldItem(item)) {
+                        final hdlePrice = provider.goldPricePerGram.toDouble();
+                        final karatVal = FinancingCalculator.parseKarat(item.karat);
+                        final rawItemPrice = hdlePrice * item.weightGram * (karatVal / 24.0);
+                        displayPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+                      }
+                      return Text(
+                        currencyFormatter.format(displayPrice),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelf ? FontWeight.w800 : FontWeight.w700,
+                          color: isSelf ? AppColors.primary : AppColors.textSecondary,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -1243,13 +1312,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Widget _tableHeader(String label) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-          color: AppColors.textSecondary,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textSecondary,
+          ),
         ),
       ),
     );
@@ -1258,13 +1331,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Widget _tableCell(String text, {bool isSelected = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-          color: isSelected ? AppColors.accent : AppColors.textDark,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+            color: isSelected ? AppColors.accent : AppColors.textDark,
+          ),
         ),
       ),
     );
