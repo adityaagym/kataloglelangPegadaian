@@ -30,7 +30,6 @@ class ItemCard extends StatelessWidget {
           MaterialPageRoute(builder: (context) => ItemDetailScreen(item: item)),
         ),
         child: Ink(
-          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(26),
@@ -46,14 +45,13 @@ class ItemCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
-                aspectRatio: 0.85,
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F8F7),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
+                child: AspectRatio(
+                  aspectRatio: 0.85,
                   child: FutureBuilder(
                     future: Provider.of<AppProvider>(
                       context,
@@ -81,21 +79,24 @@ class ItemCard extends StatelessWidget {
                         return Stack(
                           children: [
                             Positioned.fill(
-                              child: Image.file(
-                                File(primaryPhoto.localPath),
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(
-                                      Icons.image_not_supported_outlined,
-                                      size: 54,
-                                      color: AppColors.textMuted,
-                                    ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Image.file(
+                                  File(primaryPhoto.localPath),
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                        Icons.image_not_supported_outlined,
+                                        size: 54,
+                                        color: AppColors.textMuted,
+                                      ),
+                                ),
                               ),
                             ),
                             if (item.karat != null && item.karat!.isNotEmpty)
                               Positioned(
-                                top: 0,
-                                left: 0,
+                                top: 12,
+                                left: 12,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
@@ -129,74 +130,81 @@ class ItemCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.categoryBadgeBg(category),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  category,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: AppColors.categoryBadgeText(category),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 56,
-                child: Text(
-                  item.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textDark,
-                    height: 1.25,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.muted,
-                  borderRadius: BorderRadius.circular(20),
-                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'HARGA AWAL',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textSecondary,
-                        letterSpacing: 1.1,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.categoryBadgeBg(category),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        category,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.categoryBadgeText(category),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 56,
                       child: Text(
-                        currencyFormatter.format(item.basePrice),
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 31,
+                          fontSize: 21,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.primary,
-                          height: 1.05,
+                          color: AppColors.textDark,
+                          height: 1.25,
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.muted,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'HARGA AWAL',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              currencyFormatter.format(item.basePrice),
+                              style: const TextStyle(
+                                fontSize: 31,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary,
+                                height: 1.05,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
