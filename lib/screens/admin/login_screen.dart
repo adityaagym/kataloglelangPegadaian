@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String _pin = '';
-  final String _defaultPin = '123456'; // Fallback default PIN
+  final String _defaultPin = '147369'; // Fallback default PIN
   bool _isError = false;
 
   void _onKeypadTap(String value) {

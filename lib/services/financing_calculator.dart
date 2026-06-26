@@ -63,17 +63,17 @@ class SimulasiResult {
 }
 
 class FinancingCalculation {
-  final double sellingPrice;
-  final double appraisalValue;
-  final double loanAmount;
-  final double downPayment;
-  final double adminFee;
+  double sellingPrice;
+  double appraisalValue;
+  double loanAmount;
+  double downPayment;
+  double adminFee;
   final int tenorMonths;
   final double tenorMultiplier;
-  final double monthlyInstallment;
-  final double totalInstallment;
+  double monthlyInstallment;
+  double totalInstallment;  
 
-  const FinancingCalculation({
+  FinancingCalculation({
     required this.sellingPrice,
     required this.appraisalValue,
     required this.loanAmount,
@@ -131,13 +131,22 @@ class FinancingCalculator {
     required Map<String, dynamic> config,
   }) {
     final adminFee = (config['admin_fee_flat'] as num?)?.toInt() ?? 15000;
-    final double umPercentageKca = (config['um_percentage_kca'] as num?)?.toDouble() ?? 0.192;
     final int minimumUpKca = (config['minimum_up_kca'] as num?)?.toInt() ?? 500000;
     final double bungaKca = (config['bunga_kca'] as num?)?.toDouble() ?? 0.0125;
     final int tempoKca = (config['tempo_kca'] as num?)?.toInt() ?? 4;
 
-    int uangMuka = roundDown(hargaLelang * umPercentageKca, 1000);
-    int uangPinjaman = hargaLelang - uangMuka;
+    double appVal = appraisalValue ?? hargaLelang.toDouble();
+    double rasioKca;
+    if (appVal < 550000) {
+      rasioKca = 0.93;
+    } else if (appVal < 20100000) {
+      rasioKca = 0.92;
+    } else {
+      rasioKca = 0.93;
+    }
+
+    int uangPinjaman = roundDown(appVal * rasioKca, 10000);
+    int uangMuka = hargaLelang - uangPinjaman + adminFee;
 
     if (uangPinjaman < minimumUpKca) {
       return SimulasiResult(
@@ -151,7 +160,7 @@ class FinancingCalculator {
     }
 
     int bungaTotal = (uangPinjaman * bungaKca * tempoKca).round();
-    int totalPelunasan = uangPinjaman + bungaTotal + adminFee;
+    int totalPelunasan = uangPinjaman + bungaTotal;
 
     return SimulasiResult(
       skema: SkemaType.kca,
@@ -174,11 +183,11 @@ class FinancingCalculator {
     required List<Map<String, dynamic>> tenors,
     required int tenorMonths,
   }) {
-    final double umPercentageKrasida = (config['um_percentage_krasida'] as num?)?.toDouble() ?? 0.185;
     final int minimumUpKrasida = (config['minimum_up_krasida'] as num?)?.toInt() ?? 500000;
+    final int adminFee = (config['admin_fee_flat'] as num?)?.toInt() ?? 15000;
 
-    int uangMuka = roundDown(hargaLelang * umPercentageKrasida, 1000);
-    int uangPinjaman = hargaLelang - uangMuka;
+    int uangPinjaman = roundDown((appraisalValue ?? hargaLelang.toDouble()) * 0.95, 100000);
+    int uangMuka = hargaLelang - uangPinjaman + adminFee;
 
     if (uangPinjaman < minimumUpKrasida) {
       return SimulasiResult(

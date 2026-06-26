@@ -590,10 +590,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ),
                       child: Column(
                         children: [
-                          _breakdownRow('Biaya Admin', currencyFormatter.format(result.adminFee!), valueColor: AppColors.info),
-                          const SizedBox(height: 10),
-                          const Divider(),
-                          const SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -771,7 +767,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       columnWidths: const {
                         0: FlexColumnWidth(1.2),
                         1: FlexColumnWidth(2.4),
-                        2: FlexColumnWidth(2.4),
+                        // 2: FlexColumnWidth(2.4),
                       },
                       children: [
                         TableRow(
@@ -781,7 +777,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           children: [
                             _tableHeader('Tenor'),
                             _tableHeader('Angsuran / Bln'),
-                            _tableHeader('Total Bayar'),
+                            // _tableHeader('Total Bayar'),
                           ],
                         ),
                         ...?result.perbandinganTenor?.map((t) {
@@ -793,7 +789,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             children: [
                               _tableCell('${t.tenor} Bln', isSelected: t.isSelected),
                               _tableCell(currencyFormatter.format(t.angsuranPerBulan), isSelected: t.isSelected),
-                              _tableCell(currencyFormatter.format(t.totalBayar), isSelected: t.isSelected),
+                              // _tableCell(currencyFormatter.format(t.totalBayar), isSelected: t.isSelected),
                             ],
                           );
                         }),
