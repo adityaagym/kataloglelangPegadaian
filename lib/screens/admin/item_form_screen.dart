@@ -315,6 +315,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<AppProvider>(context);
+    final isGold = _isGoldCategory(provider);
+
     return Scaffold(
       appBar: widget.itemToEdit != null
           ? AppBar(
@@ -368,740 +371,274 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left Panel - Form
+                      // Left Panel - Form Cards
                       Expanded(
                         flex: 1,
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Nomor Akad / Kredit
-                                _buildLabel('Nomor Akad / Kredit'),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  initialValue: _creditNumber,
-                                  decoration: _inputDecoration(
-                                    'Contoh: BK 1234',
-                                    helperText:
-                                        'Boleh sama untuk beberapa barang dalam satu akad.',
-                                  ),
-                                  textCapitalization:
-                                      TextCapitalization.characters,
-                                  onSaved: (val) => _creditNumber = val,
-                                ),
-                                const SizedBox(height: 20),
-
-                                // Nama Barang
-                                _buildLabel('Nama Barang', required: true),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  initialValue: _name,
-                                  decoration: _inputDecoration(
-                                    'Contoh: Cincin Emas Berlian',
-                                  ),
-                                  validator: (val) => val == null || val.isEmpty
-                                      ? 'Wajib diisi'
-                                      : null,
-                                  onSaved: (val) => _name = val!,
-                                ),
-                                const SizedBox(height: 20),
-
-                                // Kategori
-                                _buildLabel('Kategori', required: true),
-                                const SizedBox(height: 8),
-                                Consumer<AppProvider>(
-                                  builder: (context, provider, child) {
-                                    final isGold = _isGoldCategory(provider);
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        DropdownButtonFormField<int>(
-                                          initialValue: _categoryId,
-                                          decoration: _inputDecoration(
-                                            'Pilih kategori',
-                                          ),
-                                          items: provider.categories
-                                              .map(
-                                                (c) => DropdownMenuItem(
-                                                  value: c.id,
-                                                  child: Text(c.name),
-                                                ),
-                                              )
-                                              .toList(),
-                                          onChanged: (val) {
-                                            setState(() {
-                                              _categoryId = val;
-                                              final nextIsGold =
-                                                  _isGoldCategory(provider);
-                                              if (nextIsGold) {
-                                                _recalculateBasePrice(provider);
-                                              } else {
-                                                _weightGram = 0.0;
-                                                _karat = null;
-                                                if (widget.itemToEdit == null) {
-                                                  _basePrice = 0.0;
-                                                  _basePriceController.clear();
-                                                }
-                                              }
-                                            });
-                                          },
-                                          validator: (val) => val == null
-                                              ? 'Pilih kategori'
-                                              : null,
-                                        ),
-                                        const SizedBox(height: 20),
-
-                                        // Berat + Karat (Only visible for Gold categories)
-                                        if (isGold) ...[
-                                          Row(
-                                            children: [
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    _buildLabel(
-                                                      'Berat (gram)',
-                                                      required: true,
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    TextFormField(
-                                                      initialValue:
-                                                          widget.itemToEdit !=
-                                                                  null &&
-                                                              widget
-                                                                      .itemToEdit!
-                                                                      .categoryId ==
-                                                                  _categoryId
-                                                          ? _weightGram
-                                                                .toString()
-                                                          : '',
-                                                      decoration:
-                                                          _inputDecoration(
-                                                            '0.00',
-                                                          ),
-                                                      keyboardType:
-                                                          const TextInputType.numberWithOptions(
-                                                            decimal: true,
-                                                          ),
-                                                      validator: (val) {
-                                                        if (!_isGoldCategory(
-                                                          provider,
-                                                        )) {
-                                                          return null;
-                                                        }
-                                                        if (val == null ||
-                                                            val.isEmpty) {
-                                                          return 'Wajib diisi';
-                                                        }
-                                                        if (double.tryParse(
-                                                              val,
-                                                            ) ==
-                                                            null) {
-                                                          return 'Harus angka';
-                                                        }
-                                                        return null;
-                                                      },
-                                                      onChanged: (val) {
-                                                        setState(() {
-                                                          _weightGram =
-                                                              double.tryParse(
-                                                                val,
-                                                              ) ??
-                                                              0.0;
-                                                          _recalculateBasePrice(
-                                                            provider,
-                                                          );
-                                                        });
-                                                      },
-                                                      onSaved: (val) {
-                                                        _weightGram =
-                                                            _isGoldCategory(
-                                                              provider,
-                                                            )
-                                                            ? (double.tryParse(
-                                                                    val ?? '',
-                                                                  ) ??
-                                                                  0.0)
-                                                            : 0.0;
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(width: 16),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    _buildLabel(
-                                                      'Kadar / Karat',
-                                                      required: true,
-                                                      suffix: '(maks 24)',
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    TextFormField(
-                                                      initialValue: _karat,
-                                                      decoration: _inputDecoration(
-                                                        'Contoh: 18 atau 18 Karat',
-                                                      ),
-                                                      validator: (val) {
-                                                        if (!_isGoldCategory(
-                                                          provider,
-                                                        )) {
-                                                          return null;
-                                                        }
-                                                        if (val == null ||
-                                                            val.isEmpty) {
-                                                          return 'Wajib diisi';
-                                                        }
-                                                        final regExp = RegExp(
-                                                          r'([0-9]+(?:\.[0-9]+)?)',
-                                                        );
-                                                        final match = regExp
-                                                            .firstMatch(val);
-                                                        if (match == null) {
-                                                          return 'Harus berupa angka karat';
-                                                        }
-                                                        final parsed =
-                                                            double.tryParse(
-                                                              match.group(1)!,
-                                                            );
-                                                        if (parsed == null ||
-                                                            parsed <= 0 ||
-                                                            parsed > 24) {
-                                                          return 'Karat harus antara 1 - 24';
-                                                        }
-                                                        return null;
-                                                      },
-                                                      onChanged: (val) {
-                                                        setState(() {
-                                                          _karat = val;
-                                                          _recalculateBasePrice(
-                                                            provider,
-                                                          );
-                                                        });
-                                                      },
-                                                      onSaved: (val) {
-                                                        _karat =
-                                                            _isGoldCategory(
-                                                              provider,
-                                                            )
-                                                            ? val
-                                                            : null;
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 20),
-                                        ],
-
-                                        // Kondisi Barang - Chip selector
-                                        _buildLabel(
-                                          'Kondisi Barang',
-                                          required: true,
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.muted,
-                                            borderRadius: BorderRadius.circular(
-                                              18,
-                                            ),
-                                            border: Border.all(
-                                              color: AppColors.border,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: _conditionOptions.map((
-                                              option,
-                                            ) {
-                                              final isSelected =
-                                                  _condition == option;
-                                              return Expanded(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 4,
-                                                      ),
-                                                  child: ChoiceChip(
-                                                    label: Center(
-                                                      child: Text(
-                                                        option,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ),
-                                                    selected: isSelected,
-                                                    selectedColor:
-                                                        AppColors.primary,
-                                                    labelStyle: TextStyle(
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : AppColors
-                                                                .textSecondary,
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                    ),
-                                                    backgroundColor:
-                                                        Colors.white,
-                                                    side: BorderSide(
-                                                      color: isSelected
-                                                          ? AppColors.primary
-                                                          : AppColors.border,
-                                                    ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            999,
-                                                          ),
-                                                    ),
-                                                    showCheckmark: false,
-                                                    onSelected: (selected) {
-                                                      if (selected) {
-                                                        setState(
-                                                          () => _condition =
-                                                              option,
-                                                        );
-                                                      }
-                                                    },
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 20),
-
-                                        // Harga Lelang
-                                        _buildLabel(
-                                          'Harga Lelang',
-                                          required: true,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        TextFormField(
-                                          controller: _basePriceController,
-                                          readOnly: false,
-                                          decoration: _inputDecoration(
-                                            'Rp 0',
-                                            helperText: isGold
-                                                ? 'Dihitung otomatis: Harga Emas x (Karat/24) x Berat (Dapat diubah manual)'
-                                                : 'Masukkan harga lelang secara manual',
-                                          ),
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly,
-                                            _ThousandsSeparatorFormatter(),
-                                          ],
-                                          onChanged: (val) {
-                                            setState(() {
-                                              final rawValue = val.replaceAll(
-                                                '.',
-                                                '',
-                                              );
-                                              _basePrice =
-                                                  double.tryParse(rawValue) ??
-                                                  0.0;
-                                            });
-                                          },
-                                          validator: (val) {
-                                            if (val == null ||
-                                                val.isEmpty ||
-                                                val.replaceAll('.', '') ==
-                                                    '0') {
-                                              return 'Wajib diisi';
-                                            }
-                                            return null;
-                                          },
-                                          onSaved: (val) {
-                                            if (val != null) {
-                                              final rawValue = val.replaceAll(
-                                                '.',
-                                                '',
-                                              );
-                                              _basePrice =
-                                                  double.tryParse(rawValue) ??
-                                                  0.0;
-                                            } else {
-                                              _basePrice = 0.0;
-                                            }
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-
-                                // Deskripsi
-                                _buildLabel(
-                                  'Deskripsi Barang',
-                                  required: false,
-                                ),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  initialValue: _description,
-                                  decoration: _inputDecoration(
-                                    'Deskripsi tambahan...',
-                                  ),
-                                  maxLines: 4,
-                                  onSaved: (val) => _description = val,
-                                ),
-                                const SizedBox(height: 20),
-
-                                // Status switch
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.background,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: SwitchListTile(
-                                    title: const Text(
-                                      'Status Aktif',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      _isActive
-                                          ? 'Barang tampil di katalog'
-                                          : 'Barang disembunyikan',
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                    value: _isActive,
-                                    activeThumbColor: AppColors.primary,
-                                    onChanged: (val) =>
-                                        setState(() => _isActive = val),
-                                  ),
-                                ),
-                                _buildSimulationPreview(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 40),
-
-                      // Right Panel - Photos
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.border),
-                          ),
+                        child: Form(
+                          key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              // Card 1: Informasi Dasar
+                              _buildFormCard(
+                                title: 'Informasi Dasar',
+                                icon: Icons.assignment_outlined,
                                 children: [
-                                  const Text(
-                                    'Unggah Foto Barang',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textDark,
+                                  _buildLabel('Nomor Akad / Kredit'),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    initialValue: _creditNumber,
+                                    decoration: _inputDecoration(
+                                      'Contoh: BK 1234',
+                                      helperText: 'Boleh sama untuk beberapa barang dalam satu akad.',
                                     ),
+                                    textCapitalization: TextCapitalization.characters,
+                                    onSaved: (val) => _creditNumber = val,
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '(Maks 10)',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: AppColors.textMuted.withValues(
-                                        alpha: 0.7,
-                                      ),
+                                  const SizedBox(height: 20),
+
+                                  _buildLabel('Nama Barang', required: true),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    initialValue: _name,
+                                    decoration: _inputDecoration(
+                                      'Contoh: Cincin Emas Berlian',
                                     ),
+                                    validator: (val) => val == null || val.isEmpty
+                                        ? 'Wajib diisi'
+                                        : null,
+                                    onSaved: (val) => _name = val!,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  _buildLabel('Kategori', required: true),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<int>(
+                                    initialValue: _categoryId,
+                                    decoration: _inputDecoration(
+                                      'Pilih kategori',
+                                    ),
+                                    items: provider.categories
+                                        .map(
+                                          (c) => DropdownMenuItem(
+                                            value: c.id,
+                                            child: Text(c.name),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (val) {
+                                      setState(() {
+                                        _categoryId = val;
+                                        final nextIsGold = _isGoldCategory(provider);
+                                        if (nextIsGold) {
+                                          _recalculateBasePrice(provider);
+                                        } else {
+                                          _weightGram = 0.0;
+                                          _karat = null;
+                                          if (widget.itemToEdit == null) {
+                                            _basePrice = 0.0;
+                                            _basePriceController.clear();
+                                          }
+                                        }
+                                      });
+                                    },
+                                    validator: (val) => val == null
+                                        ? 'Pilih kategori'
+                                        : null,
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
 
-                              // Upload area
-                              GestureDetector(
-                                onTap: _pickImages,
-                                child: Container(
-                                  height: 160,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.muted,
-                                    border: Border.all(
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.30,
-                                      ),
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.cloud_upload_outlined,
-                                        size: 44,
-                                        color: AppColors.primary.withValues(
-                                          alpha: 0.6,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      const Text(
-                                        'Ambil Foto dari Kamera\n/ Pilih dari Galeri Tablet',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        'Format JPG atau PNG',
-                                        style: TextStyle(
-                                          color: AppColors.textMuted.withValues(
-                                            alpha: 0.7,
-                                          ),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // Camera button
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: _takePhoto,
-                                  icon: const Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 20,
-                                  ),
-                                  label: const Text('Ambil dari Kamera'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.primary,
-                                    side: const BorderSide(
-                                      color: AppColors.primary,
-                                    ),
-                                    shape: const StadiumBorder(),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 20),
-
-                              // Photo thumbnails
-                              if (_existingPhotos.isNotEmpty ||
-                                  _newPhotos.isNotEmpty)
-                                SizedBox(
-                                  height: 90,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount:
-                                        _existingPhotos.length +
-                                        _newPhotos.length,
-                                    itemBuilder: (context, index) {
-                                      final isPrimary =
-                                          index == _primaryPhotoIndex;
-                                      Widget imageWidget;
-                                      VoidCallback onDelete;
-
-                                      if (index < _existingPhotos.length) {
-                                        final photo = _existingPhotos[index];
-                                        imageWidget = Image.file(
-                                          File(photo.localPath),
-                                          fit: BoxFit.cover,
-                                        );
-                                        onDelete = () async {
-                                          await DatabaseHelper.instance
-                                              .deleteItemPhoto(photo.id!);
-                                          _loadExistingPhotos();
-                                        };
-                                      } else {
-                                        final newIdx =
-                                            index - _existingPhotos.length;
-                                        imageWidget = Image.file(
-                                          _newPhotos[newIdx],
-                                          fit: BoxFit.cover,
-                                        );
-                                        onDelete = () => setState(
-                                          () => _newPhotos.removeAt(newIdx),
-                                        );
-                                      }
-
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 10,
-                                        ),
-                                        child: GestureDetector(
-                                          onTap: () => setState(
-                                            () => _primaryPhotoIndex = index,
-                                          ),
-                                          child: Stack(
-                                            clipBehavior: Clip.none,
+                              // Card 2: Spesifikasi & Kondisi
+                              _buildFormCard(
+                                title: 'Spesifikasi & Kondisi',
+                                icon: Icons.tune_outlined,
+                                children: [
+                                  if (isGold) ...[
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Container(
-                                                width: 80,
-                                                height: 80,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(18),
-                                                  border: isPrimary
-                                                      ? Border.all(
-                                                          color:
-                                                              AppColors.primary,
-                                                          width: 3,
-                                                        )
-                                                      : Border.all(
-                                                          color:
-                                                              AppColors.border,
-                                                        ),
-                                                ),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                  child: imageWidget,
-                                                ),
+                                              _buildLabel(
+                                                'Berat (gram)',
+                                                required: true,
                                               ),
-                                              if (isPrimary)
-                                                Positioned(
-                                                  bottom: 0,
-                                                  left: 0,
-                                                  right: 0,
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 3,
-                                                        ),
-                                                    decoration: const BoxDecoration(
-                                                      color: AppColors.primary,
-                                                      borderRadius:
-                                                          BorderRadius.vertical(
-                                                            bottom:
-                                                                Radius.circular(
-                                                                  15,
-                                                                ),
-                                                          ),
-                                                    ),
-                                                    child: const Text(
-                                                      'Foto Utama',
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 9,
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                      ),
-                                                    ),
-                                                  ),
+                                              const SizedBox(height: 8),
+                                              TextFormField(
+                                                initialValue: widget.itemToEdit != null &&
+                                                        widget.itemToEdit!.categoryId == _categoryId
+                                                    ? _weightGram.toString()
+                                                    : '',
+                                                decoration: _inputDecoration(
+                                                  '0.00',
                                                 ),
-                                              Positioned(
-                                                top: -4,
-                                                right: -4,
-                                                child: GestureDetector(
-                                                  onTap: onDelete,
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(2),
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                          color:
-                                                              AppColors.error,
-                                                          shape:
-                                                              BoxShape.circle,
-                                                        ),
-                                                    child: const Icon(
-                                                      Icons.close,
-                                                      size: 14,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
+                                                keyboardType: const TextInputType.numberWithOptions(
+                                                  decimal: true,
                                                 ),
+                                                validator: (val) {
+                                                  if (!_isGoldCategory(provider)) {
+                                                    return null;
+                                                  }
+                                                  if (val == null || val.isEmpty) {
+                                                    return 'Wajib diisi';
+                                                  }
+                                                  if (double.tryParse(val) == null) {
+                                                    return 'Harus angka';
+                                                  }
+                                                  return null;
+                                                },
+                                                onChanged: (val) {
+                                                  setState(() {
+                                                    _weightGram = double.tryParse(val) ?? 0.0;
+                                                    _recalculateBasePrice(provider);
+                                                  });
+                                                },
+                                                onSaved: (val) {
+                                                  _weightGram = _isGoldCategory(provider)
+                                                      ? (double.tryParse(val ?? '') ?? 0.0)
+                                                      : 0.0;
+                                                },
                                               ),
                                             ],
                                           ),
                                         ),
-                                      );
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              _buildLabel(
+                                                'Kadar / Karat',
+                                                required: true,
+                                                suffix: '(maks 24)',
+                                              ),
+                                              const SizedBox(height: 8),
+                                              TextFormField(
+                                                initialValue: _karat,
+                                                decoration: _inputDecoration(
+                                                  'Contoh: 18 atau 18 Karat',
+                                                ),
+                                                validator: (val) {
+                                                  if (!_isGoldCategory(provider)) {
+                                                    return null;
+                                                  }
+                                                  if (val == null || val.isEmpty) {
+                                                    return 'Wajib diisi';
+                                                  }
+                                                  final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
+                                                  final match = regExp.firstMatch(val);
+                                                  if (match == null) {
+                                                    return 'Harus berupa angka karat';
+                                                  }
+                                                  final parsed = double.tryParse(match.group(1)!);
+                                                  if (parsed == null || parsed <= 0 || parsed > 24) {
+                                                    return 'Karat harus antara 1 - 24';
+                                                  }
+                                                  return null;
+                                                },
+                                                onChanged: (val) {
+                                                  setState(() {
+                                                    _karat = val;
+                                                    _recalculateBasePrice(provider);
+                                                  });
+                                                },
+                                                onSaved: (val) {
+                                                  _karat = _isGoldCategory(provider) ? val : null;
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                  _buildConditionChips(),
+                                ],
+                              ),
+
+                              // Card 3: Penetapan Harga & Deskripsi
+                              _buildFormCard(
+                                title: 'Penetapan Harga & Deskripsi',
+                                icon: Icons.payments_outlined,
+                                children: [
+                                  _buildGoldPriceBanner(provider),
+                                  _buildLabel('Harga Lelang', required: true),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _basePriceController,
+                                    readOnly: false,
+                                    decoration: _inputDecoration(
+                                      'Rp 0',
+                                      helperText: isGold
+                                          ? 'Dihitung otomatis: Harga Emas x (Karat/24) x Berat (Dapat diubah manual)'
+                                          : 'Masukkan harga lelang secara manual',
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      _ThousandsSeparatorFormatter(),
+                                    ],
+                                    onChanged: (val) {
+                                      setState(() {
+                                        final rawValue = val.replaceAll('.', '');
+                                        _basePrice = double.tryParse(rawValue) ?? 0.0;
+                                      });
+                                    },
+                                    validator: (val) {
+                                      if (val == null || val.isEmpty || val.replaceAll('.', '') == '0') {
+                                        return 'Wajib diisi';
+                                      }
+                                      return null;
+                                    },
+                                    onSaved: (val) {
+                                      if (val != null) {
+                                        final rawValue = val.replaceAll('.', '');
+                                        _basePrice = double.tryParse(rawValue) ?? 0.0;
+                                      } else {
+                                        _basePrice = 0.0;
+                                      }
                                     },
                                   ),
-                                ),
+                                  const SizedBox(height: 20),
 
-                              const SizedBox(height: 32),
-
-                              // Action buttons
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor:
-                                            AppColors.textSecondary,
-                                        side: const BorderSide(
-                                          color: AppColors.cardBorder,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                      ),
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(16.0),
-                                        child: Text('Batal'),
-                                      ),
+                                  _buildLabel('Deskripsi Barang', required: false),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    initialValue: _description,
+                                    decoration: _inputDecoration(
+                                      'Deskripsi tambahan...',
                                     ),
+                                    maxLines: 4,
+                                    onSaved: (val) => _description = val,
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      onPressed: _saveItem,
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(16.0),
-                                        child: Text(
-                                          'Simpan Barang',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                  const SizedBox(height: 20),
+
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.background,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: SwitchListTile(
+                                      title: const Text(
+                                        'Status Aktif',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
+                                      subtitle: Text(
+                                        _isActive ? 'Barang tampil di katalog' : 'Barang disembunyikan',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      value: _isActive,
+                                      activeThumbColor: AppColors.primary,
+                                      onChanged: (val) => setState(() => _isActive = val),
                                     ),
                                   ),
                                 ],
@@ -1110,11 +647,519 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                           ),
                         ),
                       ),
+
+                      const SizedBox(width: 40),
+
+                      // Right Panel - Photos & Live Preview
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Photos Card
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: AppColors.border),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.02),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.photo_library_outlined, color: AppColors.primary, size: 22),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        'Unggah Foto Barang',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.textDark,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '(Maks 10)',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textMuted.withValues(alpha: 0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Upload area with dashed border CustomPaint
+                                  CustomPaint(
+                                    painter: DashedBorderPainter(
+                                      color: AppColors.primary.withValues(alpha: 0.4),
+                                      strokeWidth: 2,
+                                      borderRadius: 24,
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: _pickImages,
+                                      child: Container(
+                                        height: 160,
+                                        width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.muted,
+                                          borderRadius: BorderRadius.circular(24),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.cloud_upload_outlined,
+                                              size: 44,
+                                              color: AppColors.primary.withValues(alpha: 0.6),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            const Text(
+                                              'Ambil Foto dari Kamera\n/ Pilih dari Galeri Tablet',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              'Format JPG atau PNG',
+                                              style: TextStyle(
+                                                color: AppColors.textMuted.withValues(alpha: 0.7),
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Camera button
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      onPressed: _takePhoto,
+                                      icon: const Icon(
+                                        Icons.camera_alt_outlined,
+                                        size: 20,
+                                      ),
+                                      label: const Text('Ambil dari Kamera'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.primary,
+                                        side: const BorderSide(
+                                          color: AppColors.primary,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // Photo thumbnails
+                                  if (_existingPhotos.isNotEmpty || _newPhotos.isNotEmpty)
+                                    SizedBox(
+                                      height: 90,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: _existingPhotos.length + _newPhotos.length,
+                                        itemBuilder: (context, index) {
+                                          final isPrimary = index == _primaryPhotoIndex;
+                                          Widget imageWidget;
+                                          VoidCallback onDelete;
+
+                                          if (index < _existingPhotos.length) {
+                                            final photo = _existingPhotos[index];
+                                            imageWidget = Image.file(
+                                              File(photo.localPath),
+                                              fit: BoxFit.cover,
+                                            );
+                                            onDelete = () async {
+                                              await DatabaseHelper.instance.deleteItemPhoto(photo.id!);
+                                              _loadExistingPhotos();
+                                            };
+                                          } else {
+                                            final newIdx = index - _existingPhotos.length;
+                                            imageWidget = Image.file(
+                                              _newPhotos[newIdx],
+                                              fit: BoxFit.cover,
+                                            );
+                                            onDelete = () => setState(
+                                                  () => _newPhotos.removeAt(newIdx),
+                                                );
+                                          }
+
+                                          return Padding(
+                                            padding: const EdgeInsets.only(right: 10),
+                                            child: GestureDetector(
+                                              onTap: () => setState(
+                                                () => _primaryPhotoIndex = index,
+                                              ),
+                                              child: Stack(
+                                                clipBehavior: Clip.none,
+                                                children: [
+                                                  Container(
+                                                    width: 80,
+                                                    height: 80,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(18),
+                                                      border: isPrimary
+                                                          ? Border.all(
+                                                              color: AppColors.primary,
+                                                              width: 3,
+                                                            )
+                                                          : Border.all(
+                                                              color: AppColors.border,
+                                                            ),
+                                                    ),
+                                                    child: ClipRRect(
+                                                      borderRadius: BorderRadius.circular(15),
+                                                      child: imageWidget,
+                                                    ),
+                                                  ),
+                                                  if (isPrimary)
+                                                    Positioned(
+                                                      bottom: 0,
+                                                      left: 0,
+                                                      right: 0,
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(
+                                                          vertical: 3,
+                                                        ),
+                                                        decoration: const BoxDecoration(
+                                                          color: AppColors.primary,
+                                                          borderRadius: BorderRadius.vertical(
+                                                            bottom: Radius.circular(15),
+                                                          ),
+                                                        ),
+                                                        child: const Text(
+                                                          'Foto Utama',
+                                                          textAlign: TextAlign.center,
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 9,
+                                                            fontWeight: FontWeight.w700,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  Positioned(
+                                                    top: -4,
+                                                    right: -4,
+                                                    child: GestureDetector(
+                                                      onTap: onDelete,
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(2),
+                                                        decoration: const BoxDecoration(
+                                                          color: AppColors.error,
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.close,
+                                                          size: 14,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+
+                            // Real-time Live Simulation Preview Card
+                            _buildSimulationPreview(),
+
+                            const SizedBox(height: 32),
+
+                            // Action buttons
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => Navigator.pop(context),
+                                    icon: const Icon(Icons.close, size: 18),
+                                    label: const Text('Batal'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.textSecondary,
+                                      side: const BorderSide(color: AppColors.border),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: _saveItem,
+                                    icon: const Icon(Icons.check, size: 18),
+                                    label: const Text('Simpan Barang'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: Colors.white,
+                                      elevation: 2,
+                                      shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildFormCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConditionChips() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel('Kondisi Barang', required: true),
+        const SizedBox(height: 10),
+        Row(
+          children: _conditionOptions.map((option) {
+            final isSelected = _condition == option;
+
+            // Custom styling based on option
+            Color themeColor;
+            Color bgTint;
+            IconData icon;
+            if (option == 'Baik') {
+              themeColor = const Color(0xFF2E7D32); // Deep Green
+              bgTint = const Color(0xFFE8F5E9);
+              icon = Icons.check_circle_outline;
+            } else if (option == 'Cukup Baik') {
+              themeColor = const Color(0xFFEF6C00); // Orange/Amber
+              bgTint = const Color(0xFFFFF3E0);
+              icon = Icons.help_outline;
+            } else {
+              themeColor = const Color(0xFFC62828); // Red
+              bgTint = const Color(0xFFFFEBEE);
+              icon = Icons.error_outline;
+            }
+
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: InkWell(
+                  onTap: () {
+                    setState(() => _condition = option);
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? bgTint : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected ? themeColor : AppColors.border,
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: themeColor.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 16,
+                          color: isSelected ? themeColor : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            option,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                              color: isSelected ? themeColor : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGoldPriceBanner(AppProvider provider) {
+    final isGold = _isGoldCategory(provider);
+    if (!isGold) return const SizedBox.shrink();
+
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
+    // Calculate auto base price estimation
+    double karatVal = 24.0;
+    if (_karat != null && _karat!.isNotEmpty) {
+      final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
+      final match = regExp.firstMatch(_karat!);
+      if (match != null) {
+        final parsed = double.tryParse(match.group(1)!) ?? 24.0;
+        karatVal = parsed > 24.0 ? 24.0 : (parsed < 0 ? 0 : parsed);
+      }
+    }
+    final estimatedPrice = provider.goldPricePerGram * (karatVal / 24.0) * _weightGram;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.goldBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.gavel_outlined,
+            color: AppColors.gold,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Kalkulator Harga Emas Pegadaian',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Harga Emas Saat Ini: ${formatter.format(provider.goldPricePerGram)} / gram',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (_weightGram > 0) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Estimasi Nilai Taksir: ${formatter.format(estimatedPrice)} (${_weightGram}g @ ${karatVal.toStringAsFixed(0)} Karat)',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1206,10 +1251,10 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
     return Container(
       margin: const EdgeInsets.only(top: 24),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -1219,156 +1264,355 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
             children: [
               const Icon(Icons.calculate_outlined, color: AppColors.primary, size: 22),
               const SizedBox(width: 8),
-              Text(
-                'PREVIEW SIMULASI PEMBIAYAAN — ${currencyFormatter.format(hargaInt)}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textDark,
-                  letterSpacing: 0.5,
+              const Expanded(
+                child: Text(
+                  'PREVIEW SIMULASI PEMBIAYAAN',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textDark,
+                    letterSpacing: 0.5,
+                  ),
+                  softWrap: true,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Text(
+            'Berdasarkan harga lelang: ${currencyFormatter.format(hargaInt)}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 20),
 
-          // TUNAI
-          _buildPreviewRow(
-            icon: Icons.money_outlined,
-            iconColor: AppColors.successGreen,
-            title: '💵 TUNAI',
-            details: [
-              'Total Bayar: ${currencyFormatter.format(tunaiRes.hargaLelang)}',
-              '(Bayar penuh saat transaksi, tanpa bunga/cicilan)',
-            ],
+          // TUNAI CARD
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9), // Light green tint
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFC8E6C9)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.payments_outlined, color: AppColors.successGreen, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'TUNAI',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.successGreen,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        currencyFormatter.format(tunaiRes.hargaLelang),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.successGreen,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Padding(
+                  padding: EdgeInsets.only(left: 28),
+                  child: Text(
+                    'Bayar penuh saat transaksi, tanpa bunga/cicilan.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 16),
 
-          // KCA
+          // KCA CARD
           if (kcaRes.eligible)
-            _buildPreviewRow(
-              icon: Icons.credit_card_outlined,
-              iconColor: AppColors.info,
-              title: '💳 KCA (Kredit Cicilan Angsuran) — Tempo ${kcaRes.tempoKca} Bulan',
-              details: [
-                'Uang Muka: ${currencyFormatter.format(kcaRes.uangMuka)}',
-                'Uang Pinjaman: ${currencyFormatter.format(kcaRes.uangPinjaman)}',
-                'Bunga Total: ${currencyFormatter.format(kcaRes.bungaTotalKca!)}',
-                'Admin Fee: ${currencyFormatter.format(kcaRes.adminFee!)}',
-                'Total Pelunasan: ${currencyFormatter.format(kcaRes.totalPelunasanKca!)}',
-                '(Bayar bebas selama 4 bulan, tanpa angsuran rutin)',
-              ],
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE3F2FD), // Light blue tint
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFBBDEFB)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'KCA (Kredit Cepat Aman) — Tempo ${kcaRes.tempoKca} Bulan',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.categoryBlueText,
+                          ),
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPreviewDetailRow('Uang Muka (DP)', currencyFormatter.format(kcaRes.uangMuka)),
+                  _buildPreviewDetailRow('Uang Pinjaman', currencyFormatter.format(kcaRes.uangPinjaman)),
+                  _buildPreviewDetailRow('Bunga Total (${kcaRes.tempoKca} Bln)', currencyFormatter.format(kcaRes.bungaTotalKca!)),
+                  _buildPreviewDetailRow('Biaya Admin', currencyFormatter.format(kcaRes.adminFee!)),
+                  const Divider(height: 16),
+                  _buildPreviewDetailRow(
+                    'Total Pelunasan',
+                    currencyFormatter.format(kcaRes.totalPelunasanKca!),
+                    isBold: true,
+                    textColor: AppColors.categoryBlueText,
+                  ),
+                  const SizedBox(height: 8),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Text(
+                      '* Bayar bebas kapan saja selama 4 bulan, tanpa angsuran rutin bulanan.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             )
           else
-            _buildIneligiblePreviewRow(
-              title: '💳 KCA (Tidak Eligible)',
-              message: kcaRes.message ?? '',
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEBEE), // Light red tint
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFFCDD2)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'KCA (Tidak Eligible)',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.error,
+                          ),
+                          softWrap: true,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          kcaRes.message ?? 'Harga di luar limit kelayakan KCA.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 16),
 
-          // KRASIDA
+          // KRASIDA CARD
           if (krasidaRes.eligible)
-            _buildPreviewRow(
-              icon: Icons.bar_chart_outlined,
-              iconColor: AppColors.accent,
-              title: '📊 KRASIDA (Kredit Gadai Sistem Angsuran)',
-              details: [
-                'Uang Muka: ${currencyFormatter.format(krasidaRes.uangMuka)}',
-                'Uang Pinjaman: ${currencyFormatter.format(krasidaRes.uangPinjaman)}',
-                'Angsuran per Bulan:',
-                ...?krasidaRes.perbandinganTenor?.map((t) =>
-                    '• ${t.tenor} bln : ${currencyFormatter.format(t.angsuranPerBulan)} / bln (total ${currencyFormatter.format(t.totalBayar)})'),
-              ],
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1), // Light gold tint
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFFECB3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.bar_chart_outlined, color: AppColors.gold, size: 20),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          ' KRASIDA (Kredit Gadai Angsuran Bulanan)',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.categoryAmberText,
+                          ),
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPreviewDetailRow('Uang Muka (DP)', currencyFormatter.format(krasidaRes.uangMuka)),
+                  _buildPreviewDetailRow('Uang Pinjaman', currencyFormatter.format(krasidaRes.uangPinjaman)),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Simulasi Angsuran Bulanan:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.categoryAmberText,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Column(
+                    children: krasidaRes.perbandinganTenor?.map((t) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFFFE082)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Tenor ${t.tenor} Bulan',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${currencyFormatter.format(t.angsuranPerBulan)} / bln',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.categoryAmberText,
+                                  ),
+                                ),
+                                Text(
+                                  'Total bayar: ${currencyFormatter.format(t.totalBayar)}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList() ?? [],
+                  ),
+                ],
+              ),
             )
           else
-            _buildIneligiblePreviewRow(
-              title: '📊 KRASIDA (Tidak Eligible)',
-              message: krasidaRes.message ?? '',
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEBEE), // Light red tint
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFFCDD2)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'KRASIDA (Tidak Eligible)',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.error,
+                          ),
+                          softWrap: true,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          krasidaRes.message ?? 'Harga di luar limit kelayakan KRASIDA.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildPreviewRow({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required List<String> details,
+  Widget _buildPreviewDetailRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    Color? textColor,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: iconColor, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: iconColor,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ...details.map((d) => Padding(
-              padding: const EdgeInsets.only(left: 28, bottom: 4),
-              child: Text(
-                d,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: d.startsWith('•') || d.contains('Total') ? FontWeight.w700 : FontWeight.w600,
-                  color: d.startsWith('(') ? AppColors.textSecondary : AppColors.textDark,
-                ),
-              ),
-            )),
-      ],
-    );
-  }
-
-  Widget _buildIneligiblePreviewRow({
-    required String title,
-    required String message,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: AppColors.error,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Padding(
-          padding: const EdgeInsets.only(left: 28),
-          child: Text(
-            message,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
               color: AppColors.textSecondary,
             ),
           ),
-        ),
-      ],
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+              color: textColor ?? AppColors.textDark,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1399,4 +1643,50 @@ class _ThousandsSeparatorFormatter extends TextInputFormatter {
       selection: TextSelection.collapsed(offset: cursorPosition),
     );
   }
+}
+
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double dashLength;
+  final double borderRadius;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 2,
+    this.gap = 4,
+    this.dashLength = 6,
+    this.borderRadius = 24,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        Radius.circular(borderRadius),
+      ));
+
+    final dashPath = Path();
+    double distance = 0.0;
+    for (final pathMetric in path.computeMetrics()) {
+      while (distance < pathMetric.length) {
+        dashPath.addPath(
+          pathMetric.extractPath(distance, distance + dashLength),
+          Offset.zero,
+        );
+        distance += dashLength + gap;
+      }
+    }
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
