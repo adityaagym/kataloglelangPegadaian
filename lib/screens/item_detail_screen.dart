@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/auction_item.dart';
 import '../providers/app_provider.dart';
 import '../models/item_photo.dart';
+import '../services/financing_calculator.dart';
 import '../utils/app_colors.dart';
 
 class ItemDetailScreen extends StatefulWidget {
@@ -23,9 +24,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Map<String, dynamic>? _financingConfig;
   List<Map<String, dynamic>> _financingTenors = [];
   bool _isFinancingLoading = true;
-  int? _selectedDpPercent;
   int? _selectedTenorMonths;
-  List<int> _dpOptions = [];
+  List<AuctionItem> _packageItems = [];
+  bool _simulatePackage = false;
+  SkemaType _selectedSkema = SkemaType.tunai;
 
   @override
   void initState() {
@@ -39,46 +41,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     if (config != null && config['is_active'] == 1) {
       final tenors = await provider.getFinancingTenors(config['id'] as int);
       final activeTenors = tenors.where((t) => t['is_active'] == 1).toList();
-      final dpOpts = (config['dp_options'] as String)
-          .split(',')
-          .map((s) => int.tryParse(s.trim()) ?? 0)
-          .where((d) => d > 0)
-          .toList();
-
+      final creditNumber = widget.item.creditNumber;
+      final packageItems = creditNumber != null && creditNumber.isNotEmpty
+          ? await provider.getItemsByCreditNumber(creditNumber)
+          : <AuctionItem>[];
       if (mounted) {
         setState(() {
           _financingConfig = config;
           _financingTenors = activeTenors;
-          _dpOptions = dpOpts;
-          _selectedDpPercent = dpOpts.isNotEmpty ? dpOpts.first : null;
           _selectedTenorMonths = activeTenors.isNotEmpty
               ? activeTenors.first['months'] as int
               : null;
+          _packageItems = packageItems;
           _isFinancingLoading = false;
         });
       }
     } else if (mounted) {
       setState(() => _isFinancingLoading = false);
     }
-  }
-
-  double _calculateInstallment({
-    required double basePrice,
-    required int dpPercent,
-    required double munahRate,
-    required double adminFeeFlat,
-    required double adminFeePercent,
-    required int tenorMonths,
-    required double otherFee,
-  }) {
-    final dpAmount = basePrice * (dpPercent / 100.0);
-    final plafond = basePrice - dpAmount;
-    final adminFee = adminFeeFlat + (basePrice * (adminFeePercent / 100.0));
-    final munahPerMonth = plafond * (munahRate / 100.0) * 3;
-    return (plafond / tenorMonths) +
-        munahPerMonth +
-        (otherFee / tenorMonths) +
-        (adminFee / tenorMonths);
   }
 
   @override
@@ -289,13 +269,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         left: 16,
                         top: 0,
                         bottom: 0,
-                        child: _imageArrow(Icons.chevron_left, photos.length, -1),
+                        child: _imageArrow(
+                          Icons.chevron_left,
+                          photos.length,
+                          -1,
+                        ),
                       ),
                       Positioned(
                         right: 16,
                         top: 0,
                         bottom: 0,
-                        child: _imageArrow(Icons.chevron_right, photos.length, 1),
+                        child: _imageArrow(
+                          Icons.chevron_right,
+                          photos.length,
+                          1,
+                        ),
                       ),
                     ],
                   ],
@@ -476,6 +464,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 'Kategori',
                 widget.item.categoryName ?? '-',
               ),
+              _specCard(
+                Icons.receipt_long_outlined,
+                'No Akad',
+                widget.item.creditNumber?.isNotEmpty == true
+                    ? widget.item.creditNumber!
+                    : '-',
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -550,27 +545,85 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 if (!_isFinancingLoading &&
                     _financingConfig != null &&
                     _financingTenors.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showFinancingDialog(currencyFormatter),
-                      icon: const Icon(Icons.calculate_outlined, size: 20),
-                      label: const Text(
-                        'Lihat Simulasi Pembiayaan',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  
+                  // Cakupan simulasi (Barang ini / Paket akad)
+                  if (_packageItems.length > 1) ...[
+                    const Text(
+                      'MODE SIMULASI:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textSecondary,
+                        letterSpacing: 1.1,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _choiceChip(
+                          'Barang ini',
+                          !_simulatePackage,
+                          () => setState(() => _simulatePackage = false),
+                        ),
+                        const SizedBox(width: 12),
+                        _choiceChip(
+                          'Paket Akad',
+                          _simulatePackage,
+                          () => setState(() => _simulatePackage = true),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Pilih Cara Pembelian
+                  const Text(
+                    'PILIH CARA PEMBELIAN:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textSecondary,
+                      letterSpacing: 1.1,
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _skemaCard(
+                          'TUNAI',
+                          'Bayar Penuh',
+                          _selectedSkema == SkemaType.tunai,
+                          () => setState(() => _selectedSkema = SkemaType.tunai),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _skemaCard(
+                          'KCA',
+                          'Tempo 4 Bln',
+                          _selectedSkema == SkemaType.kca,
+                          () => setState(() => _selectedSkema = SkemaType.kca),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _skemaCard(
+                          'KRASIDA',
+                          'Cicilan Tetap',
+                          _selectedSkema == SkemaType.krasida,
+                          () => setState(() => _selectedSkema = SkemaType.krasida),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Simulation Result Panel
+                  _buildSimulationPanel(currencyFormatter),
                 ],
               ],
             ),
@@ -631,253 +684,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
-  void _showFinancingDialog(NumberFormat currencyFormatter) {
-    showDialog(
-      context: context,
-      barrierColor: AppColors.muted.withValues(alpha: 0.88),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final config = _financingConfig!;
-          final basePrice = widget.item.basePrice;
-          final dpPercent = _selectedDpPercent ?? _dpOptions.first;
-          final tenorMonths =
-              _selectedTenorMonths ?? _financingTenors.first['months'] as int;
-          final tenor = _financingTenors.firstWhere(
-            (t) => t['months'] == tenorMonths,
-            orElse: () => _financingTenors.first,
-          );
-          final otherFee = (tenor['other_fee'] as num?)?.toDouble() ?? 0;
-          final munahRate = (config['munah_rate'] as num).toDouble();
-          final adminFlat = (config['admin_fee_flat'] as num).toDouble();
-          final adminPercent = (config['admin_fee_percent'] as num).toDouble();
-          final dpAmount = basePrice * (dpPercent / 100);
-          final plafond = basePrice - dpAmount;
-          final installment = _calculateInstallment(
-            basePrice: basePrice,
-            dpPercent: dpPercent,
-            munahRate: munahRate,
-            adminFeeFlat: adminFlat,
-            adminFeePercent: adminPercent,
-            tenorMonths: tenorMonths,
-            otherFee: otherFee,
-          );
 
-          return Dialog(
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 48,
-              vertical: 32,
-            ),
-            backgroundColor: Colors.transparent,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1040),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: Material(
-                  color: Colors.white,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(28),
-                        child: Row(
-                          children: [
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Simulasi Pembiayaan Syariah',
-                                    style: TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.textDark,
-                                    ),
-                                  ),
-                                  SizedBox(height: 6),
-                                  Text(
-                                    'Estimasi mengikuti parameter pembiayaan aktif di database lokal.',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: AppColors.textSecondary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton.filledTonal(
-                              onPressed: () => Navigator.pop(context),
-                              icon: const Icon(Icons.close),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppColors.muted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  color: AppColors.goldBg,
-                                  borderRadius: BorderRadius.circular(28),
-                                  border: Border.all(
-                                    color: const Color(0xFFF3D27A),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Estimasi angsuran',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF8A5A00),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      currencyFormatter.format(
-                                        installment.round(),
-                                      ),
-                                      style: const TextStyle(
-                                        fontSize: 38,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.accent,
-                                      ),
-                                    ),
-                                    const Text(
-                                      '/ bulan',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF8A5A00),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 22),
-                                    _breakdown(
-                                      'Harga barang',
-                                      currencyFormatter.format(basePrice),
-                                    ),
-                                    _breakdown(
-                                      'DP $dpPercent%',
-                                      currencyFormatter.format(dpAmount),
-                                    ),
-                                    _breakdown(
-                                      'Plafond',
-                                      currencyFormatter.format(plafond),
-                                    ),
-                                    _breakdown(
-                                      "Mu'nah / 10 hari",
-                                      '${munahRate.toStringAsFixed(2)}%',
-                                    ),
-                                    _breakdown('Tenor', '$tenorMonths bulan'),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 22),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _selectorPanel(
-                                    title: 'Down Payment',
-                                    children: _dpOptions.map((dp) {
-                                      final selected = dp == dpPercent;
-                                      return _choice('$dp%', selected, () {
-                                        setState(() => _selectedDpPercent = dp);
-                                        setDialogState(() {});
-                                      });
-                                    }).toList(),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  _selectorPanel(
-                                    title: 'Tenor',
-                                    children: _financingTenors.map((t) {
-                                      final months = t['months'] as int;
-                                      return _choice(
-                                        '$months bulan',
-                                        months == tenorMonths,
-                                        () {
-                                          setState(
-                                            () => _selectedTenorMonths = months,
-                                          );
-                                          setDialogState(() {});
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  Text(
-                                    'Estimasi angsuran dapat berubah sesuai kebijakan outlet dan hasil verifikasi barang.',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary.withValues(
-                                        alpha: 0.85,
-                                      ),
-                                      height: 1.45,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _selectorPanel({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.muted,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Wrap(spacing: 10, runSpacing: 10, children: children),
-        ],
-      ),
-    );
-  }
-
-  Widget _choice(String label, bool selected, VoidCallback onTap) {
+  Widget _choiceChip(String label, bool selected, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(999),
@@ -889,34 +702,570 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           label,
           style: TextStyle(
             color: selected ? Colors.white : AppColors.textSecondary,
-            fontWeight: FontWeight.w900,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
     );
   }
 
-  Widget _breakdown(String label, String value) {
+  Widget _skemaCard(
+    String title,
+    String subtitle,
+    bool selected,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary.withValues(alpha: 0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+            width: selected ? 2.0 : 1.0,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: selected ? AppColors.primary : AppColors.textDark,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: selected ? AppColors.primary : AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSimulationPanel(NumberFormat currencyFormatter) {
+    final config = _financingConfig!;
+    final totalHarga = _simulatePackage
+        ? _packageItems.fold<double>(0.0, (sum, item) => sum + item.basePrice)
+        : widget.item.basePrice;
+
+    if (_selectedSkema == SkemaType.tunai) {
+      final result = FinancingCalculator.simulasiTunai(hargaLelang: totalHarga.round());
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F8F1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.money_outlined, color: AppColors.successGreen, size: 24),
+                SizedBox(width: 8),
+                Text(
+                  '💵 PEMBELIAN TUNAI',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.successGreen,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Total Bayar',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              currencyFormatter.format(result.hargaLelang),
+              style: const TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+                color: AppColors.successGreen,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            _bulletPoint('Bayar penuh saat transaksi.'),
+            _bulletPoint('Tidak ada bunga atau cicilan tambahan.'),
+            if (_simulatePackage) ...[
+              const SizedBox(height: 12),
+              _buildPackageItemsList(currencyFormatter),
+            ],
+          ],
+        ),
+      );
+    } else if (_selectedSkema == SkemaType.kca) {
+      final result = FinancingCalculator.simulasiKca(
+        hargaLelang: totalHarga.round(),
+        config: config,
+      );
+
+      if (!result.eligible) {
+        return _buildIneligiblePanel(result.message ?? '');
+      }
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0F4F8),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.credit_card_outlined, color: AppColors.info, size: 24),
+                SizedBox(width: 8),
+                Text(
+                  '💳 KCA — Kredit Cicilan Angsuran',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.info,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _breakdownRow('Harga Lelang', currencyFormatter.format(result.hargaLelang)),
+            _breakdownRow('Uang Muka (19.2%)', currencyFormatter.format(result.uangMuka)),
+            _breakdownRow('Uang Pinjaman', currencyFormatter.format(result.uangPinjaman)),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.timer_outlined, color: AppColors.info, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  '⏱️ TEMPO: ${result.tempoKca} BULAN',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.info,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _bulletPoint('Nasabah melunasi sisa pinjaman dalam 4 bulan.'),
+            _bulletPoint('TIDAK ADA angsuran rutin bulanan.'),
+            _bulletPoint('Bayar bebas kapan saja (bertahap/sekaligus).'),
+            _bulletPoint('Bunga 1.25% flat per bulan atas sisa pinjaman.'),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            _breakdownRow('Bunga Total (4 bln)', currencyFormatter.format(result.bungaTotalKca!)),
+            _breakdownRow('Admin Fee', currencyFormatter.format(result.adminFee!)),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'TOTAL PELUNASAN',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                Text(
+                  currencyFormatter.format(result.totalPelunasanKca!),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.info,
+                  ),
+                ),
+              ],
+            ),
+            if (_simulatePackage) ...[
+              const SizedBox(height: 16),
+              _buildPackageItemsList(currencyFormatter),
+            ],
+          ],
+        ),
+      );
+    } else {
+      final tenorMonths = _selectedTenorMonths ?? _financingTenors.first['months'] as int;
+      final result = FinancingCalculator.simulasiKrasida(
+        hargaLelang: totalHarga.round(),
+        config: config,
+        tenors: _financingTenors,
+        tenorMonths: tenorMonths,
+      );
+
+      if (!result.eligible) {
+        return _buildIneligiblePanel(result.message ?? '');
+      }
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFDF5),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFF3D27A), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.bar_chart_outlined, color: AppColors.accent, size: 24),
+                SizedBox(width: 8),
+                Text(
+                  '📊 KRASIDA — Kredit Gadai Angsuran',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _breakdownRow('Harga Lelang', currencyFormatter.format(result.hargaLelang)),
+            _breakdownRow('Uang Muka (18.5%)', currencyFormatter.format(result.uangMuka)),
+            _breakdownRow('Uang Pinjaman', currencyFormatter.format(result.uangPinjaman)),
+            const SizedBox(height: 16),
+            
+            const Text(
+              'PILIH TENOR:',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _financingTenors.map((t) {
+                final months = t['months'] as int;
+                final isSelected = months == tenorMonths;
+                return ChoiceChip(
+                  label: Text('$months bln'),
+                  selected: isSelected,
+                  selectedColor: AppColors.accent,
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() => _selectedTenorMonths = months);
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFFD95A)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ANGSURAN TETAP PER BULAN',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF8A5A00),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    currencyFormatter.format(result.angsuranPerBulan!),
+                    style: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.accent,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'selama $tenorMonths bulan (Bunga ${(result.bungaPerBulan! * 100).toStringAsFixed(2)}% flat/bulan)',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF8A5A00),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _breakdownRow('Total Bayar', currencyFormatter.format(result.totalBayar!)),
+            _breakdownRow('Bunga Total', currencyFormatter.format(result.bungaTotalKrasida!)),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 12),
+            
+            const Text(
+              '📊 PERBANDINGAN SEMUA TENOR:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(1),
+                1: FlexColumnWidth(2),
+                2: FlexColumnWidth(2),
+                3: FlexColumnWidth(1.8),
+              },
+              children: [
+                TableRow(
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: AppColors.border)),
+                  ),
+                  children: [
+                    _tableHeader('Bln'),
+                    _tableHeader('Angsuran'),
+                    _tableHeader('Total Bayar'),
+                    _tableHeader('Bunga'),
+                  ],
+                ),
+                ...?result.perbandinganTenor?.map((t) {
+                  return TableRow(
+                    decoration: BoxDecoration(
+                      color: t.isSelected ? AppColors.accent.withValues(alpha: 0.08) : null,
+                      border: const Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+                    ),
+                    children: [
+                      _tableCell('${t.tenor}', isSelected: t.isSelected),
+                      _tableCell(currencyFormatter.format(t.angsuranPerBulan), isSelected: t.isSelected),
+                      _tableCell(currencyFormatter.format(t.totalBayar), isSelected: t.isSelected),
+                      _tableCell(currencyFormatter.format(t.bungaTotal), isSelected: t.isSelected),
+                    ],
+                  );
+                }),
+              ],
+            ),
+            if (_simulatePackage) ...[
+              const SizedBox(height: 16),
+              _buildPackageItemsList(currencyFormatter),
+            ],
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _bulletPoint(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _breakdownRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFF8A5A00),
+              fontSize: 14,
               fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
             ),
           ),
-          const Spacer(),
           Text(
             value,
             style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
               color: AppColors.textDark,
-              fontWeight: FontWeight.w900,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIneligiblePanel(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF0F0),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+              SizedBox(width: 8),
+              Text(
+                'Skema Tidak Tersedia',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.error,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPackageItemsList(NumberFormat currencyFormatter) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📦 BARANG DALAM PAKET ${widget.item.creditNumber}:',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ..._packageItems.map((item) {
+            final isSelf = item.id == widget.item.id;
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Text(
+                    '• ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isSelf ? AppColors.primary : AppColors.textSecondary,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '${item.name} (${item.karat ?? "-"}K, ${item.weightGram}g)${isSelf ? " (Barang ini)" : ""}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelf ? FontWeight.w800 : FontWeight.w600,
+                        color: isSelf ? AppColors.primary : AppColors.textDark,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    currencyFormatter.format(item.basePrice),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelf ? FontWeight.w800 : FontWeight.w700,
+                      color: isSelf ? AppColors.primary : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _tableHeader(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _tableCell(String text, {bool isSelected = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+          color: isSelected ? AppColors.accent : AppColors.textDark,
+        ),
       ),
     );
   }

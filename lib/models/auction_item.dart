@@ -1,5 +1,6 @@
 class AuctionItem {
   final int? id;
+  final String? creditNumber;
   final String name;
   final int categoryId;
   final double weightGram;
@@ -9,12 +10,13 @@ class AuctionItem {
   final String? description;
   final bool isActive;
   final String? createdAt;
-  
+
   // Custom field to hold fetched category name if needed
   String? categoryName;
 
   AuctionItem({
     this.id,
+    this.creditNumber,
     required this.name,
     required this.categoryId,
     required this.weightGram,
@@ -30,6 +32,7 @@ class AuctionItem {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'credit_number': creditNumber,
       'name': name,
       'category_id': categoryId,
       'weight_gram': weightGram,
@@ -45,6 +48,7 @@ class AuctionItem {
   factory AuctionItem.fromMap(Map<String, dynamic> map) {
     return AuctionItem(
       id: map['id'],
+      creditNumber: map['credit_number'] as String?,
       name: map['name'],
       categoryId: map['category_id'],
       weightGram: (map['weight_gram'] as num).toDouble(),

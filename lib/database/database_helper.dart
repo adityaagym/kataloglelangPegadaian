@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -47,6 +47,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE auction_items (
         id $idType,
+        credit_number $textNullable,
         name $textType,
         category_id $intType,
         weight_gram $doubleType,
@@ -83,9 +84,18 @@ class DatabaseHelper {
       CREATE TABLE financing_config (
         id $idType,
         dp_options TEXT NOT NULL DEFAULT '15,25,35,50',
-        admin_fee_flat REAL NOT NULL DEFAULT 50000,
+        stl_price REAL NOT NULL DEFAULT 502894,
+        hdle_price REAL NOT NULL DEFAULT 550000,
+        loan_ratio REAL NOT NULL DEFAULT 0.95,
+        admin_fee_flat REAL NOT NULL DEFAULT 15000,
         admin_fee_percent REAL NOT NULL DEFAULT 0,
         munah_rate REAL NOT NULL DEFAULT 0.38,
+        um_percentage_kca REAL NOT NULL DEFAULT 0.192,
+        um_percentage_krasida REAL NOT NULL DEFAULT 0.185,
+        bunga_kca REAL NOT NULL DEFAULT 0.0125,
+        tempo_kca INTEGER NOT NULL DEFAULT 4,
+        minimum_up_kca INTEGER NOT NULL DEFAULT 500000,
+        minimum_up_krasida INTEGER NOT NULL DEFAULT 500000,
         is_active INTEGER NOT NULL DEFAULT 1,
         updated_at TEXT
       )
@@ -96,6 +106,8 @@ class DatabaseHelper {
         id $idType,
         config_id INTEGER NOT NULL,
         months INTEGER NOT NULL,
+        multiplier REAL NOT NULL DEFAULT 1,
+        bunga_flat REAL NOT NULL DEFAULT 0.0125,
         is_active INTEGER NOT NULL DEFAULT 1,
         other_fee REAL NOT NULL DEFAULT 0,
         FOREIGN KEY (config_id) REFERENCES financing_config (id)
@@ -103,10 +115,22 @@ class DatabaseHelper {
     ''');
 
     // Insert default categories
-    await db.insert('categories', {'name': 'Perhiasan Emas', 'description': 'Berbagai perhiasan emas murni maupun campuran'});
-    await db.insert('categories', {'name': 'Elektronik', 'description': 'Gadget, laptop, dan elektronik lainnya'});
-    await db.insert('categories', {'name': 'Logam Mulia', 'description': 'Emas batangan antam/UBS'});
-    await db.insert('categories', {'name': 'Kendaraan', 'description': 'Mobil, motor, dan kendaraan lainnya'});
+    await db.insert('categories', {
+      'name': 'Perhiasan Emas',
+      'description': 'Berbagai perhiasan emas murni maupun campuran',
+    });
+    await db.insert('categories', {
+      'name': 'Elektronik',
+      'description': 'Gadget, laptop, dan elektronik lainnya',
+    });
+    await db.insert('categories', {
+      'name': 'Logam Mulia',
+      'description': 'Emas batangan antam/UBS',
+    });
+    await db.insert('categories', {
+      'name': 'Kendaraan',
+      'description': 'Mobil, motor, dan kendaraan lainnya',
+    });
 
     // Insert default gold price
     await db.insert('gold_prices', {
@@ -117,18 +141,36 @@ class DatabaseHelper {
     // Insert default financing config
     final configId = await db.insert('financing_config', {
       'dp_options': '15,25,35,50',
-      'admin_fee_flat': 50000,
+      'stl_price': 502894,
+      'hdle_price': 550000,
+      'loan_ratio': 0.95,
+      'admin_fee_flat': 15000,
       'admin_fee_percent': 0,
       'munah_rate': 0.38,
+      'um_percentage_kca': 0.192,
+      'um_percentage_krasida': 0.185,
+      'bunga_kca': 0.0125,
+      'tempo_kca': 4,
+      'minimum_up_kca': 500000,
+      'minimum_up_krasida': 500000,
       'is_active': 1,
       'updated_at': DateTime.now().toIso8601String(),
     });
 
     // Insert default tenors
-    for (final months in [6, 12, 18, 24, 36]) {
+    final defaultBunga = {
+      6: 0.0125,
+      12: 0.0125,
+      18: 0.0130,
+      24: 0.0130,
+      36: 0.0140,
+    };
+    for (final entry in _defaultTenorMultipliers.entries) {
       await db.insert('financing_tenors', {
         'config_id': configId,
-        'months': months,
+        'months': entry.key,
+        'multiplier': entry.value,
+        'bunga_flat': defaultBunga[entry.key] ?? 0.0125,
         'is_active': 1,
         'other_fee': 0,
       });
@@ -169,9 +211,16 @@ class DatabaseHelper {
       ''');
 
       // Add Kendaraan category if not exists
-      final existing = await db.query('categories', where: 'name = ?', whereArgs: ['Kendaraan']);
+      final existing = await db.query(
+        'categories',
+        where: 'name = ?',
+        whereArgs: ['Kendaraan'],
+      );
       if (existing.isEmpty) {
-        await db.insert('categories', {'name': 'Kendaraan', 'description': 'Mobil, motor, dan kendaraan lainnya'});
+        await db.insert('categories', {
+          'name': 'Kendaraan',
+          'description': 'Mobil, motor, dan kendaraan lainnya',
+        });
       }
 
       // Insert default gold price if empty
@@ -204,6 +253,135 @@ class DatabaseHelper {
         }
       }
     }
+    if (oldVersion < 3) {
+      await _addColumnIfMissing(db, 'auction_items', 'credit_number', 'TEXT');
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'stl_price',
+        'REAL NOT NULL DEFAULT 502894',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'hdle_price',
+        'REAL NOT NULL DEFAULT 550000',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'loan_ratio',
+        'REAL NOT NULL DEFAULT 0.95',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_tenors',
+        'multiplier',
+        'REAL NOT NULL DEFAULT 1',
+      );
+
+      for (final entry in _defaultTenorMultipliers.entries) {
+        await db.update(
+          'financing_tenors',
+          {'multiplier': entry.value},
+          where: 'months = ?',
+          whereArgs: [entry.key],
+        );
+      }
+    }
+    if (oldVersion < 4) {
+      // Add KCA and KRASIDA new fields to financing_config
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'um_percentage_kca',
+        'REAL NOT NULL DEFAULT 0.192',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'um_percentage_krasida',
+        'REAL NOT NULL DEFAULT 0.185',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'bunga_kca',
+        'REAL NOT NULL DEFAULT 0.0125',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'tempo_kca',
+        'INTEGER NOT NULL DEFAULT 4',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'minimum_up_kca',
+        'INTEGER NOT NULL DEFAULT 500000',
+      );
+      await _addColumnIfMissing(
+        db,
+        'financing_config',
+        'minimum_up_krasida',
+        'INTEGER NOT NULL DEFAULT 500000',
+      );
+
+      // Add bunga_flat to financing_tenors
+      await _addColumnIfMissing(
+        db,
+        'financing_tenors',
+        'bunga_flat',
+        'REAL NOT NULL DEFAULT 0.0125',
+      );
+
+      // Update existing admin_fee_flat to 15000 if it was the default 50000
+      await db.update(
+        'financing_config',
+        {'admin_fee_flat': 15000},
+        where: 'admin_fee_flat = ?',
+        whereArgs: [50000],
+      );
+
+      // Update bunga_flat for tenors
+      final defaultBunga = {
+        6: 0.0125,
+        12: 0.0125,
+        18: 0.0130,
+        24: 0.0130,
+        36: 0.0140,
+      };
+      for (final entry in defaultBunga.entries) {
+        await db.update(
+          'financing_tenors',
+          {'bunga_flat': entry.value},
+          where: 'months = ?',
+          whereArgs: [entry.key],
+        );
+      }
+    }
+  }
+
+  static const Map<int, double> _defaultTenorMultipliers = {
+    6: 1.075,
+    12: 1.15,
+    18: 1.234,
+    24: 1.312,
+    36: 1.504,
+  };
+
+  Future<void> _addColumnIfMissing(
+    Database db,
+    String table,
+    String column,
+    String definition,
+  ) async {
+    final columns = await db.rawQuery('PRAGMA table_info($table)');
+    final exists = columns.any((c) => c['name'] == column);
+    if (!exists) {
+      await db.execute('ALTER TABLE $table ADD COLUMN $column $definition');
+    }
   }
 
   // --- Categories ---
@@ -235,7 +413,9 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<AuctionItem>> readAllAuctionItems({bool activeOnly = false}) async {
+  Future<List<AuctionItem>> readAllAuctionItems({
+    bool activeOnly = false,
+  }) async {
     final db = await instance.database;
 
     // Join with categories to get category name
@@ -246,6 +426,30 @@ class DatabaseHelper {
       ${activeOnly ? "WHERE a.is_active = 1" : ""}
       ORDER BY a.created_at DESC
     ''');
+
+    return result.map((json) {
+      var item = AuctionItem.fromMap(json);
+      item.categoryName = json['category_name'] as String?;
+      return item;
+    }).toList();
+  }
+
+  Future<List<AuctionItem>> readAuctionItemsByCreditNumber(
+    String creditNumber, {
+    bool activeOnly = true,
+  }) async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      '''
+      SELECT a.*, c.name as category_name
+      FROM auction_items a
+      LEFT JOIN categories c ON a.category_id = c.id
+      WHERE a.credit_number = ?
+      ${activeOnly ? "AND a.is_active = 1" : ""}
+      ORDER BY a.created_at ASC
+    ''',
+      [creditNumber],
+    );
 
     return result.map((json) {
       var item = AuctionItem.fromMap(json);
@@ -268,11 +472,7 @@ class DatabaseHelper {
     final db = await instance.database;
     // Also delete photos
     await db.delete('item_photos', where: 'item_id = ?', whereArgs: [id]);
-    return await db.delete(
-      'auction_items',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('auction_items', where: 'id = ?', whereArgs: [id]);
   }
 
   // --- Photos ---
@@ -294,11 +494,7 @@ class DatabaseHelper {
 
   Future<int> deleteItemPhoto(int id) async {
     final db = await instance.database;
-    return await db.delete(
-      'item_photos',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('item_photos', where: 'id = ?', whereArgs: [id]);
   }
 
   // --- Gold Prices ---
@@ -426,6 +622,15 @@ class DatabaseHelper {
     required double munahRate,
     required bool isActive,
     required List<Map<String, dynamic>> tenors,
+    double stlPrice = 502894,
+    double hdlePrice = 550000,
+    double loanRatio = 0.95,
+    double umPercentageKca = 0.192,
+    double umPercentageKrasida = 0.185,
+    double bungaKca = 0.0125,
+    int tempoKca = 4,
+    int minimumUpKca = 500000,
+    int minimumUpKrasida = 500000,
   }) async {
     final db = await instance.database;
 
@@ -434,9 +639,18 @@ class DatabaseHelper {
 
     final configId = await db.insert('financing_config', {
       'dp_options': dpOptions,
+      'stl_price': stlPrice,
+      'hdle_price': hdlePrice,
+      'loan_ratio': loanRatio,
       'admin_fee_flat': adminFeeFlat,
       'admin_fee_percent': adminFeePercent,
       'munah_rate': munahRate,
+      'um_percentage_kca': umPercentageKca,
+      'um_percentage_krasida': umPercentageKrasida,
+      'bunga_kca': bungaKca,
+      'tempo_kca': tempoKca,
+      'minimum_up_kca': minimumUpKca,
+      'minimum_up_krasida': minimumUpKrasida,
       'is_active': isActive ? 1 : 0,
       'updated_at': DateTime.now().toIso8601String(),
     });
@@ -445,6 +659,19 @@ class DatabaseHelper {
       await db.insert('financing_tenors', {
         'config_id': configId,
         'months': tenor['months'],
+        'multiplier':
+            tenor['multiplier'] ??
+            _defaultTenorMultipliers[tenor['months']] ??
+            1.0,
+        'bunga_flat': tenor['bunga_flat'] ??
+            {
+              6: 0.0125,
+              12: 0.0125,
+              18: 0.0130,
+              24: 0.0130,
+              36: 0.0140,
+            }[tenor['months']] ??
+            0.0125,
         'is_active': tenor['is_active'] ?? 1,
         'other_fee': tenor['other_fee'] ?? 0,
       });
@@ -454,7 +681,9 @@ class DatabaseHelper {
   // --- Stats ---
   Future<int> getActiveItemCount() async {
     final db = await instance.database;
-    final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM auction_items WHERE is_active = 1');
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM auction_items WHERE is_active = 1',
+    );
     return (result.first['cnt'] as int?) ?? 0;
   }
 
@@ -475,13 +704,16 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getRecentItems({int limit = 3}) async {
     final db = await instance.database;
-    return await db.rawQuery('''
+    return await db.rawQuery(
+      '''
       SELECT a.*, c.name as category_name
       FROM auction_items a
       LEFT JOIN categories c ON a.category_id = c.id
       ORDER BY a.created_at DESC
       LIMIT ?
-    ''', [limit]);
+    ''',
+      [limit],
+    );
   }
 
   // --- Backup ---

@@ -32,11 +32,12 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     // Search filter
     if (_searchController.text.isNotEmpty) {
+      final query = _searchController.text.toLowerCase();
       items = items
           .where(
-            (item) => item.name.toLowerCase().contains(
-              _searchController.text.toLowerCase(),
-            ),
+            (item) =>
+                item.name.toLowerCase().contains(query) ||
+                (item.creditNumber ?? '').toLowerCase().contains(query),
           )
           .toList();
     }
@@ -200,7 +201,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                   controller: _searchController,
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
-                    hintText: 'Cari berdasarkan nama...',
+                    hintText: 'Cari nama atau nomor akad...',
                     hintStyle: const TextStyle(color: AppColors.textMuted),
                     prefixIcon: const Icon(
                       Icons.search,
@@ -371,6 +372,17 @@ class _ItemListScreenState extends State<ItemListScreen> {
                             Expanded(
                               flex: 2,
                               child: Text(
+                                'NO AKAD',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
                                 'KATEGORI',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
@@ -466,11 +478,43 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                   // Name
                                   Expanded(
                                     flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textDark,
+                                          ),
+                                        ),
+                                        if ((item.creditNumber ?? '')
+                                            .isNotEmpty)
+                                          const SizedBox(height: 3),
+                                        if ((item.creditNumber ?? '')
+                                            .isNotEmpty)
+                                          const Text(
+                                            'Bagian dari akad yang dapat berisi beberapa barang',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: AppColors.textMuted,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
                                     child: Text(
-                                      item.name,
+                                      item.creditNumber?.isNotEmpty == true
+                                          ? item.creditNumber!
+                                          : '-',
                                       style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textDark,
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ),

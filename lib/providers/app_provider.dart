@@ -55,14 +55,29 @@ class AppProvider with ChangeNotifier {
     return await _dbHelper.readItemPhotos(itemId);
   }
 
-  void filterItems({String query = '', List<int>? categoryIds, double? minPrice, double? maxPrice}) {
+  Future<List<AuctionItem>> getItemsByCreditNumber(String creditNumber) async {
+    return await _dbHelper.readAuctionItemsByCreditNumber(creditNumber);
+  }
+
+  void filterItems({
+    String query = '',
+    List<int>? categoryIds,
+    double? minPrice,
+    double? maxPrice,
+  }) {
     _filteredItems = _allItems.where((item) {
       bool matchesQuery = item.name.toLowerCase().contains(query.toLowerCase());
-      bool matchesCategory = categoryIds == null || categoryIds.isEmpty || categoryIds.contains(item.categoryId);
+      bool matchesCategory =
+          categoryIds == null ||
+          categoryIds.isEmpty ||
+          categoryIds.contains(item.categoryId);
       bool matchesMinPrice = minPrice == null || item.basePrice >= minPrice;
       bool matchesMaxPrice = maxPrice == null || item.basePrice <= maxPrice;
 
-      return matchesQuery && matchesCategory && matchesMinPrice && matchesMaxPrice;
+      return matchesQuery &&
+          matchesCategory &&
+          matchesMinPrice &&
+          matchesMaxPrice;
     }).toList();
     notifyListeners();
   }
@@ -132,6 +147,15 @@ class AppProvider with ChangeNotifier {
     required double munahRate,
     required bool isActive,
     required List<Map<String, dynamic>> tenors,
+    double stlPrice = 502894,
+    double hdlePrice = 550000,
+    double loanRatio = 0.95,
+    double umPercentageKca = 0.192,
+    double umPercentageKrasida = 0.185,
+    double bungaKca = 0.0125,
+    int tempoKca = 4,
+    int minimumUpKca = 500000,
+    int minimumUpKrasida = 500000,
   }) async {
     await _dbHelper.saveFinancingConfig(
       dpOptions: dpOptions,
@@ -140,6 +164,15 @@ class AppProvider with ChangeNotifier {
       munahRate: munahRate,
       isActive: isActive,
       tenors: tenors,
+      stlPrice: stlPrice,
+      hdlePrice: hdlePrice,
+      loanRatio: loanRatio,
+      umPercentageKca: umPercentageKca,
+      umPercentageKrasida: umPercentageKrasida,
+      bungaKca: bungaKca,
+      tempoKca: tempoKca,
+      minimumUpKca: minimumUpKca,
+      minimumUpKrasida: minimumUpKrasida,
     );
     notifyListeners();
   }

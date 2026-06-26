@@ -10,6 +10,7 @@ import '../../models/item_photo.dart';
 import '../../database/database_helper.dart';
 import '../../utils/file_helper.dart';
 import '../../utils/app_colors.dart';
+import '../../services/financing_calculator.dart';
 
 class ItemFormScreen extends StatefulWidget {
   final AuctionItem? itemToEdit;
@@ -23,6 +24,7 @@ class ItemFormScreen extends StatefulWidget {
 class _ItemFormScreenState extends State<ItemFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  String? _creditNumber;
   String _name = '';
   int? _categoryId;
   double _weightGram = 0;
@@ -47,6 +49,10 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
   late TextEditingController _basePriceController;
 
+  Map<String, dynamic>? _financingConfig;
+  List<Map<String, dynamic>> _financingTenors = [];
+  bool _isFinancingLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +64,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           : '',
     );
     if (widget.itemToEdit != null) {
+      _creditNumber = widget.itemToEdit!.creditNumber;
       _name = widget.itemToEdit!.name;
       _categoryId = widget.itemToEdit!.categoryId;
       _weightGram = widget.itemToEdit!.weightGram;
@@ -68,6 +75,25 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       _isActive = widget.itemToEdit!.isActive;
 
       _loadExistingPhotos();
+    }
+    _loadFinancingData();
+  }
+
+  Future<void> _loadFinancingData() async {
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    final config = await provider.getActiveFinancingConfig();
+    if (config != null && config['is_active'] == 1) {
+      final tenors = await provider.getFinancingTenors(config['id'] as int);
+      final activeTenors = tenors.where((t) => t['is_active'] == 1).toList();
+      if (mounted) {
+        setState(() {
+          _financingConfig = config;
+          _financingTenors = activeTenors;
+          _isFinancingLoading = false;
+        });
+      }
+    } else if (mounted) {
+      setState(() => _isFinancingLoading = false);
     }
   }
 
@@ -217,6 +243,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
       final item = AuctionItem(
         id: widget.itemToEdit?.id,
+        creditNumber: _creditNumber?.trim().isEmpty == true
+            ? null
+            : _creditNumber?.trim(),
         name: _name,
         categoryId: _categoryId!,
         weightGram: _weightGram,
@@ -354,6 +383,22 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Nomor Akad / Kredit
+                                _buildLabel('Nomor Akad / Kredit'),
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  initialValue: _creditNumber,
+                                  decoration: _inputDecoration(
+                                    'Contoh: BK 1234',
+                                    helperText:
+                                        'Boleh sama untuk beberapa barang dalam satu akad.',
+                                  ),
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  onSaved: (val) => _creditNumber = val,
+                                ),
+                                const SizedBox(height: 20),
+
                                 // Nama Barang
                                 _buildLabel('Nama Barang', required: true),
                                 const SizedBox(height: 8),
@@ -642,42 +687,43 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                         ),
                                         const SizedBox(height: 20),
 
-                                        // Harga Dasar Lelang
+                                        // Harga Lelang
                                         _buildLabel(
-                                          'Harga Dasar Lelang',
+                                          'Harga Lelang',
                                           required: true,
                                         ),
                                         const SizedBox(height: 8),
                                         TextFormField(
                                           controller: _basePriceController,
-                                          readOnly: isGold,
+                                          readOnly: false,
                                           decoration: _inputDecoration(
-                                            isGold
-                                                ? 'Dihitung otomatis'
-                                                : 'Rp 0',
+                                            'Rp 0',
                                             helperText: isGold
-                                                ? 'Dihitung otomatis: Harga Emas x (Karat/24) x Berat'
-                                                : 'Masukkan harga dasar lelang secara manual',
+                                                ? 'Dihitung otomatis: Harga Emas x (Karat/24) x Berat (Dapat diubah manual)'
+                                                : 'Masukkan harga lelang secara manual',
                                           ),
                                           keyboardType: TextInputType.number,
-                                          inputFormatters: isGold
-                                              ? null
-                                              : [
-                                                  FilteringTextInputFormatter
-                                                      .digitsOnly,
-                                                  _ThousandsSeparatorFormatter(),
-                                                ],
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                            _ThousandsSeparatorFormatter(),
+                                          ],
+                                          onChanged: (val) {
+                                            setState(() {
+                                              final rawValue = val.replaceAll(
+                                                '.',
+                                                '',
+                                              );
+                                              _basePrice =
+                                                  double.tryParse(rawValue) ??
+                                                  0.0;
+                                            });
+                                          },
                                           validator: (val) {
-                                            if (isGold) {
-                                              if (val == null ||
-                                                  val.isEmpty ||
-                                                  val.replaceAll('.', '') ==
-                                                      '0') {
-                                                return 'Masukkan berat dan kadar terlebih dahulu';
-                                              }
-                                              return null;
-                                            }
-                                            if (val == null || val.isEmpty) {
+                                            if (val == null ||
+                                                val.isEmpty ||
+                                                val.replaceAll('.', '') ==
+                                                    '0') {
                                               return 'Wajib diisi';
                                             }
                                             return null;
@@ -747,6 +793,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                         setState(() => _isActive = val),
                                   ),
                                 ),
+                                _buildSimulationPreview(),
                               ],
                             ),
                           ),
@@ -1121,6 +1168,207 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         borderRadius: BorderRadius.circular(24),
         borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
+    );
+  }
+
+  Widget _buildSimulationPreview() {
+    if (_isFinancingLoading || _financingConfig == null || _basePrice <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
+    final hargaInt = _basePrice.round();
+
+    // 1. Tunai
+    final tunaiRes = FinancingCalculator.simulasiTunai(hargaLelang: hargaInt);
+
+    // 2. KCA
+    final kcaRes = FinancingCalculator.simulasiKca(
+      hargaLelang: hargaInt,
+      config: _financingConfig!,
+    );
+
+    // 3. KRASIDA
+    final defaultTenor = _financingTenors.isNotEmpty
+        ? _financingTenors.first['months'] as int
+        : 12;
+    final krasidaRes = FinancingCalculator.simulasiKrasida(
+      hargaLelang: hargaInt,
+      config: _financingConfig!,
+      tenors: _financingTenors,
+      tenorMonths: defaultTenor,
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calculate_outlined, color: AppColors.primary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'PREVIEW SIMULASI PEMBIAYAAN — ${currencyFormatter.format(hargaInt)}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textDark,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+
+          // TUNAI
+          _buildPreviewRow(
+            icon: Icons.money_outlined,
+            iconColor: AppColors.successGreen,
+            title: '💵 TUNAI',
+            details: [
+              'Total Bayar: ${currencyFormatter.format(tunaiRes.hargaLelang)}',
+              '(Bayar penuh saat transaksi, tanpa bunga/cicilan)',
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+
+          // KCA
+          if (kcaRes.eligible)
+            _buildPreviewRow(
+              icon: Icons.credit_card_outlined,
+              iconColor: AppColors.info,
+              title: '💳 KCA (Kredit Cicilan Angsuran) — Tempo ${kcaRes.tempoKca} Bulan',
+              details: [
+                'Uang Muka: ${currencyFormatter.format(kcaRes.uangMuka)}',
+                'Uang Pinjaman: ${currencyFormatter.format(kcaRes.uangPinjaman)}',
+                'Bunga Total: ${currencyFormatter.format(kcaRes.bungaTotalKca!)}',
+                'Admin Fee: ${currencyFormatter.format(kcaRes.adminFee!)}',
+                'Total Pelunasan: ${currencyFormatter.format(kcaRes.totalPelunasanKca!)}',
+                '(Bayar bebas selama 4 bulan, tanpa angsuran rutin)',
+              ],
+            )
+          else
+            _buildIneligiblePreviewRow(
+              title: '💳 KCA (Tidak Eligible)',
+              message: kcaRes.message ?? '',
+            ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+
+          // KRASIDA
+          if (krasidaRes.eligible)
+            _buildPreviewRow(
+              icon: Icons.bar_chart_outlined,
+              iconColor: AppColors.accent,
+              title: '📊 KRASIDA (Kredit Gadai Sistem Angsuran)',
+              details: [
+                'Uang Muka: ${currencyFormatter.format(krasidaRes.uangMuka)}',
+                'Uang Pinjaman: ${currencyFormatter.format(krasidaRes.uangPinjaman)}',
+                'Angsuran per Bulan:',
+                ...?krasidaRes.perbandinganTenor?.map((t) =>
+                    '• ${t.tenor} bln : ${currencyFormatter.format(t.angsuranPerBulan)} / bln (total ${currencyFormatter.format(t.totalBayar)})'),
+              ],
+            )
+          else
+            _buildIneligiblePreviewRow(
+              title: '📊 KRASIDA (Tidak Eligible)',
+              message: krasidaRes.message ?? '',
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreviewRow({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required List<String> details,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: iconColor, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: iconColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...details.map((d) => Padding(
+              padding: const EdgeInsets.only(left: 28, bottom: 4),
+              child: Text(
+                d,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: d.startsWith('•') || d.contains('Total') ? FontWeight.w700 : FontWeight.w600,
+                  color: d.startsWith('(') ? AppColors.textSecondary : AppColors.textDark,
+                ),
+              ),
+            )),
+      ],
+    );
+  }
+
+  Widget _buildIneligiblePreviewRow({
+    required String title,
+    required String message,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppColors.error,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 28),
+          child: Text(
+            message,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

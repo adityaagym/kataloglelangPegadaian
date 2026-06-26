@@ -2,6 +2,10 @@
 
 A new Flutter project.
 
+## Dokumentasi Fitur
+
+- [Simulasi Pembiayaan](docs/simulasi_pembiayaan.md)
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
