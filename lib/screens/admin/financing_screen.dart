@@ -23,6 +23,35 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
   double _stlPrice = 502894;
 
+  // Track original values to show floating save button when modified
+  double _originalStlPrice = 502894;
+  double _originalAdminFeeFlat = 15000;
+  bool _originalIsActive = true;
+  List<Map<String, dynamic>> _originalTenors = [];
+
+  bool get _hasChanges {
+    final currentStl = double.tryParse(_stlController.text) ?? _stlPrice;
+    final currentAdminFlat = double.tryParse(_adminFeeFlatController.text) ?? _adminFeeFlat;
+
+    if (currentStl != _originalStlPrice) return true;
+    if (currentAdminFlat != _originalAdminFeeFlat) return true;
+    if (_isActive != _originalIsActive) return true;
+
+    // Check tenors
+    if (_tenors.length != _originalTenors.length) return true;
+    for (int i = 0; i < _tenors.length; i++) {
+      final tCurrent = _tenors[i];
+      final tOrig = _originalTenors[i];
+      if (tCurrent['is_active'] != tOrig['is_active']) return true;
+      
+      final currentMultiplier = (tCurrent['multiplier'] as num?)?.toDouble() ?? 1.0;
+      final origMultiplier = (tOrig['multiplier'] as num?)?.toDouble() ?? 1.0;
+      if ((currentMultiplier - origMultiplier).abs() > 0.0001) return true;
+    }
+
+    return false;
+  }
+
   // Controllers for editable fields
   late TextEditingController _stlController;
   late TextEditingController _adminFeeFlatController;
@@ -76,6 +105,12 @@ class _FinancingScreenState extends State<FinancingScreen> {
           _stlController.text = _stlPrice.round().toString();
           _adminFeeFlatController.text = _adminFeeFlat.round().toString();
 
+          // Initialize tracking values
+          _originalStlPrice = _stlPrice;
+          _originalAdminFeeFlat = _adminFeeFlat;
+          _originalIsActive = _isActive;
+          _originalTenors = _tenors.map((t) => Map<String, dynamic>.from(t)).toList();
+
           _isLoading = false;
         });
       }
@@ -93,6 +128,12 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
         _stlController.text = '502894';
         _adminFeeFlatController.text = '70000';
+
+        // Initialize tracking values
+        _originalStlPrice = 502894;
+        _originalAdminFeeFlat = 70000;
+        _originalIsActive = _isActive;
+        _originalTenors = _tenors.map((t) => Map<String, dynamic>.from(t)).toList();
 
         _isLoading = false;
       });
@@ -169,472 +210,607 @@ class _FinancingScreenState extends State<FinancingScreen> {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 24), 
-          
-          // Title row
-          isPortrait
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Konfigurasi Pembiayaan Syariah',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _isActive ? AppColors.secondary : AppColors.muted,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _isActive ? Icons.check_circle : Icons.cancel_outlined,
-                            color: _isActive
-                                ? AppColors.successGreen
-                                : AppColors.textMuted,
-                            size: 18,
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(32, 32, 32, 120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 24), 
+              
+              // Title row
+              isPortrait
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Konfigurasi Pembiayaan Syariah',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textDark,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _isActive ? 'Aturan aktif' : 'Nonaktif',
-                            style: TextStyle(
-                              color: _isActive
-                                  ? AppColors.successGreen
-                                  : AppColors.textMuted,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Konfigurasi Pembiayaan Syariah',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textDark,
                         ),
-                        softWrap: true,
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _isActive ? AppColors.secondary : AppColors.muted,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isActive ? Icons.check_circle : Icons.cancel_outlined,
+                                color: _isActive
+                                    ? AppColors.successGreen
+                                    : AppColors.textMuted,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _isActive ? 'Aturan aktif' : 'Nonaktif',
+                                style: TextStyle(
+                                  color: _isActive
+                                      ? AppColors.successGreen
+                                      : AppColors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Konfigurasi Pembiayaan Syariah',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textDark,
+                            ),
+                            softWrap: true,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _isActive ? AppColors.secondary : AppColors.muted,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isActive ? Icons.check_circle : Icons.cancel_outlined,
+                                color: _isActive
+                                    ? AppColors.successGreen
+                                    : AppColors.textMuted,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _isActive ? 'Aturan aktif' : 'Nonaktif',
+                                style: TextStyle(
+                                  color: _isActive
+                                      ? AppColors.successGreen
+                                      : AppColors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+              const SizedBox(height: 6),
+              const Text(
+                'Atur parameter bunga, uang muka, STL, dan ratio pinjaman SQLite outlet secara real-time.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 28),
+
+              if (isPortrait) ...[
+                _buildMainParametersCard(),
+                const SizedBox(height: 24),
+                _buildImpactPreview(),
+                const SizedBox(height: 24),
+                _buildTenorTableCard(),
+              ] else ...[
+                ResponsiveRowColumn(
+                  isPortrait: false,
+                  spacing: 28,
+                  left: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildMainParametersCard(),
+                      const SizedBox(height: 24),
+                      _buildTenorTableCard(),
+                    ],
+                  ),
+                  right: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildImpactPreview(),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (_hasChanges)
+          Positioned(
+            left: 32,
+            right: 32,
+            bottom: 24,
+            child: _buildFloatingSaveButton(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMainParametersCard() {
+    return _buildConfigCard(
+      title: 'Parameter & Aturan Utama',
+      icon: Icons.tune_outlined,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final useHorizontal = constraints.maxWidth > 650;
+            if (useHorizontal) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _buildParamInputField(
+                      label: 'STL per Gram (24K)',
+                      controller: _stlController,
+                      suffixText: 'Rp',
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: _buildParamInputField(
+                      label: 'Biaya Administrasi Flat',
+                      controller: _adminFeeFlatController,
+                      suffixText: 'Rp',
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: _buildStatusSwitchField(),
+                  ),
+                ],
+              );
+            } else {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildParamInputField(
+                    label: 'STL per Gram (24K)',
+                    controller: _stlController,
+                    suffixText: 'Rp',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildParamInputField(
+                    label: 'Biaya Administrasi Flat',
+                    controller: _adminFeeFlatController,
+                    suffixText: 'Rp',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildStatusSwitchField(),
+                ],
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusSwitchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Status Aktif Aturan',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 52, // matches the height of our parameter textfields
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.muted,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Status Aktif',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: AppColors.textDark,
+                ),
+              ),
+              Switch(
+                value: _isActive,
+                activeThumbColor: AppColors.primary,
+                onChanged: (val) => setState(() => _isActive = val),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTenorTableCard() {
+    return _buildConfigCard(
+      title: 'Tenor KRASIDA & Multiplier',
+      icon: Icons.calendar_month_outlined,
+      children: [
+        // Tenor selection chips
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _tenors.map((tenor) {
+            final months = tenor['months'] as int;
+            final isSelected = _selectedTenorMonths == months;
+            final isActive = tenor['is_active'] == 1;
+
+            return ChoiceChip(
+              label: Text('$months bln'),
+              selected: isSelected,
+              selectedColor: AppColors.accent,
+              labelStyle: TextStyle(
+                color: isSelected
+                    ? Colors.white
+                    : (isActive
+                        ? AppColors.textDark
+                        : AppColors.textMuted),
+                fontWeight: FontWeight.w800,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onSelected: (selected) {
+                if (selected) {
+                  setState(() => _selectedTenorMonths = months);
+                }
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 20),
+
+        // Tenors table
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.muted,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: AppColors.cardBorder,
+                    ),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Status',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Tenor',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: _isActive ? AppColors.secondary : AppColors.muted,
-                        borderRadius: BorderRadius.circular(20),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Multiplier',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _isActive ? Icons.check_circle : Icons.cancel_outlined,
-                            color: _isActive
-                                ? AppColors.successGreen
-                                : AppColors.textMuted,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _isActive ? 'Aturan aktif' : 'Nonaktif',
-                            style: TextStyle(
-                              color: _isActive
-                                  ? AppColors.successGreen
-                                  : AppColors.textMuted,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ],
                 ),
-          const SizedBox(height: 6),
-          const Text(
-            'Atur parameter bunga, uang muka, STL, dan ratio pinjaman SQLite outlet secara real-time.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          const SizedBox(height: 28),
+              ),
+              // Rows
+              ...List.generate(_tenors.length, (index) {
+                final tenor = _tenors[index];
+                final months = tenor['months'] as int;
+                final isActive = tenor['is_active'] == 1;
+                final multiplier =
+                    (tenor['multiplier'] as num?)?.toDouble() ?? 1.0;
 
-          ResponsiveRowColumn(
-            isPortrait: isPortrait,
-            spacing: 28,
-            left: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                    // Card 1: Parameter Emas & Nilai Taksir
-                    _buildConfigCard(
-                      title: 'Parameter Emas & Nilai Taksir',
-                      icon: Icons.gavel_outlined,
-                      children: [
-                        _buildParamInputField(
-                          label: 'STL per Gram (24K)',
-                          controller: _stlController,
-                          suffixText: 'Rp',
-                        ),
-                      ],
-                    ),
-
-                    // Card 2: Administrasi & Biaya
-                    _buildConfigCard(
-                      title: 'Administrasi & Biaya',
-                      icon: Icons.payments_outlined,
-                      children: [
-                        _buildParamInputField(
-                          label: 'Biaya Administrasi Flat (Rp)',
-                          controller: _adminFeeFlatController,
-                          suffixText: 'Rp',
-                        ),
-                      ],
-                    ),
-
-                    // Card 4: Status Aturan
-                    _buildConfigCard(
-                      title: 'Status Aturan Konfigurasi',
-                      icon: Icons.toggle_on_outlined,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.muted,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: SwitchListTile(
-                            title: const Text(
-                              'Status Aktif',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    border: index < _tenors.length - 1
+                        ? const Border(
+                            bottom: BorderSide(
+                              color: AppColors.cardBorder,
+                            ),
+                          )
+                        : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Checkbox(
+                              value: isActive,
+                              activeColor: AppColors.primary,
+                              onChanged: (val) {
+                                setState(() {
+                                  _tenors[index]['is_active'] =
+                                      val == true ? 1 : 0;
+                                });
+                              },
+                            ),
+                            Expanded(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  isActive ? 'On' : 'Off',
+                                  style: TextStyle(
+                                    color: isActive
+                                        ? AppColors.textDark
+                                        : AppColors.textMuted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
-                            subtitle: const Text(
-                              'Aktifkan aturan simulasi pembiayaan ini',
-                              style: TextStyle(fontSize: 12),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '$months bln',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
                             ),
-                            value: _isActive,
-                            activeThumbColor: AppColors.primary,
-                            onChanged: (val) => setState(() => _isActive = val),
                           ),
                         ),
-                      ],
-                    ),
-              ],
-            ),
-            right: Column(
-              children: [
-                    // Tenor multiplier table container
-                    Container(
-                      padding: const EdgeInsets.all(28),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: AppColors.border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Tenor KRASIDA & Multiplier',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
+                      Expanded(
+                        flex: 2,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            multiplier.toStringAsFixed(3),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.textDark,
                             ),
                           ),
-                          const SizedBox(height: 20),
-
-                          // Tenor selection chips
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _tenors.map((tenor) {
-                              final months = tenor['months'] as int;
-                              final isSelected = _selectedTenorMonths == months;
-                              final isActive = tenor['is_active'] == 1;
-
-                              return ChoiceChip(
-                                label: Text('$months bln'),
-                                selected: isSelected,
-                                selectedColor: AppColors.accent,
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isActive
-                                          ? AppColors.textDark
-                                          : AppColors.textMuted),
-                                  fontWeight: FontWeight.w800,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                onSelected: (selected) {
-                                  if (selected) {
-                                    setState(() => _selectedTenorMonths = months);
-                                  }
-                                },
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Tenors table
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.muted,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              children: [
-                                // Header
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 12,
-                                  ),
-                                  decoration: const BoxDecoration(
-                                    border: Border(
-                                      bottom: BorderSide(
-                                        color: AppColors.cardBorder,
-                                      ),
-                                    ),
-                                  ),
-                                  child: const Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          'Status',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 11,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          'Tenor',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 11,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          'Multiplier',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 11,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Text(
-                                          'Edit',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 11,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Rows
-                                ...List.generate(_tenors.length, (index) {
-                                  final tenor = _tenors[index];
-                                  final months = tenor['months'] as int;
-                                  final isActive = tenor['is_active'] == 1;
-                                  final multiplier =
-                                      (tenor['multiplier'] as num?)?.toDouble() ?? 1.0;
-
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      border: index < _tenors.length - 1
-                                          ? const Border(
-                                              bottom: BorderSide(
-                                                color: AppColors.cardBorder,
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Checkbox(
-                                                value: isActive,
-                                                activeColor: AppColors.primary,
-                                                onChanged: (val) {
-                                                  setState(() {
-                                                    _tenors[index]['is_active'] =
-                                                        val == true ? 1 : 0;
-                                                  });
-                                                },
-                                              ),
-                                              Expanded(
-                                                child: FittedBox(
-                                                  fit: BoxFit.scaleDown,
-                                                  alignment: Alignment.centerLeft,
-                                                  child: Text(
-                                                    isActive ? 'On' : 'Off',
-                                                    style: TextStyle(
-                                                      color: isActive
-                                                          ? AppColors.textDark
-                                                          : AppColors.textMuted,
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              '$months bln',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              multiplier.toStringAsFixed(3),
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.textDark,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 1,
-                                          child: IconButton(
-                                            icon: const Icon(
-                                              Icons.edit,
-                                              size: 16,
-                                              color: AppColors.primary,
-                                            ),
-                                            onPressed: () => _showEditTenorDialog(index),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Impact Preview Panel
-                    _buildImpactPreview(),
-                  ],
-                ),
-            ),
-
-          const SizedBox(height: 28),
-
-          // Save button
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton.icon(
-              onPressed: _isSaving ? null : _saveConfig,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+                      Expanded(
+                        flex: 1,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.edit,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
+                          onPressed: () => _showEditTenorDialog(index),
+                        ),
                       ),
-                    )
-                  : const Icon(Icons.check, size: 20),
-              label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Konfigurasi'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 18,
-                ),
-                elevation: 2,
-                shadowColor: AppColors.primary.withValues(alpha: 0.3),
-              ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFloatingSaveButton() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = MediaQuery.of(context).size.width > 650;
+        final button = ElevatedButton.icon(
+          onPressed: _isSaving ? null : _saveConfig,
+          icon: _isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.check_circle_outline_rounded, size: 22),
+          label: Text(
+            _isSaving ? 'Menyimpan...' : 'Simpan Perubahan',
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
             ),
           ),
-        ],
-      ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            elevation: 4,
+            shadowColor: AppColors.primary.withValues(alpha: 0.4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32,
+              vertical: 20,
+            ),
+          ),
+        );
+
+        final notificationIcon = Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.primary,
+            size: 24,
+          ),
+        );
+
+        final textColumn = const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Perubahan Terdeteksi',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                color: AppColors.textDark,
+              ),
+            ),
+            Text(
+              'Anda memiliki parameter yang belum disimpan.',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        );
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                blurRadius: 30,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: isWide
+              ? Row(
+                  children: [
+                    notificationIcon,
+                    const SizedBox(width: 16),
+                    Expanded(child: textColumn),
+                    const SizedBox(width: 16),
+                    button,
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        notificationIcon,
+                        const SizedBox(width: 16),
+                        Expanded(child: textColumn),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: button,
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -823,24 +999,31 @@ class _FinancingScreenState extends State<FinancingScreen> {
     final krasidaTotal = krasidaRes.totalBayar!;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.insights_outlined, color: AppColors.primary, size: 22),
-              const SizedBox(width: 8),
-              const Expanded(
+              Icon(Icons.insights_outlined, color: AppColors.primary, size: 26),
+              SizedBox(width: 12),
+              Expanded(
                 child: Text(
                   'IMPACT PREVIEW (Simulasi Contoh)',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 20,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textDark,
                     letterSpacing: 0.5,
@@ -850,66 +1033,88 @@ class _FinancingScreenState extends State<FinancingScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Menggunakan contoh harga barang: ${currencyFormatter.format(mockPrice)}',
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.muted,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: 8),
+                Text(
+                  'Contoh Harga Barang: ${currencyFormatter.format(mockPrice)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
           // TUNAI CARD
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9), // Light green tint
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFC8E6C9)),
+              color: AppColors.categoryGreenBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.categoryGreenText.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.payments_outlined, color: AppColors.successGreen, size: 20),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.payments_outlined, color: AppColors.categoryGreenText, size: 26),
+                    const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
                         'TUNAI',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.successGreen,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.categoryGreenText,
                         ),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Text(
                         currencyFormatter.format(tunaiTotal),
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.successGreen,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.categoryGreenText,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const Padding(
-                  padding: EdgeInsets.only(left: 28),
+                  padding: EdgeInsets.only(left: 36),
                   child: Text(
                     'Bayar penuh saat transaksi, tanpa bunga/cicilan.',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textSecondary,
                     ),
@@ -918,29 +1123,29 @@ class _FinancingScreenState extends State<FinancingScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // KCA CARD
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFE3F2FD), // Light blue tint
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFBBDEFB)),
+              color: AppColors.categoryBlueBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.categoryBlueText.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 20),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.credit_card_outlined, color: AppColors.categoryBlueText, size: 26),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'KCA — Tempo $tempoKca Bulan',
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.categoryBlueText,
                         ),
                         softWrap: true,
@@ -948,11 +1153,11 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(kcaUm)),
                 _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(kcaUp)),
                 _buildImpactDetailRow('Biaya Admin', currencyFormatter.format(adminFlat.round())),
-                const Divider(height: 16),
+                const Divider(height: 24, color: Color(0xFFBBDEFB)),
                 _buildImpactDetailRow(
                   'Total Pelunasan',
                   currencyFormatter.format(kcaPelunasan),
@@ -962,29 +1167,29 @@ class _FinancingScreenState extends State<FinancingScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // KRASIDA CARD
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E1), // Light gold tint
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFFECB3)),
+              color: AppColors.categoryAmberBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.categoryAmberText.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.bar_chart_outlined, color: AppColors.gold, size: 20),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.bar_chart_outlined, color: AppColors.categoryAmberText, size: 26),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'KRASIDA — Tenor $tenorMonths Bulan',
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.categoryAmberText,
                         ),
                         softWrap: true,
@@ -992,11 +1197,11 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(krasidaUm)),
                 _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(krasidaUp)),
                 _buildImpactDetailRow('Angsuran per Bulan', '${currencyFormatter.format(krasidaAngsuran)} / bln'),
-                const Divider(height: 16),
+                const Divider(height: 24, color: Color(0xFFFFECB3)),
                 _buildImpactDetailRow(
                   'Total Bayar',
                   currencyFormatter.format(krasidaTotal),
@@ -1018,7 +1223,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
     Color? textColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1026,25 +1231,24 @@ class _FinancingScreenState extends State<FinancingScreen> {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-                color: AppColors.textSecondary,
+                fontSize: isBold ? 16 : 15,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                color: isBold ? AppColors.textDark : AppColors.textSecondary,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 16),
           Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
-                  color: textColor ?? AppColors.textDark,
-                ),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: isBold ? 18 : 16,
+                fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+                color: textColor ?? AppColors.textDark,
               ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
             ),
           ),
         ],

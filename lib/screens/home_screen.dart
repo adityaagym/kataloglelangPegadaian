@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Temukan barang lelang terpercaya dengan tampilan yang jelas dan mudah dibaca.',
+          'Temukan barang lelang favorit anda dengan mudah dan aman , hanya di PEGADAIAN.',
           style: TextStyle(
             fontSize: isPortrait ? 24 : 34,
             fontWeight: FontWeight.w800,
