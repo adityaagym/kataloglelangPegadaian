@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
 import '../../utils/app_colors.dart';
 import '../../services/financing_calculator.dart';
+import '../../widgets/responsive_row_column.dart';
 
 class FinancingScreen extends StatefulWidget {
   const FinancingScreen({super.key});
@@ -161,6 +162,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).size.width < 900;
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
@@ -175,56 +177,104 @@ class _FinancingScreenState extends State<FinancingScreen> {
           const SizedBox(height: 24), 
           
           // Title row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Text(
-                  'Konfigurasi Pembiayaan Syariah',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textDark,
-                  ),
-                  softWrap: true,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: _isActive ? AppColors.secondary : AppColors.muted,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          isPortrait
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      _isActive ? Icons.check_circle : Icons.cancel_outlined,
-                      color: _isActive
-                          ? AppColors.successGreen
-                          : AppColors.textMuted,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _isActive ? 'Aturan aktif' : 'Nonaktif',
+                    const Text(
+                      'Konfigurasi Pembiayaan Syariah',
                       style: TextStyle(
-                        color: _isActive
-                            ? AppColors.successGreen
-                            : AppColors.textMuted,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _isActive ? AppColors.secondary : AppColors.muted,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isActive ? Icons.check_circle : Icons.cancel_outlined,
+                            color: _isActive
+                                ? AppColors.successGreen
+                                : AppColors.textMuted,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isActive ? 'Aturan aktif' : 'Nonaktif',
+                            style: TextStyle(
+                              color: _isActive
+                                  ? AppColors.successGreen
+                                  : AppColors.textMuted,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Konfigurasi Pembiayaan Syariah',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textDark,
+                        ),
+                        softWrap: true,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _isActive ? AppColors.secondary : AppColors.muted,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isActive ? Icons.check_circle : Icons.cancel_outlined,
+                            color: _isActive
+                                ? AppColors.successGreen
+                                : AppColors.textMuted,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isActive ? 'Aturan aktif' : 'Nonaktif',
+                            style: TextStyle(
+                              color: _isActive
+                                  ? AppColors.successGreen
+                                  : AppColors.textMuted,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
           const SizedBox(height: 6),
           const Text(
             'Atur parameter bunga, uang muka, STL, dan ratio pinjaman SQLite outlet secara real-time.',
@@ -232,15 +282,12 @@ class _FinancingScreenState extends State<FinancingScreen> {
           ),
           const SizedBox(height: 28),
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left Column: All parameters (scrollable Form)
-              Expanded(
-                flex: 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          ResponsiveRowColumn(
+            isPortrait: isPortrait,
+            spacing: 28,
+            left: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                     // Card 1: Parameter Emas & Nilai Taksir
                     _buildConfigCard(
                       title: 'Parameter Emas & Nilai Taksir',
@@ -300,17 +347,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 24),
-
-              // Right Column: Tenor, Multipliers and Impact Preview
-              Expanded(
-                flex: 4,
-                child: Column(
-                  children: [
+              ],
+            ),
+            right: Column(
+              children: [
                     // Tenor multiplier table container
                     Container(
                       padding: const EdgeInsets.all(28),
@@ -558,9 +598,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     _buildImpactPreview(),
                   ],
                 ),
-              ),
-            ],
-          ),
+            ),
 
           const SizedBox(height: 28),
 

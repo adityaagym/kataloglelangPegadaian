@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
 import '../../utils/app_colors.dart';
+import '../../widgets/responsive_row_column.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -95,6 +96,7 @@ class _BackupScreenState extends State<BackupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).size.width < 900;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -207,11 +209,10 @@ class _BackupScreenState extends State<BackupScreen> {
           const SizedBox(height: 24),
 
           // Actions
-          Row(
-            children: [
-              // Export
-              Expanded(
-                child: Container(
+          ResponsiveRowColumn(
+            isPortrait: isPortrait,
+            spacing: 24,
+            left: Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -282,13 +283,7 @@ class _BackupScreenState extends State<BackupScreen> {
                     ],
                   ),
                 ),
-              ),
-
-              const SizedBox(width: 24),
-
-              // Info
-              Expanded(
-                child: Container(
+              right: Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -402,9 +397,7 @@ class _BackupScreenState extends State<BackupScreen> {
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );

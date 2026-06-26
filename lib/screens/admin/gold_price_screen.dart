@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
 import '../../utils/app_colors.dart';
+import '../../widgets/responsive_row_column.dart';
 
 class GoldPriceScreen extends StatefulWidget {
   final VoidCallback? onNavigateToItem;
@@ -98,6 +99,8 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).size.width < 900;
+
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -130,13 +133,10 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
           ),
           const SizedBox(height: 28),
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left - Input card
-              Expanded(
-                flex: 1,
-                child: Container(
+          ResponsiveRowColumn(
+            isPortrait: isPortrait,
+            spacing: 28,
+            left: Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -291,14 +291,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                     ],
                   ),
                 ),
-              ),
-
-              const SizedBox(width: 28),
-
-              // Right - Preview
-              Expanded(
-                flex: 1,
-                child: Container(
+              right: Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -431,9 +424,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );

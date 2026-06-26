@@ -21,8 +21,28 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   int _selectedIndex = 0;
 
+  String _getMenuTitle(int index) {
+    switch (index) {
+      case 0:
+        return 'Ringkasan';
+      case 1:
+        return 'Kelola Barang';
+      case 2:
+        return 'Tambah Barang';
+      case 3:
+        return 'Harga Emas';
+      case 4:
+        return 'Backup Data';
+      case 5:
+        return 'Pembiayaan';
+      default:
+        return 'Panel Admin';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).size.width < 900;
     Widget content;
     switch (_selectedIndex) {
       case 0:
@@ -54,10 +74,55 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
 
     return Scaffold(
+      appBar: isPortrait
+          ? AppBar(
+              title: Text(
+                _getMenuTitle(_selectedIndex),
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1),
+                child: Container(
+                  color: const Color(0xFFD7E7D8),
+                  height: 1,
+                ),
+              ),
+              leading: Builder(
+                builder: (context) {
+                  return IconButton(
+                    icon: const Icon(
+                      Icons.menu,
+                      color: AppColors.textDark,
+                      size: 24,
+                    ),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  );
+                },
+              ),
+            )
+          : null,
+      drawer: isPortrait
+          ? Drawer(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: _buildSidebar(isDrawer: true),
+            )
+          : null,
       body: Row(
         children: [
           // Left Navigation Sidebar
-          _buildSidebar(),
+          if (!isPortrait) _buildSidebar(isDrawer: false),
 
           // Main Content Area
           Expanded(
@@ -68,12 +133,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildSidebar() {
+  Widget _buildSidebar({required bool isDrawer}) {
     return Container(
       width: 280,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: const Border(right: BorderSide(color: Color(0xFFD7E7D8))),
+        border: isDrawer
+            ? null
+            : const Border(right: BorderSide(color: Color(0xFFD7E7D8))),
       ),
       child: Column(
         children: [
@@ -169,18 +236,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       Icons.dashboard,
                       'Ringkasan',
                       0,
+                      isDrawer: isDrawer,
                     ),
                     _buildNavItem(
                       Icons.inventory_2_outlined,
                       Icons.inventory_2,
                       'Kelola Barang',
                       1,
+                      isDrawer: isDrawer,
                     ),
                     _buildNavItem(
                       Icons.add_box_outlined,
                       Icons.add_box,
                       'Tambah Barang',
                       2,
+                      isDrawer: isDrawer,
                     ),
                     const SizedBox(height: 8),
                     const Divider(),
@@ -190,18 +260,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       Icons.diamond,
                       'Harga Emas',
                       3,
+                      isDrawer: isDrawer,
                     ),
                     _buildNavItem(
                       Icons.backup_outlined,
                       Icons.backup,
                       'Backup Data',
                       4,
+                      isDrawer: isDrawer,
                     ),
                     _buildNavItem(
                       Icons.account_balance_outlined,
                       Icons.account_balance,
                       'Pembiayaan',
                       5,
+                      isDrawer: isDrawer,
                     ),
                   ],
                 ),
@@ -214,7 +287,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
             padding: const EdgeInsets.all(12),
             child: InkWell(
               borderRadius: BorderRadius.circular(18),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                if (isDrawer) {
+                  Navigator.pop(context);
+                }
+                Navigator.pop(context);
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -256,14 +334,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
     IconData iconOutline,
     IconData iconFilled,
     String title,
-    int index,
-  ) {
+    int index, {
+    required bool isDrawer,
+  }) {
     final isSelected = _selectedIndex == index;
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => setState(() => _selectedIndex = index),
+        onTap: () {
+          setState(() => _selectedIndex = index);
+          if (isDrawer) {
+            Navigator.pop(context);
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -350,6 +434,7 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     );
     final now = DateTime.now();
     final timeStr = DateFormat('HH:mm').format(now);
+    final isPortrait = MediaQuery.of(context).size.width < 900;
 
     if (_isLoading) {
       return const Center(
@@ -359,56 +444,98 @@ class _DashboardOverviewState extends State<DashboardOverview> {
 
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(isPortrait ? 20 : 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Title row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Ringkasan Katalog Outlet',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textDark,
+          isPortrait
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ringkasan Katalog Outlet',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textDark,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Sistem Database Offline (SQLite) Aktif',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Sistem Database Offline (SQLite) Aktif',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 12,
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Text(
+                        'Hari Ini, $timeStr',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ringkasan Katalog Outlet',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Sistem Database Offline (SQLite) Aktif',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Text(
+                        'Hari Ini, $timeStr',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Text(
-                  'Hari Ini, $timeStr',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 28),
 
           // Workflow info card
@@ -419,126 +546,236 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               borderRadius: BorderRadius.circular(28),
               border: Border.all(color: const Color(0xFFD7E7D8)),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: const Icon(
-                    Icons.article_outlined,
-                    color: AppColors.primary,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Text(
-                    'Alur kerja: update harga emas, kelola barang, lalu backup database lokal.',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Update Harga Emas button
-                GestureDetector(
-                  onTap: widget.onNavigateToGoldPrice,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.25),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
+            child: isPortrait
+                ? Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.article_outlined,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'Alur kerja: update harga emas, kelola barang, lalu backup database lokal.',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                height: 1.4,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      child: const Center(
-                        child: Text(
-                          'Update\nHarga\nEmas',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            height: 1.3,
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: widget.onNavigateToGoldPrice,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.25),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Update Harga Emas',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: const Icon(
+                          Icons.article_outlined,
+                          color: AppColors.primary,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Alur kerja: update harga emas, kelola barang, lalu backup database lokal.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Update Harga Emas button
+                      GestureDetector(
+                        onTap: widget.onNavigateToGoldPrice,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: Container(
+                            width: 96,
+                            height: 96,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.25),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Update\nHarga\nEmas',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
           const SizedBox(height: 24),
 
           // Stat cards row
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.inventory_2_outlined,
-                    iconColor: AppColors.successGreen,
-                    label: 'Total Barang\nAktif',
-                    value: '$_activeItemCount',
-                    suffix: 'Barang',
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: _buildStatCard(
-                    icon: Icons.category_outlined,
-                    iconColor: AppColors.primary,
-                    label: 'Kategori\nTerbanyak',
-                    value: _topCategory?['name'] ?? '-',
-                    suffix: _topCategory != null
-                        ? '(${_topCategory!['cnt']})'
-                        : '',
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Consumer<AppProvider>(
-                    builder: (context, provider, _) {
-                      String updateTime = 'Belum ada';
-                      if (provider.goldPriceUpdatedAt != null) {
-                        try {
-                          final dt = DateTime.parse(provider.goldPriceUpdatedAt!);
-                          updateTime =
-                              'Hari Ini,\n${DateFormat('HH:mm').format(dt)}';
-                        } catch (_) {
-                          updateTime = 'Hari Ini';
+          isPortrait
+              ? Column(
+                  children: [
+                    _buildStatCard(
+                      icon: Icons.inventory_2_outlined,
+                      iconColor: AppColors.successGreen,
+                      label: 'Total Barang Aktif',
+                      value: '$_activeItemCount',
+                      suffix: 'Barang',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildStatCard(
+                      icon: Icons.category_outlined,
+                      iconColor: AppColors.primary,
+                      label: 'Kategori Terbanyak',
+                      value: _topCategory?['name'] ?? '-',
+                      suffix: _topCategory != null
+                          ? '(${_topCategory!['cnt']})'
+                          : '',
+                    ),
+                    const SizedBox(height: 16),
+                    Consumer<AppProvider>(
+                      builder: (context, provider, _) {
+                        String updateTime = 'Belum ada';
+                        if (provider.goldPriceUpdatedAt != null) {
+                          try {
+                            final dt = DateTime.parse(provider.goldPriceUpdatedAt!);
+                            updateTime =
+                                'Hari Ini, ${DateFormat('HH:mm').format(dt)}';
+                          } catch (_) {
+                            updateTime = 'Hari Ini';
+                          }
                         }
-                      }
-                      return _buildStatCard(
-                        icon: Icons.access_time,
-                        iconColor: AppColors.textMuted,
-                        label: 'Update\nTerakhir',
-                        value: updateTime,
-                        suffix: '',
-                      );
-                    },
+                        return _buildStatCard(
+                          icon: Icons.access_time,
+                          iconColor: AppColors.textMuted,
+                          label: 'Update Terakhir',
+                          value: updateTime,
+                          suffix: '',
+                        );
+                      },
+                    ),
+                  ],
+                )
+              : IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.inventory_2_outlined,
+                          iconColor: AppColors.successGreen,
+                          label: 'Total Barang\nAktif',
+                          value: '$_activeItemCount',
+                          suffix: 'Barang',
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.category_outlined,
+                          iconColor: AppColors.primary,
+                          label: 'Kategori\nTerbanyak',
+                          value: _topCategory?['name'] ?? '-',
+                          suffix: _topCategory != null
+                              ? '(${_topCategory!['cnt']})'
+                              : '',
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Consumer<AppProvider>(
+                          builder: (context, provider, _) {
+                            String updateTime = 'Belum ada';
+                            if (provider.goldPriceUpdatedAt != null) {
+                              try {
+                                final dt = DateTime.parse(provider.goldPriceUpdatedAt!);
+                                updateTime =
+                                    'Hari Ini,\n${DateFormat('HH:mm').format(dt)}';
+                              } catch (_) {
+                                updateTime = 'Hari Ini';
+                              }
+                            }
+                            return _buildStatCard(
+                              icon: Icons.access_time,
+                              iconColor: AppColors.textMuted,
+                              label: 'Update\nTerakhir',
+                              value: updateTime,
+                              suffix: '',
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
           const SizedBox(height: 28),
 
           // Recent activity

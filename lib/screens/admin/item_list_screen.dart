@@ -169,6 +169,86 @@ class _ItemListScreenState extends State<ItemListScreen> {
       symbol: 'Rp ',
       decimalDigits: 0,
     );
+    final isPortrait = MediaQuery.of(context).size.width < 900;
+
+    final searchField = TextField(
+      controller: _searchController,
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(
+        hintText: 'Cari nama atau nomor akad...',
+        hintStyle: const TextStyle(color: AppColors.textMuted),
+        prefixIcon: const Icon(
+          Icons.search,
+          color: AppColors.textMuted,
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: const BorderSide(color: AppColors.cardBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: const BorderSide(color: AppColors.cardBorder),
+        ),
+      ),
+    );
+
+    final categoryDropdown = Consumer<AppProvider>(
+      builder: (context, provider, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.cardBorder),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int?>(
+              value: _filterCategoryId,
+              isExpanded: true,
+              hint: const Text(
+                'Kategori',
+                style: TextStyle(color: AppColors.textMuted),
+              ),
+              items: [
+                const DropdownMenuItem<int?>(
+                  value: null,
+                  child: Text('Semua Kategori'),
+                ),
+                ...provider.categories.map(
+                  (c) => DropdownMenuItem<int?>(
+                    value: c.id,
+                    child: Text(c.name),
+                  ),
+                ),
+              ],
+              onChanged: (val) =>
+                  setState(() => _filterCategoryId = val),
+            ),
+          ),
+        );
+      },
+    );
+
+    final sortDropdown = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _sortBy,
+          isExpanded: isPortrait,
+          items: ['Terbaru', 'Harga naik', 'Harga turun', 'Nama A-Z']
+              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+              .toList(),
+          onChanged: (val) => setState(() => _sortBy = val!),
+        ),
+      ),
+    );
 
     return Padding(
       padding: const EdgeInsets.all(32.0),
@@ -192,96 +272,38 @@ class _ItemListScreenState extends State<ItemListScreen> {
           const SizedBox(height: 24),
 
           // Search, Category filter, Sort
-          Row(
-            children: [
-              // Search
-              Expanded(
-                flex: 3,
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    hintText: 'Cari nama atau nomor akad...',
-                    hintStyle: const TextStyle(color: AppColors.textMuted),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppColors.textMuted,
+          isPortrait
+              ? Column(
+                  children: [
+                    searchField,
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: categoryDropdown),
+                        const SizedBox(width: 12),
+                        Expanded(child: sortDropdown),
+                      ],
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(999),
-                      borderSide: const BorderSide(color: AppColors.cardBorder),
+                  ],
+                )
+              : Row(
+                  children: [
+                    // Search
+                    Expanded(
+                      flex: 3,
+                      child: searchField,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(999),
-                      borderSide: const BorderSide(color: AppColors.cardBorder),
+                    const SizedBox(width: 16),
+                    // Category dropdown
+                    Expanded(
+                      flex: 2,
+                      child: categoryDropdown,
                     ),
-                  ),
+                    const SizedBox(width: 16),
+                    // Sort dropdown
+                    sortDropdown,
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              // Category dropdown
-              Expanded(
-                flex: 2,
-                child: Consumer<AppProvider>(
-                  builder: (context, provider, _) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: AppColors.cardBorder),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int?>(
-                          value: _filterCategoryId,
-                          isExpanded: true,
-                          hint: const Text(
-                            'Kategori',
-                            style: TextStyle(color: AppColors.textMuted),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('Semua Kategori'),
-                            ),
-                            ...provider.categories.map(
-                              (c) => DropdownMenuItem<int?>(
-                                value: c.id,
-                                child: Text(c.name),
-                              ),
-                            ),
-                          ],
-                          onChanged: (val) =>
-                              setState(() => _filterCategoryId = val),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Sort dropdown
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _sortBy,
-                    items: ['Terbaru', 'Harga naik', 'Harga turun', 'Nama A-Z']
-                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                        .toList(),
-                    onChanged: (val) => setState(() => _sortBy = val!),
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 24),
 
           // Table

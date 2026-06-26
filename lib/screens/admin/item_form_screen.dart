@@ -11,6 +11,7 @@ import '../../database/database_helper.dart';
 import '../../utils/file_helper.dart';
 import '../../utils/app_colors.dart';
 import '../../services/financing_calculator.dart';
+import '../../widgets/responsive_row_column.dart';
 
 class ItemFormScreen extends StatefulWidget {
   final AuctionItem? itemToEdit;
@@ -318,6 +319,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<AppProvider>(context);
     final isGold = _isGoldCategory(provider);
+    final isPortrait = MediaQuery.of(context).size.width < 900;
 
     return Scaffold(
       appBar: widget.itemToEdit != null
@@ -369,15 +371,12 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                     const SizedBox(height: 28),
                   ],
 
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Left Panel - Form Cards
-                      Expanded(
-                        flex: 1,
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
+                  ResponsiveRowColumn(
+                    isPortrait: isPortrait,
+                    spacing: 40,
+                    left: Form(
+                      key: _formKey,
+                      child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Card 1: Informasi Dasar
@@ -645,16 +644,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                 ],
                               ),
                             ],
-                          ),
                         ),
                       ),
-
-                      const SizedBox(width: 40),
-
-                      // Right Panel - Photos & Live Preview
-                      Expanded(
-                        flex: 1,
-                        child: Column(
+                      right: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Photos Card
@@ -937,9 +929,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
             ),
