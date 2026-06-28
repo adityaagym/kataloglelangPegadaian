@@ -5,6 +5,7 @@ import 'screens/home_screen.dart';
 import 'utils/app_colors.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => AppProvider())],

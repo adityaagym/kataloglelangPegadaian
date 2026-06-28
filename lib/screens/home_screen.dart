@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _selectedCategoryId;
   DateTime _currentDeviceTime = DateTime.now();
   Timer? _timeTimer;
+  int _currentPage = 1;
 
   @override
   void initState() {
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onSearchChanged() => _applyFilters();
 
   void _applyFilters({double? minPrice, double? maxPrice}) {
+    setState(() => _currentPage = 1);
     Provider.of<AppProvider>(context, listen: false).filterItems(
       query: _searchController.text,
       categoryIds: _selectedCategoryId != null ? [_selectedCategoryId!] : null,
@@ -556,6 +558,18 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
+        final totalItems = provider.items.length;
+        final totalPages = (totalItems / 20).ceil();
+        final displayPages = totalPages == 0 ? 1 : totalPages;
+        final currentPage = _currentPage.clamp(1, displayPages);
+
+        final startIndex = (currentPage - 1) * 20;
+        final endIndex = startIndex + 20;
+        final paginatedItems = provider.items.sublist(
+          startIndex,
+          endIndex > totalItems ? totalItems : endIndex,
+        );
+
         return Padding(
           padding: EdgeInsets.fromLTRB(
             isPortrait ? 16 : 40,
@@ -680,9 +694,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisSpacing: isPortrait ? 16 : 28,
                   mainAxisSpacing: isPortrait ? 16 : 28,
                 ),
-                itemCount: provider.items.length,
+                itemCount: paginatedItems.length,
                 itemBuilder: (context, index) =>
-                    ItemCard(item: provider.items[index]),
+                    ItemCard(item: paginatedItems[index]),
               ),
             ],
           ),
@@ -694,81 +708,109 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFooter() {
     final isPortrait = MediaQuery.of(context).size.width < 900;
     
-    return Container(
-      height: isPortrait ? 76 : 88,
-      padding: EdgeInsets.symmetric(horizontal: isPortrait ? 16 : 40),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Consumer<AppProvider>(
-            builder: (context, provider, child) => Text.rich(
-              TextSpan(
-                text: 'Menampilkan ',
-                children: [
-                  TextSpan(
-                    text: '${provider.items.length}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
+    return Consumer<AppProvider>(
+      builder: (context, provider, child) {
+        final totalItems = provider.items.length;
+        final totalPages = (totalItems / 20).ceil();
+        final displayPages = totalPages == 0 ? 1 : totalPages;
+        final currentPage = _currentPage.clamp(1, displayPages);
+
+        final startIndex = totalItems == 0 ? 0 : (currentPage - 1) * 20 + 1;
+        final endIndex = (currentPage * 20).clamp(0, totalItems);
+
+        return Container(
+          height: isPortrait ? 76 : 88,
+          padding: EdgeInsets.symmetric(horizontal: isPortrait ? 16 : 40),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border(
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+            ),
+          ),
+          child: Row(
+            children: [
+              Text.rich(
+                TextSpan(
+                  text: 'Menampilkan ',
+                  children: [
+                    TextSpan(
+                      text: totalItems == 0 ? '0' : '$startIndex - $endIndex',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
                     ),
+                    TextSpan(text: ' dari $totalItems barang'),
+                  ],
+                ),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  fontSize: isPortrait ? 14 : 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              _footerCircle(
+                Icons.chevron_left,
+                currentPage > 1,
+                isPortrait,
+                currentPage > 1
+                    ? () => setState(() => _currentPage = currentPage - 1)
+                    : null,
+              ),
+              SizedBox(width: isPortrait ? 8 : 12),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isPortrait ? 16 : 24,
+                  vertical: isPortrait ? 8 : 12,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  'Halaman $currentPage dari $displayPages',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: isPortrait ? 12 : 14,
                   ),
-                  const TextSpan(text: ' barang'),
-                ],
+                ),
               ),
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.82),
-                fontSize: isPortrait ? 14 : 17,
-                fontWeight: FontWeight.w600,
+              SizedBox(width: isPortrait ? 8 : 12),
+              _footerCircle(
+                Icons.chevron_right,
+                currentPage < displayPages,
+                isPortrait,
+                currentPage < displayPages
+                    ? () => setState(() => _currentPage = currentPage + 1)
+                    : null,
               ),
-            ),
+            ],
           ),
-          const Spacer(),
-          _footerCircle(Icons.chevron_left, false, isPortrait),
-          SizedBox(width: isPortrait ? 8 : 12),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isPortrait ? 16 : 24,
-              vertical: isPortrait ? 8 : 12,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'Halaman 1 dari 1',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: isPortrait ? 12 : 14,
-              ),
-            ),
-          ),
-          SizedBox(width: isPortrait ? 8 : 12),
-          _footerCircle(Icons.chevron_right, true, isPortrait),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _footerCircle(IconData icon, bool filled, bool isPortrait) {
+  Widget _footerCircle(IconData icon, bool filled, bool isPortrait, VoidCallback? onTap) {
     final size = isPortrait ? 40.0 : 48.0;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: filled ? Colors.white : Colors.white.withValues(alpha: 0.10),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
-      ),
-      child: Icon(
-        icon,
-        color: filled ? AppColors.primary : Colors.white,
-        size: isPortrait ? 20 : 24,
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: filled ? Colors.white : Colors.white.withValues(alpha: 0.10),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+        ),
+        child: Icon(
+          icon,
+          color: filled ? AppColors.primary : Colors.white.withValues(alpha: 0.3),
+          size: isPortrait ? 20 : 24,
+        ),
       ),
     );
   }

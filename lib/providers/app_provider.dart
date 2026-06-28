@@ -1,8 +1,11 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/auction_item.dart';
 import '../models/category.dart';
+import '../models/imported_auction_item.dart';
 import '../models/item_photo.dart';
+import '../services/excel_import_service.dart';
 
 class AppProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -13,6 +16,13 @@ class AppProvider with ChangeNotifier {
   double _goldPricePerGram = 1120000;
   String? _goldPriceUpdatedAt;
   String? _lastItemUpdatedAt;
+
+  // --- Bulk Import State ---
+  List<ImportedAuctionItem> _importDraftItems = [];
+  List<ImportedAuctionItem> get importDraftItems => _importDraftItems;
+  bool get hasImportDraft => _importDraftItems.isNotEmpty;
+  int get selectedImportCount =>
+      _importDraftItems.where((i) => i.isSelected && i.isValid).length;
 
   List<Category> get categories => _categories;
   List<AuctionItem> get items => _filteredItems;
@@ -197,5 +207,74 @@ class AppProvider with ChangeNotifier {
   // --- Database Path (for backup) ---
   Future<String> getDatabasePath() async {
     return await _dbHelper.getDatabasePath();
+  }
+
+  // --- Bulk Import ---
+  Future<List<ImportedAuctionItem>> parseImportFile(Uint8List fileBytes) async {
+    final categories = await _dbHelper.readAllCategories();
+    final parsed = await ExcelImportService.parseFile(fileBytes, categories);
+    _importDraftItems = parsed;
+    notifyListeners();
+    return parsed;
+  }
+
+  void setImportDraft(List<ImportedAuctionItem> items) {
+    _importDraftItems = items;
+    notifyListeners();
+  }
+
+  void toggleItemSelection(int rowIndex) {
+    _importDraftItems = _importDraftItems.map((item) {
+      if (item.rowIndex == rowIndex) {
+        return item.copyWith(isSelected: !item.isSelected);
+      }
+      return item;
+    }).toList();
+    notifyListeners();
+  }
+
+  void updateImportedItem(int rowIndex, AuctionItem updatedItem) {
+    _importDraftItems = _importDraftItems.map((imported) {
+      if (imported.rowIndex == rowIndex) {
+        return imported.copyWith(item: updatedItem);
+      }
+      return imported;
+    }).toList();
+    notifyListeners();
+  }
+
+  Future<List<int>> saveImportedItems() async {
+    final itemsToSave = _importDraftItems
+        .where((i) => i.isSelected && i.isValid)
+        .map((i) => i.item)
+        .toList();
+
+    if (itemsToSave.isEmpty) return [];
+
+    final ids = await _dbHelper.createAuctionItemsBatch(itemsToSave);
+    await refreshAdminData();
+    _importDraftItems = [];
+    notifyListeners();
+    return ids;
+  }
+
+  Future<void> attachPhotoToItem(
+    int itemId,
+    String localPath, {
+    bool isPrimary = false,
+  }) async {
+    final photos = await _dbHelper.readItemPhotos(itemId);
+    await _dbHelper.createItemPhoto(ItemPhoto(
+      itemId: itemId,
+      localPath: localPath,
+      isPrimary: isPrimary,
+      sortOrder: photos.length,
+    ));
+    notifyListeners();
+  }
+
+  void clearImportDraft() {
+    _importDraftItems = [];
+    notifyListeners();
   }
 }

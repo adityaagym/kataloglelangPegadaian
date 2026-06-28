@@ -391,10 +391,36 @@ class DatabaseHelper {
     return result.map((json) => Category.fromMap(json)).toList();
   }
 
+  Future<Category?> getCategoryByName(String name) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'categories',
+      where: 'LOWER(name) = ?',
+      whereArgs: [name.toLowerCase().trim()],
+      limit: 1,
+    );
+    if (result.isEmpty) return null;
+    return Category.fromMap(result.first);
+  }
+
   // --- Auction Items ---
   Future<int> createAuctionItem(AuctionItem item) async {
     final db = await instance.database;
     return await db.insert('auction_items', item.toMap());
+  }
+
+  Future<List<int>> createAuctionItemsBatch(List<AuctionItem> items) async {
+    final db = await instance.database;
+    final ids = <int>[];
+
+    await db.transaction((txn) async {
+      for (final item in items) {
+        final id = await txn.insert('auction_items', item.toMap());
+        ids.add(id);
+      }
+    });
+
+    return ids;
   }
 
   Future<AuctionItem> readAuctionItem(int id) async {

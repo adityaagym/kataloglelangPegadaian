@@ -12,6 +12,7 @@ import 'gold_price_screen.dart';
 import 'backup_screen.dart';
 import 'financing_screen.dart';
 import 'contact_screen.dart';
+import 'bulk_import_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -39,6 +40,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return 'Pembiayaan';
       case 6:
         return 'Informasi Kontak';
+      case 7:
+        return 'Import Massal';
       default:
         return 'Panel Admin';
     }
@@ -73,6 +76,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         break;
       case 6:
         content = const ContactScreen();
+        break;
+      case 7:
+        content = const BulkImportScreen();
         break;
       default:
         content = DashboardOverview(
@@ -267,6 +273,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       Icons.add_box,
                       'Tambah Barang',
                       2,
+                      isDrawer: isDrawer,
+                    ),
+                    _buildNavItem(
+                      Icons.file_upload_outlined,
+                      Icons.file_upload,
+                      'Import Massal',
+                      7,
                       isDrawer: isDrawer,
                     ),
                     _buildNavItem(
