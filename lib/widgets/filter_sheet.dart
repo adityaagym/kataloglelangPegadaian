@@ -147,73 +147,36 @@ class _FilterSheetState extends State<FilterSheet> {
                             ],
                           ),
                         ),
+
                         const SizedBox(height: 24),
-                        IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            borderRadius: BorderRadius.circular(26),
+                            border: Border.all(color: const Color(0xFFD7E7D8)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: _panel(
-                                  title: 'Kondisi Barang',
-                                  subtitle: 'Kondisi masih mengikuti data asli barang.',
-                                  child: Wrap(
-                                    spacing: 12,
-                                    runSpacing: 12,
-                                    children: [
-                                      _FilterSelectableChip(
-                                        label: 'Sangat Baik',
-                                        isSelected: true,
-                                        onTap: () {},
-                                      ),
-                                      _FilterSelectableChip(
-                                        label: 'Baik',
-                                        isSelected: true,
-                                        onTap: () {},
-                                      ),
-                                      _FilterSelectableChip(
-                                        label: 'Cukup Baik',
-                                        isSelected: false,
-                                        onTap: () {},
-                                      ),
-                                    ],
-                                  ),
+                              const Text(
+                                'Ringkasan Filter',
+                                style: TextStyle(
+                                  fontSize: 21,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.successGreen,
                                 ),
                               ),
-                              const SizedBox(width: 24),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(24),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.secondary,
-                                    borderRadius: BorderRadius.circular(26),
-                                    border: Border.all(color: const Color(0xFFD7E7D8)),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Ringkasan Filter',
-                                        style: TextStyle(
-                                          fontSize: 21,
-                                          fontWeight: FontWeight.w900,
-                                          color: AppColors.successGreen,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 18),
-                                      _summaryRow(
-                                        'Kategori',
-                                        _selectedCategoryId == null
-                                            ? 'Semua'
-                                            : '1 kategori',
-                                      ),
-                                      _summaryRow(
-                                        'Harga',
-                                        '${(_minPrice / 1000000).toStringAsFixed(1)} jt - ${(_maxPrice / 1000000).toStringAsFixed(1)} jt',
-                                      ),
-                                      _summaryRow('Kondisi', 'Semua kondisi'),
-                                    ],
-                                  ),
-                                ),
+                              const SizedBox(height: 18),
+                              _summaryRow(
+                                'Kategori',
+                                _selectedCategoryId == null
+                                    ? 'Semua'
+                                    : '1 kategori',
+                              ),
+                              _summaryRow(
+                                'Harga',
+                                '${(_minPrice / 1000000).toStringAsFixed(1)} jt - ${(_maxPrice / 1000000).toStringAsFixed(1)} jt',
                               ),
                             ],
                           ),

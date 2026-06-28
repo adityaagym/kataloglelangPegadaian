@@ -82,11 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
       decimalDigits: 0,
     );
 
-    return IdleTimeoutWrapper(
-      onTimeout: _resetKiosk,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: Container(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Container(
           decoration: const BoxDecoration(gradient: AppColors.headerGradient),
           child: SafeArea(
             child: Column(
@@ -107,8 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        ),
-      ),
+      ),    
     );
   }
 

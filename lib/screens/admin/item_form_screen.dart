@@ -30,7 +30,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   int? _categoryId;
   double _weightGram = 0;
   String? _karat;
-  String _condition = 'Baik';
   double _basePrice = 0;
   String? _description;
   bool _isActive = true;
@@ -50,7 +49,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           _categoryId != null ||
           _weightGram != 0.0 ||
           _karat != null ||
-          _condition != 'Baik' ||
           currentBasePrice != 0.0 ||
           (_description != null && _description!.trim().isNotEmpty) ||
           !_isActive ||
@@ -64,7 +62,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     if (_categoryId != orig.categoryId) return true;
     if (_weightGram != orig.weightGram) return true;
     if ((_karat ?? '') != (orig.karat ?? '')) return true;
-    if (_condition != orig.condition) return true;
     if (currentBasePrice != orig.basePrice) return true;
     if ((_description ?? '') != (orig.description ?? '')) return true;
     if (_isActive != orig.isActive) return true;
@@ -81,12 +78,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isSaving = false;
   int _primaryPhotoIndex = 0; // index in the combined list
-
-  final List<String> _conditionOptions = [
-    'Baik',
-    'Cukup Baik',
-    'Perlu Perbaikan',
-  ];
 
   late TextEditingController _basePriceController;
 
@@ -110,7 +101,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       _categoryId = widget.itemToEdit!.categoryId;
       _weightGram = widget.itemToEdit!.weightGram;
       _karat = widget.itemToEdit!.karat;
-      _condition = widget.itemToEdit!.condition;
       _basePrice = widget.itemToEdit!.basePrice;
       _description = widget.itemToEdit!.description;
       _isActive = widget.itemToEdit!.isActive;
@@ -295,7 +285,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         categoryId: _categoryId!,
         weightGram: _weightGram,
         karat: _karat,
-        condition: _condition,
         basePrice: _basePrice,
         description: _description,
         isActive: _isActive,
@@ -495,9 +484,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                 ],
                               ),
 
-                              // Card 2: Spesifikasi & Kondisi
+                              // Card 2: Spesifikasi
                               _buildFormCard(
-                                title: 'Spesifikasi & Kondisi',
+                                title: 'Spesifikasi',
                                 icon: Icons.tune_outlined,
                                 children: [
                                   if (isGold) ...[
@@ -599,11 +588,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 20),
-                                  ],
-                                  _buildConditionChips(),
                                 ],
-                              ),
+                              ]),
 
                               // Card 3: Penetapan Harga & Deskripsi
                               _buildFormCard(
@@ -1164,93 +1150,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     );
   }
 
-  Widget _buildConditionChips() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel('Kondisi Barang', required: true),
-        const SizedBox(height: 10),
-        Row(
-          children: _conditionOptions.map((option) {
-            final isSelected = _condition == option;
-
-            // Custom styling based on option
-            Color themeColor;
-            Color bgTint;
-            IconData icon;
-            if (option == 'Baik') {
-              themeColor = const Color(0xFF2E7D32); // Deep Green
-              bgTint = const Color(0xFFE8F5E9);
-              icon = Icons.check_circle_outline;
-            } else if (option == 'Cukup Baik') {
-              themeColor = const Color(0xFFEF6C00); // Orange/Amber
-              bgTint = const Color(0xFFFFF3E0);
-              icon = Icons.help_outline;
-            } else {
-              themeColor = const Color(0xFFC62828); // Red
-              bgTint = const Color(0xFFFFEBEE);
-              icon = Icons.error_outline;
-            }
-
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: InkWell(
-                  onTap: () {
-                    setState(() => _condition = option);
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? bgTint : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected ? themeColor : AppColors.border,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: themeColor.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              )
-                            ]
-                          : [],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          icon,
-                          size: 16,
-                          color: isSelected ? themeColor : AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            option,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isSelected ? themeColor : AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
 
   Widget _buildGoldPriceBanner(AppProvider provider) {
     final isGold = _isGoldCategory(provider);

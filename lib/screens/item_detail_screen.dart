@@ -28,7 +28,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   List<AuctionItem> _packageItems = [];
   bool _simulatePackage = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -80,7 +79,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final isPortrait = constraints.maxWidth < constraints.maxHeight || constraints.maxWidth < 900;
+                    final isPortrait =
+                        constraints.maxWidth < constraints.maxHeight ||
+                        constraints.maxWidth < 900;
 
                     if (isPortrait) {
                       return SingleChildScrollView(
@@ -93,7 +94,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             border: Border.all(color: AppColors.border),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.textDark.withValues(alpha: 0.08),
+                                color: AppColors.textDark.withValues(
+                                  alpha: 0.08,
+                                ),
                                 blurRadius: 38,
                                 offset: const Offset(0, 16),
                               ),
@@ -104,7 +107,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             children: [
                               _buildImageColumn(height: 480),
                               const SizedBox(height: 28),
-                              _buildDetails(currencyFormatter, scrollable: false),
+                              _buildDetails(
+                                currencyFormatter,
+                                scrollable: false,
+                              ),
                             ],
                           ),
                         ),
@@ -120,7 +126,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             border: Border.all(color: AppColors.border),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.textDark.withValues(alpha: 0.08),
+                                color: AppColors.textDark.withValues(
+                                  alpha: 0.08,
+                                ),
                                 blurRadius: 38,
                                 offset: const Offset(0, 16),
                               ),
@@ -132,7 +140,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                               const SizedBox(width: 28),
                               Expanded(
                                 flex: 46,
-                                child: _buildDetails(currencyFormatter, scrollable: true),
+                                child: _buildDetails(
+                                  currencyFormatter,
+                                  scrollable: true,
+                                ),
                               ),
                             ],
                           ),
@@ -419,9 +430,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         if (_isGoldItem(item)) {
           double stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
           double karatVal = FinancingCalculator.parseKarat(item.karat);
-          
+
           final rawItemPrice = hdlePrice * item.weightGram * (karatVal / 24.0);
-          final recalculatedItemPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+          final recalculatedItemPrice = FinancingCalculator.roundUp(
+            rawItemPrice,
+            10000,
+          ).toDouble();
           totalHarga += recalculatedItemPrice;
 
           appraisalValue += stlPrice * item.weightGram * (karatVal / 24.0);
@@ -434,9 +448,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       if (_isGoldItem(widget.item)) {
         double stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
         double karatVal = FinancingCalculator.parseKarat(widget.item.karat);
-        
-        final rawItemPrice = hdlePrice * widget.item.weightGram * (karatVal / 24.0);
-        final recalculatedItemPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+
+        final rawItemPrice =
+            hdlePrice * widget.item.weightGram * (karatVal / 24.0);
+        final recalculatedItemPrice = FinancingCalculator.roundUp(
+          rawItemPrice,
+          10000,
+        ).toDouble();
         totalHarga = recalculatedItemPrice;
 
         appraisalValue = stlPrice * widget.item.weightGram * (karatVal / 24.0);
@@ -472,7 +490,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             if (skema == SkemaType.tunai) {
               dialogTitle = 'Detail Pembelian Tunai';
               headerColor = AppColors.primary;
-              final result = FinancingCalculator.simulasiTunai(hargaLelang: totalHarga.round());
+              final result = FinancingCalculator.simulasiTunai(
+                hargaLelang: totalHarga.round(),
+              );
               contentWidget = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -483,7 +503,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,8 +532,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _bulletPoint('Bayar penuh saat transaksi langsung di cabang.'),
-                  _bulletPoint('Bebas dari bunga, denda, atau cicilan tambahan.'),
+                  _bulletPoint(
+                    'Bayar penuh saat transaksi langsung di cabang.',
+                  ),
+                  _bulletPoint(
+                    'Bebas dari bunga, denda, atau cicilan tambahan.',
+                  ),
                   if (_simulatePackage) ...[
                     const SizedBox(height: 16),
                     _buildPackageItemsList(currencyFormatter),
@@ -539,29 +565,50 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.info.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
+                        border: Border.all(
+                          color: AppColors.info.withValues(alpha: 0.25),
+                        ),
                       ),
                       child: Column(
                         children: [
-                          _breakdownRow('Harga Lelang', currencyFormatter.format(result.hargaLelang)),
+                          _breakdownRow(
+                            'Harga Lelang',
+                            currencyFormatter.format(result.hargaLelang),
+                          ),
                           const SizedBox(height: 6),
-                          _breakdownRow('Uang Muka (DP)', currencyFormatter.format(result.uangMuka)),
+                          _breakdownRow(
+                            'Uang Muka (DP)',
+                            currencyFormatter.format(result.uangMuka),
+                          ),
                           const SizedBox(height: 6),
-                          _breakdownRow('Uang Pinjaman', currencyFormatter.format(result.uangPinjaman), valueColor: AppColors.info),
+                          _breakdownRow(
+                            'Uang Pinjaman',
+                            currencyFormatter.format(result.uangPinjaman),
+                            valueColor: AppColors.info,
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.info.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: AppColors.info.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.timer_outlined, color: AppColors.info, size: 24),
+                          const Icon(
+                            Icons.timer_outlined,
+                            color: AppColors.info,
+                            size: 24,
+                          ),
                           const SizedBox(width: 10),
                           Text(
                             'TEMPO: ${result.tempoKca} BULAN',
@@ -575,9 +622,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _bulletPoint('Nasabah melunasi sisa pinjaman dalam 4 bulan.'),
+                    _bulletPoint(
+                      'Nasabah melunasi sisa pinjaman dalam 4 bulan.',
+                    ),
                     _bulletPoint('TIDAK ADA angsuran rutin bulanan.'),
-                    _bulletPoint('Bayar bebas kapan saja (bertahap/sekaligus).'),
+                    _bulletPoint(
+                      'Bayar bebas kapan saja (bertahap/sekaligus).',
+                    ),
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 12),
@@ -586,7 +637,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.info.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
+                        border: Border.all(
+                          color: AppColors.info.withValues(alpha: 0.25),
+                        ),
                       ),
                       child: Column(
                         children: [
@@ -602,7 +655,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                 ),
                               ),
                               Text(
-                                currencyFormatter.format(result.totalPelunasanKca!),
+                                currencyFormatter.format(
+                                  result.totalPelunasanKca!,
+                                ),
                                 style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w900,
@@ -624,7 +679,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             } else {
               dialogTitle = 'Detail Simulasi KRASIDA';
               headerColor = AppColors.accent;
-              final tenorMonths = _selectedTenorMonths ?? _financingTenors.first['months'] as int;
+              final tenorMonths =
+                  _selectedTenorMonths ??
+                  _financingTenors.first['months'] as int;
               final result = FinancingCalculator.simulasiKrasida(
                 hargaLelang: totalHarga.round(),
                 appraisalValue: appraisalValue,
@@ -645,15 +702,27 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.accent.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
+                        border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.25),
+                        ),
                       ),
                       child: Column(
                         children: [
-                          _breakdownRow('Harga Lelang', currencyFormatter.format(result.hargaLelang)),
+                          _breakdownRow(
+                            'Harga Lelang',
+                            currencyFormatter.format(result.hargaLelang),
+                          ),
                           const SizedBox(height: 6),
-                          _breakdownRow('Uang Muka (DP)', currencyFormatter.format(result.uangMuka)),
+                          _breakdownRow(
+                            'Uang Muka (DP)',
+                            currencyFormatter.format(result.uangMuka),
+                          ),
                           const SizedBox(height: 6),
-                          _breakdownRow('Uang Pinjaman', currencyFormatter.format(result.uangPinjaman), valueColor: AppColors.accent),
+                          _breakdownRow(
+                            'Uang Pinjaman',
+                            currencyFormatter.format(result.uangPinjaman),
+                            valueColor: AppColors.accent,
+                          ),
                         ],
                       ),
                     ),
@@ -676,13 +745,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         final isSelected = months == tenorMonths;
                         return ChoiceChip(
                           label: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             child: Text('$months bulan'),
                           ),
                           selected: isSelected,
                           selectedColor: AppColors.accent,
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textSecondary,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textSecondary,
                             fontWeight: FontWeight.w900,
                             fontSize: 16,
                           ),
@@ -706,13 +780,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFFFD95A), width: 1.5),
+                        border: Border.all(
+                          color: const Color(0xFFFFD95A),
+                          width: 1.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFD95A).withValues(alpha: 0.15),
+                            color: const Color(
+                              0xFFFFD95A,
+                            ).withValues(alpha: 0.15),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       child: Column(
@@ -750,7 +829,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    _breakdownRow('Total Pembayaran', currencyFormatter.format(result.totalBayar!), valueColor: AppColors.accent),
+                    _breakdownRow(
+                      'Total Pembayaran',
+                      currencyFormatter.format(result.totalBayar!),
+                      valueColor: AppColors.accent,
+                    ),
                     const SizedBox(height: 18),
                     const Divider(),
                     const SizedBox(height: 14),
@@ -772,7 +855,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       children: [
                         TableRow(
                           decoration: const BoxDecoration(
-                            border: Border(bottom: BorderSide(color: AppColors.border, width: 1.5)),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: AppColors.border,
+                                width: 1.5,
+                              ),
+                            ),
                           ),
                           children: [
                             _tableHeader('Tenor'),
@@ -783,12 +871,25 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         ...?result.perbandinganTenor?.map((t) {
                           return TableRow(
                             decoration: BoxDecoration(
-                              color: t.isSelected ? AppColors.accent.withValues(alpha: 0.08) : null,
-                              border: const Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
+                              color: t.isSelected
+                                  ? AppColors.accent.withValues(alpha: 0.08)
+                                  : null,
+                              border: const Border(
+                                bottom: BorderSide(
+                                  color: AppColors.border,
+                                  width: 0.5,
+                                ),
+                              ),
                             ),
                             children: [
-                              _tableCell('${t.tenor} Bln', isSelected: t.isSelected),
-                              _tableCell(currencyFormatter.format(t.angsuranPerBulan), isSelected: t.isSelected),
+                              _tableCell(
+                                '${t.tenor} Bln',
+                                isSelected: t.isSelected,
+                              ),
+                              _tableCell(
+                                currencyFormatter.format(t.angsuranPerBulan),
+                                isSelected: t.isSelected,
+                              ),
                               // _tableCell(currencyFormatter.format(t.totalBayar), isSelected: t.isSelected),
                             ],
                           );
@@ -827,8 +928,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             skema == SkemaType.tunai
                                 ? Icons.payments_outlined
                                 : skema == SkemaType.kca
-                                    ? Icons.credit_card_outlined
-                                    : Icons.bar_chart_outlined,
+                                ? Icons.credit_card_outlined
+                                : Icons.bar_chart_outlined,
                             color: headerColor,
                             size: 28,
                           ),
@@ -854,9 +955,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     const Divider(),
                     const SizedBox(height: 16),
                     Flexible(
-                      child: SingleChildScrollView(
-                        child: contentWidget,
-                      ),
+                      child: SingleChildScrollView(child: contentWidget),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
@@ -911,16 +1010,16 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         icon: Icon(icon, size: 22),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w900,
-          ),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
         ),
       ),
     );
   }
 
-  Widget _buildDetails(NumberFormat currencyFormatter, {bool scrollable = true}) {
+  Widget _buildDetails(
+    NumberFormat currencyFormatter, {
+    bool scrollable = true,
+  }) {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1000,15 +1099,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             _specCard(
               Icons.diamond_outlined,
               'Karat',
-              widget.item.karat?.isNotEmpty == true
-                  ? widget.item.karat!
-                  : '-',
+              widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
             ),
-            _specCard(
-              Icons.verified_outlined,
-              'Kondisi',
-              widget.item.condition,
-            ),
+
             _specCard(
               Icons.category_outlined,
               'Kategori',
@@ -1062,16 +1155,25 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         ),
                         if (_isGoldItem(widget.item))
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.accent.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(30),
-                              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                              border: Border.all(
+                                color: AppColors.accent.withValues(alpha: 0.3),
+                              ),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.workspace_premium_outlined, color: AppColors.accent, size: 14),
+                                Icon(
+                                  Icons.workspace_premium_outlined,
+                                  color: AppColors.accent,
+                                  size: 14,
+                                ),
                                 SizedBox(width: 4),
                                 Text(
                                   'EMAS',
@@ -1094,10 +1196,19 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         builder: (context, provider, _) {
                           double displayPrice = widget.item.basePrice;
                           if (_isGoldItem(widget.item)) {
-                            final hdlePrice = provider.goldPricePerGram.toDouble();
-                            final karatVal = FinancingCalculator.parseKarat(widget.item.karat);
-                            final rawItemPrice = hdlePrice * widget.item.weightGram * (karatVal / 24.0);
-                            displayPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+                            final hdlePrice = provider.goldPricePerGram
+                                .toDouble();
+                            final karatVal = FinancingCalculator.parseKarat(
+                              widget.item.karat,
+                            );
+                            final rawItemPrice =
+                                hdlePrice *
+                                widget.item.weightGram *
+                                (karatVal / 24.0);
+                            displayPrice = FinancingCalculator.roundUp(
+                              rawItemPrice,
+                              10000,
+                            ).toDouble();
                           }
                           return Text(
                             currencyFormatter.format(displayPrice),
@@ -1125,7 +1236,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.accent.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.accent.withValues(alpha: 0.15)),
+                        border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.15),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -1179,7 +1292,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   _financingConfig != null &&
                   _financingTenors.isNotEmpty) ...[
                 const Divider(height: 1, color: AppColors.border),
-                
+
                 // Bottom section (Mode & Buttons)
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -1213,13 +1326,16 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                   _choiceTab(
                                     'Barang Ini',
                                     !_simulatePackage,
-                                    () => setState(() => _simulatePackage = false),
+                                    () => setState(
+                                      () => _simulatePackage = false,
+                                    ),
                                   ),
                                   const SizedBox(width: 4),
                                   _choiceTab(
                                     'Paket Akad',
                                     _simulatePackage,
-                                    () => setState(() => _simulatePackage = true),
+                                    () =>
+                                        setState(() => _simulatePackage = true),
                                   ),
                                 ],
                               ),
@@ -1280,9 +1396,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
 
     if (scrollable) {
-      return SingleChildScrollView(
-        child: content,
-      );
+      return SingleChildScrollView(child: content);
     }
     return content;
   }
@@ -1337,7 +1451,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
-
   Widget _choiceTab(String label, bool selected, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -1370,7 +1483,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
-
   bool _isGoldItem(AuctionItem item) {
     final provider = Provider.of<AppProvider>(context, listen: false);
     try {
@@ -1388,14 +1500,20 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     }
   }
 
-
   Widget _bulletPoint(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
+          const Text(
+            '• ',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: AppColors.primary,
+            ),
+          ),
           Expanded(
             child: Text(
               text,
@@ -1452,7 +1570,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.error,
+                size: 24,
+              ),
               SizedBox(width: 8),
               Text(
                 'Skema Tidak Tersedia',
@@ -1509,7 +1631,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     '• ',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isSelf ? AppColors.primary : AppColors.textSecondary,
+                      color: isSelf
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
                     ),
                   ),
                   Expanded(
@@ -1527,16 +1651,26 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       double displayPrice = item.basePrice;
                       if (_isGoldItem(item)) {
                         final hdlePrice = provider.goldPricePerGram.toDouble();
-                        final karatVal = FinancingCalculator.parseKarat(item.karat);
-                        final rawItemPrice = hdlePrice * item.weightGram * (karatVal / 24.0);
-                        displayPrice = FinancingCalculator.roundUp(rawItemPrice, 10000).toDouble();
+                        final karatVal = FinancingCalculator.parseKarat(
+                          item.karat,
+                        );
+                        final rawItemPrice =
+                            hdlePrice * item.weightGram * (karatVal / 24.0);
+                        displayPrice = FinancingCalculator.roundUp(
+                          rawItemPrice,
+                          10000,
+                        ).toDouble();
                       }
                       return Text(
                         currencyFormatter.format(displayPrice),
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: isSelf ? FontWeight.w800 : FontWeight.w700,
-                          color: isSelf ? AppColors.primary : AppColors.textSecondary,
+                          fontWeight: isSelf
+                              ? FontWeight.w800
+                              : FontWeight.w700,
+                          color: isSelf
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
                         ),
                       );
                     },

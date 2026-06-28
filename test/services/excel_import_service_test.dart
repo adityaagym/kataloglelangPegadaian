@@ -22,7 +22,6 @@ void main() {
     expect(first.item.categoryId, 1);
     expect(first.item.weightGram, 5.5);
     expect(first.item.basePrice, 5500000);
-    expect(first.item.condition, 'Baik');
   });
 
   test('parseFile flags invalid category and missing name', () async {
@@ -45,7 +44,6 @@ void main() {
       TextCellValue('Kategori'),
       TextCellValue('Berat (gram)'),
       TextCellValue('Karat (opsional)'),
-      TextCellValue('Kondisi'),
       TextCellValue('Harga Dasar (Rp)'),
       TextCellValue('Deskripsi (opsional)'),
     ]);
@@ -56,12 +54,11 @@ void main() {
       TextCellValue('Perhiasan Emas'),
       TextCellValue('3'),
       TextCellValue(''),
-      TextCellValue('Baik'),
       TextCellValue('1000000'),
       TextCellValue(''),
     ]);
     // Empty row
-    sheet.appendRow(List.generate(9, (_) => TextCellValue('')));
+    sheet.appendRow(List.generate(8, (_) => TextCellValue('')));
 
     final bytes = Uint8List.fromList(excel.encode()!);
     final result = await ExcelImportService.parseFile(bytes, categories);

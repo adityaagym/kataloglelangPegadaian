@@ -52,7 +52,6 @@ class DatabaseHelper {
         category_id $intType,
         weight_gram $doubleType,
         karat $textNullable,
-        condition $textType,
         base_price $doubleType,
         description $textNullable,
         is_active $boolType,

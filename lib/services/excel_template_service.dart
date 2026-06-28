@@ -12,7 +12,6 @@ class ExcelTemplateService {
     'Kategori',
     'Berat (gram)',
     'Karat (opsional)',
-    'Kondisi',
     'Harga Dasar (Rp)',
     'Deskripsi (opsional)',
   ];
@@ -24,7 +23,6 @@ class ExcelTemplateService {
     'Perhiasan Emas',
     '5.5',
     '22',
-    'Baik',
     '5500000',
     'Cincin emas polos',
   ];
@@ -36,7 +34,6 @@ class ExcelTemplateService {
     'Elektronik',
     '0',
     '',
-    'Cukup Baik',
     '4500000',
     'Laptop second',
   ];
@@ -78,9 +75,8 @@ class ExcelTemplateService {
     sheet.setColumnWidth(3, 22);
     sheet.setColumnWidth(4, 16);
     sheet.setColumnWidth(5, 16);
-    sheet.setColumnWidth(6, 18);
-    sheet.setColumnWidth(7, 22);
-    sheet.setColumnWidth(8, 32);
+    sheet.setColumnWidth(6, 22);
+    sheet.setColumnWidth(7, 32);
 
     final bytes = excel.encode();
     if (bytes == null) {

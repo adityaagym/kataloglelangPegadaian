@@ -8,7 +8,7 @@ void main() {
       name: 'Cincin Emas',
       categoryId: 1,
       weightGram: 5.0,
-      condition: 'Baik',
+
       basePrice: 1000000,
     );
     final imported = ImportedAuctionItem(
@@ -29,7 +29,7 @@ void main() {
         name: 'Cincin Emas',
         categoryId: 1,
         weightGram: 5.0,
-        condition: 'Baik',
+
         basePrice: 1000000,
       ),
     );

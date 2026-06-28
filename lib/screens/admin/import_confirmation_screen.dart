@@ -248,7 +248,6 @@ class ImportConfirmationScreen extends StatelessWidget {
                         'Kategori ID: ${item.categoryId}',
                       ),
                       _infoChip(Icons.scale_outlined, '${item.weightGram}g'),
-                      _infoChip(Icons.star_outline, item.condition),
                     ],
                   ),
                   const SizedBox(height: 4),

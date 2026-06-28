@@ -30,8 +30,7 @@ class ExcelImportService {
       final name = _readCell(row, 2);
       final categoryName = _readCell(row, 3);
       final weightText = _readCell(row, 4);
-      final condition = _readCell(row, 6);
-      final basePriceText = _readCell(row, 7);
+      final basePriceText = _readCell(row, 6);
 
       if (name.isEmpty) {
         errors.add('Nama produk wajib diisi');
@@ -54,12 +53,6 @@ class ExcelImportService {
         errors.add('Harga dasar tidak valid');
       }
 
-      final validConditions = ['Baik', 'Cukup Baik', 'Perlu Perbaikan'];
-      if (condition.isEmpty) {
-        errors.add('Kondisi wajib diisi');
-      } else if (!validConditions.contains(condition)) {
-        errors.add('Kondisi harus Baik, Cukup Baik, atau Perlu Perbaikan');
-      }
 
       final item = AuctionItem(
         creditNumber: _readCell(row, 1).isEmpty ? null : _readCell(row, 1),
@@ -67,9 +60,8 @@ class ExcelImportService {
         categoryId: categoryId ?? 0,
         weightGram: weightGram < 0 ? 0 : weightGram,
         karat: _readCell(row, 5).isEmpty ? null : _readCell(row, 5),
-        condition: condition.isEmpty ? 'Baik' : condition,
         basePrice: basePrice < 0 ? 0 : basePrice,
-        description: _readCell(row, 8).isEmpty ? null : _readCell(row, 8),
+        description: _readCell(row, 7).isEmpty ? null : _readCell(row, 7),
         isActive: true,
         createdAt: DateTime.now().toIso8601String(),
       );
