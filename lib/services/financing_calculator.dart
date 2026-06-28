@@ -1,5 +1,3 @@
-import '../models/auction_item.dart';
-
 enum SkemaType { tunai, kca, krasida }
 
 class SimulasiTenor {
@@ -111,6 +109,29 @@ class FinancingCalculator {
     if (match == null) return 0;
     final parsed = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0;
     return parsed.clamp(0, 24).toDouble();
+  }
+
+  /// Hitung harga jual barang emas (HDLE) berdasarkan harga per gram, berat, dan karat.
+  /// Hasil dibulatkan ke atas kelipatan 10.000.
+  static int hitungHargaEmas({
+    required double hdlePrice,
+    required double weightGram,
+    required double karatVal,
+  }) {
+    if (weightGram <= 0 || karatVal <= 0) return 0;
+    final raw = hdlePrice * (karatVal / 24.0) * weightGram;
+    return roundUp(raw, 10000);
+  }
+
+  /// Hitung nilai taksiran barang emas (STL) berdasarkan harga taksiran per gram, berat, dan karat.
+  /// Digunakan sebagai `appraisalValue` pada simulasi KCA dan Krasida.
+  static double hitungNilaiTaksiran({
+    required double stlPrice,
+    required double weightGram,
+    required double karatVal,
+  }) {
+    if (weightGram <= 0 || karatVal <= 0) return 0;
+    return stlPrice * (karatVal / 24.0) * weightGram;
   }
 
   // 1. Skema Tunai
@@ -242,92 +263,4 @@ class FinancingCalculator {
     );
   }
 
-  // --- Backward Compatibility Delegate (optional, to avoid breaking other files temporarily) ---
-  static FinancingCalculation calculate({
-    required double stlPrice,
-    required double hdlePrice,
-    required double loanRatio,
-    required double adminFeeFlat,
-    required int tenorMonths,
-    required double tenorMultiplier,
-    required double weightGram,
-    required double karat,
-    double? fallbackSellingPrice,
-  }) {
-    final hasGoldInputs = weightGram > 0 && karat > 0;
-    final sellingPrice = hasGoldInputs
-        ? roundUp((karat / 24) * hdlePrice * weightGram, 10000).toDouble()
-        : (fallbackSellingPrice ?? 0);
-    final appraisalValue = hasGoldInputs
-        ? stlPrice * karat / 24 * weightGram
-        : sellingPrice;
-    final loanAmount = roundDown(appraisalValue * loanRatio, 100000).toDouble();
-    final adminFee = adminFeeFlat;
-    final downPayment = (sellingPrice - loanAmount + adminFee).clamp(
-      0.0,
-      double.infinity,
-    );
-    final monthlyInstallment = roundUp(
-      (loanAmount * tenorMultiplier) / tenorMonths,
-      100,
-    ).toDouble();
-
-    return FinancingCalculation(
-      sellingPrice: sellingPrice,
-      appraisalValue: appraisalValue,
-      loanAmount: loanAmount,
-      downPayment: downPayment,
-      adminFee: adminFee,
-      tenorMonths: tenorMonths,
-      tenorMultiplier: tenorMultiplier,
-      monthlyInstallment: monthlyInstallment,
-      totalInstallment: monthlyInstallment * tenorMonths,
-    );
-  }
-
-  static FinancingCalculation calculateItems({
-    required List<AuctionItem> items,
-    required double stlPrice,
-    required double hdlePrice,
-    required double loanRatio,
-    required double adminFeeFlat,
-    required int tenorMonths,
-    required double tenorMultiplier,
-  }) {
-    var sellingPrice = 0.0;
-    var appraisalValue = 0.0;
-
-    for (final item in items) {
-      final karat = parseKarat(item.karat);
-      final hasGoldInputs = item.weightGram > 0 && karat > 0;
-      sellingPrice += hasGoldInputs
-          ? roundUp((karat / 24) * hdlePrice * item.weightGram, 10000)
-          : item.basePrice;
-      appraisalValue += hasGoldInputs
-          ? stlPrice * karat / 24 * item.weightGram
-          : item.basePrice;
-    }
-
-    final loanAmount = roundDown(appraisalValue * loanRatio, 100000).toDouble();
-    final downPayment = (sellingPrice - loanAmount + adminFeeFlat).clamp(
-      0.0,
-      double.infinity,
-    );
-    final monthlyInstallment = roundUp(
-      (loanAmount * tenorMultiplier) / tenorMonths,
-      100,
-    ).toDouble();
-
-    return FinancingCalculation(
-      sellingPrice: sellingPrice,
-      appraisalValue: appraisalValue,
-      loanAmount: loanAmount,
-      downPayment: downPayment,
-      adminFee: adminFeeFlat,
-      tenorMonths: tenorMonths,
-      tenorMultiplier: tenorMultiplier,
-      monthlyInstallment: monthlyInstallment,
-      totalInstallment: monthlyInstallment * tenorMonths,
-    );
-  }
 }

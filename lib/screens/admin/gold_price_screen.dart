@@ -345,82 +345,70 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
                           ),
                         )
                       else
-                        ...List.generate(_goldItems.length, (index) {
-                          final item = _goldItems[index];
-                          final name = item['name'] as String;
-                          final weight = (item['weight_gram'] as num)
-                              .toDouble();
-                          final karat = item['karat'] as String?;
-                          final calculatedPrice =
-                              (item['calculated_price'] as num).toDouble();
-                          final goldPrice = (item['gold_price_per_gram'] as num)
-                              .toDouble();
+                        ...List.generate(
+                          _goldItems.length > 5 ? 5 : _goldItems.length,
+                          (index) {
+                            final item = _goldItems[index];
+                            final name = item['name'] as String;
+                            final weight = (item['weight_gram'] as num).toDouble();
+                            final karat = item['karat'] as String?;
+                            final calculatedPrice = (item['calculated_price'] as num).toDouble();
+                            final displayCount = _goldItems.length > 5 ? 5 : _goldItems.length;
 
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: index < _goldItems.length - 1 ? 16 : 0,
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.muted,
-                                borderRadius: BorderRadius.circular(20),
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index < displayCount - 1 ? 12 : 0,
                               ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textDark,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        if (karat != null && karat.isNotEmpty)
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: AppColors.muted,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
                                           Text(
-                                            karat,
+                                            name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
-                                              color: AppColors.textMuted,
-                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.textDark,
+                                              fontSize: 15,
                                             ),
                                           ),
-                                        Text(
-                                          '${weight}g',
-                                          style: const TextStyle(
-                                            color: AppColors.textMuted,
-                                            fontSize: 12,
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${weight}g${(karat != null && karat.isNotEmpty) ? " · $karat Karat" : ""}',
+                                            style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Berat $weight gram × ${currencyFormatter.format(goldPrice)}',
-                                          style: const TextStyle(
-                                            color: AppColors.textMuted,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    currencyFormatter.format(calculatedPrice),
-                                    style: const TextStyle(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 16,
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      currencyFormatter.format(calculatedPrice),
+                                      style: const TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 17,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        }),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),

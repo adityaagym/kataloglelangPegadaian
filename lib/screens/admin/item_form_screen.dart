@@ -1306,17 +1306,14 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
     double appraisalValue = hargaInt.toDouble();
     if (_isGoldCategory(provider)) {
-      double stlPrice = (_financingConfig?['stl_price'] as num?)?.toDouble() ?? 502894;
-      double karatVal = 24.0;
-      if (_karat != null && _karat!.isNotEmpty) {
-        final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
-        final match = regExp.firstMatch(_karat!);
-        if (match != null) {
-          final parsed = double.tryParse(match.group(1)!) ?? 24.0;
-          karatVal = parsed > 24.0 ? 24.0 : (parsed < 0 ? 0 : parsed);
-        }
-      }
-      appraisalValue = stlPrice * _weightGram * (karatVal / 24.0);
+      final stlPrice = (_financingConfig?['stl_price'] as num?)?.toDouble() ?? 502894;
+      // Bug B fix: gunakan parseKarat terpusat, bukan inline regex duplikat
+      final karatVal = FinancingCalculator.parseKarat(_karat);
+      appraisalValue = FinancingCalculator.hitungNilaiTaksiran(
+        stlPrice: stlPrice,
+        weightGram: _weightGram,
+        karatVal: karatVal > 0 ? karatVal : 24.0,
+      );
     }
 
     // 1. Tunai

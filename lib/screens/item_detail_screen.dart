@@ -429,16 +429,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       for (final item in _packageItems) {
         if (_isGoldItem(item)) {
           double stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
-          double karatVal = FinancingCalculator.parseKarat(item.karat);
+          final karatVal = FinancingCalculator.parseKarat(item.karat);
+          final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
 
-          final rawItemPrice = hdlePrice * item.weightGram * (karatVal / 24.0);
-          final recalculatedItemPrice = FinancingCalculator.roundUp(
-            rawItemPrice,
-            10000,
+          final recalculatedItemPrice = FinancingCalculator.hitungHargaEmas(
+            hdlePrice: hdlePrice,
+            weightGram: item.weightGram,
+            karatVal: effectiveKarat,
           ).toDouble();
           totalHarga += recalculatedItemPrice;
 
-          appraisalValue += stlPrice * item.weightGram * (karatVal / 24.0);
+          appraisalValue += FinancingCalculator.hitungNilaiTaksiran(
+            stlPrice: stlPrice,
+            weightGram: item.weightGram,
+            karatVal: effectiveKarat,
+          );
         } else {
           totalHarga += item.basePrice;
           appraisalValue += item.basePrice;
@@ -447,17 +452,20 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     } else {
       if (_isGoldItem(widget.item)) {
         double stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
-        double karatVal = FinancingCalculator.parseKarat(widget.item.karat);
+        final karatVal = FinancingCalculator.parseKarat(widget.item.karat);
+        final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
 
-        final rawItemPrice =
-            hdlePrice * widget.item.weightGram * (karatVal / 24.0);
-        final recalculatedItemPrice = FinancingCalculator.roundUp(
-          rawItemPrice,
-          10000,
+        totalHarga = FinancingCalculator.hitungHargaEmas(
+          hdlePrice: hdlePrice,
+          weightGram: widget.item.weightGram,
+          karatVal: effectiveKarat,
         ).toDouble();
-        totalHarga = recalculatedItemPrice;
 
-        appraisalValue = stlPrice * widget.item.weightGram * (karatVal / 24.0);
+        appraisalValue = FinancingCalculator.hitungNilaiTaksiran(
+          stlPrice: stlPrice,
+          weightGram: widget.item.weightGram,
+          karatVal: effectiveKarat,
+        );
       } else {
         totalHarga = widget.item.basePrice;
         appraisalValue = widget.item.basePrice;

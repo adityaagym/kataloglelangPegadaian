@@ -960,34 +960,51 @@ class _FinancingScreenState extends State<FinancingScreen> {
       decimalDigits: 0,
     );
 
-    // Mock item price from excel reference
-    const mockPrice = 6580000;
-    final adminFlat = double.tryParse(_adminFeeFlatController.text) ?? 70000;
+    final provider = Provider.of<AppProvider>(context, listen: false);
+
+    // Bug D fix: gunakan harga aktual dari config, bukan mockPrice hardcoded.
+    // Simulasikan contoh representatif: emas 22K berat 10 gram.
+    const mockWeightGram = 10.0;
+    const mockKaratVal = 22.0;
+    final hdlePrice = provider.goldPricePerGram.toDouble();
+    final stlPrice = _stlPrice;
+    final adminFlat = double.tryParse(_adminFeeFlatController.text) ?? _adminFeeFlat;
+
+    final mockHargaLelang = FinancingCalculator.hitungHargaEmas(
+      hdlePrice: hdlePrice,
+      weightGram: mockWeightGram,
+      karatVal: mockKaratVal,
+    );
+    final mockAppraisalValue = FinancingCalculator.hitungNilaiTaksiran(
+      stlPrice: stlPrice,
+      weightGram: mockWeightGram,
+      karatVal: mockKaratVal,
+    );
 
     final config = {
       'admin_fee_flat': adminFlat,
     };
 
     // 1. Tunai
-    final tunaiTotal = mockPrice;
+    final tunaiTotal = mockHargaLelang;
 
     // 2. KCA
     final kcaRes = FinancingCalculator.simulasiKca(
-      hargaLelang: mockPrice,
-      appraisalValue: mockPrice.toDouble(),
+      hargaLelang: mockHargaLelang,
+      appraisalValue: mockAppraisalValue,
       config: config,
     );
 
     final kcaUm = kcaRes.uangMuka;
     final kcaUp = kcaRes.uangPinjaman;
-    final kcaPelunasan = kcaRes.totalPelunasanKca!;
-    final tempoKca = kcaRes.tempoKca!;
+    final kcaPelunasan = kcaRes.totalPelunasanKca ?? 0;
+    final tempoKca = kcaRes.tempoKca ?? 4;
 
     // 3. KRASIDA
     final tenorMonths = _selectedTenorMonths ?? (_tenors.isNotEmpty ? _tenors.first['months'] as int : 12);
     final krasidaRes = FinancingCalculator.simulasiKrasida(
-      hargaLelang: mockPrice,
-      appraisalValue: mockPrice.toDouble(),
+      hargaLelang: mockHargaLelang,
+      appraisalValue: mockAppraisalValue,
       config: config,
       tenors: _tenors,
       tenorMonths: tenorMonths,
@@ -995,8 +1012,8 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
     final krasidaUm = krasidaRes.uangMuka;
     final krasidaUp = krasidaRes.uangPinjaman;
-    final krasidaAngsuran = krasidaRes.angsuranPerBulan!;
-    final krasidaTotal = krasidaRes.totalBayar!;
+    final krasidaAngsuran = krasidaRes.angsuranPerBulan ?? 0;
+    final krasidaTotal = krasidaRes.totalBayar ?? 0;
 
     return Container(
       padding: const EdgeInsets.all(28),
@@ -1046,12 +1063,14 @@ class _FinancingScreenState extends State<FinancingScreen> {
               children: [
                 const Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
                 const SizedBox(width: 8),
-                Text(
-                  'Contoh Harga Barang: ${currencyFormatter.format(mockPrice)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.w800,
+                Expanded(
+                  child: Text(
+                    'Simulasi: Emas 22K · 10g · ${currencyFormatter.format(mockHargaLelang)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],

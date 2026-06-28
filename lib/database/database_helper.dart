@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import '../models/category.dart';
 import '../models/auction_item.dart';
 import '../models/item_photo.dart';
+import '../services/financing_calculator.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -22,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -360,6 +361,18 @@ class DatabaseHelper {
         );
       }
     }
+    if (oldVersion < 5) {
+      // v5: Hapus seluruh skema lama (termasuk kolom 'condition' legacy)
+      // dan buat ulang dari awal agar bersih.
+      // Data lama akan hilang — ini disengaja untuk menghapus schema yang tidak sinkron.
+      await db.execute('DROP TABLE IF EXISTS financing_tenors');
+      await db.execute('DROP TABLE IF EXISTS financing_config');
+      await db.execute('DROP TABLE IF EXISTS item_photos');
+      await db.execute('DROP TABLE IF EXISTS auction_items');
+      await db.execute('DROP TABLE IF EXISTS gold_prices');
+      await db.execute('DROP TABLE IF EXISTS categories');
+      await _createDB(db, newVersion);
+    }
   }
 
   static const Map<int, double> _defaultTenorMultipliers = {
@@ -564,7 +577,13 @@ class DatabaseHelper {
 
     return result.map((row) {
       final weightGram = (row['weight_gram'] as num).toDouble();
-      final calculatedPrice = weightGram * goldPrice;
+      // Bug A fix: gunakan karat dalam kalkulasi, bukan sekadar berat × harga
+      final karatVal = FinancingCalculator.parseKarat(row['karat'] as String?);
+      final calculatedPrice = FinancingCalculator.hitungHargaEmas(
+        hdlePrice: goldPrice,
+        weightGram: weightGram,
+        karatVal: karatVal > 0 ? karatVal : 24.0,
+      );
       return {
         ...row,
         'calculated_price': calculatedPrice,
@@ -597,18 +616,15 @@ class DatabaseHelper {
       final weight = (item['weight_gram'] as num).toDouble();
       final karatStr = item['karat'] as String?;
 
-      double karatVal = 24.0;
-      if (karatStr != null && karatStr.isNotEmpty) {
-        final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
-        final match = regExp.firstMatch(karatStr);
-        if (match != null) {
-          final parsed = double.tryParse(match.group(1)!) ?? 24.0;
-          karatVal = parsed > 24.0 ? 24.0 : (parsed < 0 ? 0 : parsed);
-        }
-      }
+      // Bug B fix: gunakan parseKarat terpusat, bukan inline regex duplikat
+      final karatVal = FinancingCalculator.parseKarat(karatStr);
+      final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
 
-      final rawPrice = goldPrice * (karatVal / 24.0) * weight;
-      final newPrice = ((rawPrice + 10000 - 1) ~/ 10000) * 10000;
+      final newPrice = FinancingCalculator.hitungHargaEmas(
+        hdlePrice: goldPrice,
+        weightGram: weight,
+        karatVal: effectiveKarat,
+      );
       await db.update(
         'auction_items',
         {'base_price': newPrice.toDouble()},
