@@ -30,11 +30,14 @@ class _FinancingScreenState extends State<FinancingScreen> {
   List<Map<String, dynamic>> _originalTenors = [];
 
   bool get _hasChanges {
-    final currentStl = double.tryParse(_stlController.text) ?? _stlPrice;
-    final currentAdminFlat = double.tryParse(_adminFeeFlatController.text) ?? _adminFeeFlat;
+    final cleanStlText = _stlController.text.replaceAll('.', '').replaceAll(',', '');
+    final currentStl = double.tryParse(cleanStlText) ?? _originalStlPrice;
+    
+    final cleanAdminText = _adminFeeFlatController.text.replaceAll('.', '').replaceAll(',', '');
+    final currentAdmin = double.tryParse(cleanAdminText) ?? _originalAdminFeeFlat;
 
     if (currentStl != _originalStlPrice) return true;
-    if (currentAdminFlat != _originalAdminFeeFlat) return true;
+    if (currentAdmin != _originalAdminFeeFlat) return true;
     if (_isActive != _originalIsActive) return true;
 
     // Check tenors
@@ -80,7 +83,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
   Future<void> _loadConfig() async {
     final provider = Provider.of<AppProvider>(context, listen: false);
-    final config = await provider.getActiveFinancingConfig();
+    final config = await provider.getLatestFinancingConfig();
     final tenors = await provider.getFinancingTenors(config?['id'] as int? ?? 0);
 
     if (config != null) {
@@ -144,9 +147,14 @@ class _FinancingScreenState extends State<FinancingScreen> {
     setState(() => _isSaving = true);
     try {
       final provider = Provider.of<AppProvider>(context, listen: false);
-      final stlVal = double.tryParse(_stlController.text) ?? 502894;
+      
+      final cleanStlText = _stlController.text.replaceAll('.', '').replaceAll(',', '');
+      final stlVal = double.tryParse(cleanStlText) ?? 502894;
+      
       final hdleVal = provider.goldPricePerGram;
-      final adminFlatVal = double.tryParse(_adminFeeFlatController.text) ?? 70000;
+      
+      final cleanAdminText = _adminFeeFlatController.text.replaceAll('.', '').replaceAll(',', '');
+      final adminFlatVal = double.tryParse(cleanAdminText) ?? 70000;
 
       await Provider.of<AppProvider>(
         context,

@@ -13,7 +13,8 @@ void main() {
 
   test('parseFile returns valid item for well-formed row', () async {
     final bytes = ExcelTemplateService.generateTemplateBytes(categories);
-    final result = await ExcelImportService.parseFile(bytes, categories, 1120000.0);
+    // Gold price = 1200000, weight = 5.5, karat = 22 -> 1200000 * 5.5 * (22/24) = 6050000
+    final result = await ExcelImportService.parseFile(bytes, categories, goldPrice: 1200000);
 
     expect(result, isNotEmpty);
     final first = result.first;
@@ -21,12 +22,12 @@ void main() {
     expect(first.item.name, 'Cincin Emas 22K');
     expect(first.item.categoryId, 1);
     expect(first.item.weightGram, 5.5);
-    expect(first.item.basePrice, 5650000.0);
+    expect(first.item.basePrice, 6050000);
   });
 
   test('parseFile flags invalid category and missing name', () async {
     final bytes = ExcelTemplateService.generateTemplateBytes(categories);
-    final result = await ExcelImportService.parseFile(bytes, categories, 1120000.0);
+    final result = await ExcelImportService.parseFile(bytes, categories);
 
     // Second sample row uses Elektronik, should be valid.
     final second = result[1];
@@ -61,7 +62,7 @@ void main() {
     sheet.appendRow(List.generate(8, (_) => TextCellValue('')));
 
     final bytes = Uint8List.fromList(excel.encode()!);
-    final result = await ExcelImportService.parseFile(bytes, categories, 1120000.0);
+    final result = await ExcelImportService.parseFile(bytes, categories);
 
     expect(result.length, 1);
     expect(result.first.isValid, true);

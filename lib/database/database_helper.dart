@@ -647,6 +647,17 @@ class DatabaseHelper {
     return null;
   }
 
+  Future<Map<String, dynamic>?> getLatestFinancingConfig() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'financing_config',
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    if (result.isNotEmpty) return result.first;
+    return null;
+  }
+
   Future<List<Map<String, dynamic>>> getFinancingTenors(int configId) async {
     final db = await instance.database;
     return await db.query(

@@ -1371,7 +1371,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _pembelianButton(
-                              'KCA',
+                              'RAHN',
                               Icons.credit_card_outlined,
                               AppColors.info,
                               () => _showSimulationDialog(SkemaType.kca),
@@ -1380,7 +1380,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _pembelianButton(
-                              'KRASIDA',
+                              'ARRUM EMAS',
                               Icons.bar_chart_outlined,
                               AppColors.accent,
                               () => _showSimulationDialog(SkemaType.krasida),
