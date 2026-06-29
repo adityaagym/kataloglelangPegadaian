@@ -176,7 +176,7 @@ class FinancingCalculator {
         uangMuka: uangMuka,
         uangPinjaman: uangPinjaman,
         eligible: false,
-        message: 'Uang pinjaman KCA (Rp $uangPinjaman) kurang dari batas minimum (Rp $minimumUpKca). Hanya tersedia untuk pembelian tunai.',
+        message: 'Uang pinjaman Rahn (Rp $uangPinjaman) kurang dari batas minimum (Rp $minimumUpKca). Hanya tersedia untuk pembelian tunai.',
       );
     }
 
@@ -217,7 +217,7 @@ class FinancingCalculator {
         uangMuka: uangMuka,
         uangPinjaman: uangPinjaman,
         eligible: false,
-        message: 'Uang pinjaman KRASIDA (Rp $uangPinjaman) kurang dari batas minimum (Rp $minimumUpKrasida). Hanya tersedia untuk pembelian tunai.',
+        message: 'Uang pinjaman Arrum Emas (Rp $uangPinjaman) kurang dari batas minimum (Rp $minimumUpKrasida). Hanya tersedia untuk pembelian tunai.',
       );
     }
 

@@ -1437,7 +1437,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'KCA (Kredit Cepat Aman) — Tempo ${kcaRes.tempoKca} Bulan',
+                          'Rahn (Kredit Cepat Aman) — Tempo ${kcaRes.tempoKca} Bulan',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
@@ -1492,7 +1492,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'KCA (Tidak Eligible)',
+                          'Rahn (Tidak Eligible)',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
@@ -1502,7 +1502,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          kcaRes.message ?? 'Harga di luar limit kelayakan KCA.',
+                          kcaRes.message ?? 'Harga di luar limit kelayakan Rahn.',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF4B5563),
@@ -1535,7 +1535,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
-                          ' KRASIDA (Kredit Gadai Angsuran Bulanan)',
+                          ' Arrum Emas (Kredit Gadai Angsuran Bulanan)',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
@@ -1636,7 +1636,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'KRASIDA (Tidak Eligible)',
+                          'Arrum Emas (Tidak Eligible)',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
@@ -1646,7 +1646,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          krasidaRes.message ?? 'Harga di luar limit kelayakan KRASIDA.',
+                          krasidaRes.message ?? 'Harga di luar limit kelayakan Arrum Emas.',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF4B5563),
