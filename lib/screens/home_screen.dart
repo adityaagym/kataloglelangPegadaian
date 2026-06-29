@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeader() {
     final isPortrait = MediaQuery.of(context).size.width < 900;
-
+    
     return Padding(
       padding: EdgeInsets.fromLTRB(
         isPortrait ? 16 : 40,
@@ -139,7 +139,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 width: isPortrait ? 140 : 280,
                 height: isPortrait ? 52 : 84,
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 2,
+                  vertical: 2,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -161,9 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Consumer<AppProvider>(
                 builder: (context, provider, _) => Text(
-                  isPortrait
-                      ? provider.branchName
-                      : 'Cabang ${provider.branchName}',
+                  isPortrait ? provider.branchName : 'Cabang ${provider.branchName}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -245,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHero(NumberFormat currencyFormatter) {
     final isPortrait = MediaQuery.of(context).size.width < 900;
-
+    
     final goldCard = Consumer<AppProvider>(
       builder: (context, provider, _) => Container(
         width: isPortrait ? double.infinity : 390,
@@ -282,7 +283,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.successGreen.withValues(alpha: 0.70),
+                color: AppColors.successGreen.withValues(
+                  alpha: 0.70,
+                ),
               ),
             ),
           ],
@@ -576,10 +579,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Text(
                               'Barang Lelang Tersedia',
                               style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.textDark,
-                              ),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.textDark),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -694,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFooter() {
     final isPortrait = MediaQuery.of(context).size.width < 900;
-
+    
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
         final totalItems = provider.items.length;
@@ -780,12 +782,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _footerCircle(
-    IconData icon,
-    bool filled,
-    bool isPortrait,
-    VoidCallback? onTap,
-  ) {
+  Widget _footerCircle(IconData icon, bool filled, bool isPortrait, VoidCallback? onTap) {
     final size = isPortrait ? 40.0 : 48.0;
     return InkWell(
       onTap: onTap,
@@ -800,9 +797,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Icon(
           icon,
-          color: filled
-              ? AppColors.primary
-              : Colors.white.withValues(alpha: 0.3),
+          color: filled ? AppColors.primary : Colors.white.withValues(alpha: 0.3),
           size: isPortrait ? 20 : 24,
         ),
       ),

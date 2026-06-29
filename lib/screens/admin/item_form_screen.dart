@@ -407,7 +407,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                   TextFormField(
                                     initialValue: _creditNumber,
                                     decoration: _inputDecoration(
-                                      'Contoh: BK 1234',
+                                      'Contoh: 6070226020001197',
                                       helperText: 'Boleh sama untuk beberapa barang dalam satu akad.',
                                     ),
                                     textCapitalization: TextCapitalization.characters,
@@ -421,7 +421,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                   TextFormField(
                                     initialValue: _name,
                                     decoration: _inputDecoration(
-                                      'Contoh: Cincin Emas Berlian',
+                                      'Contoh: GELANG SISIK NAGA',
                                     ),
                                     validator: (val) => val == null || val.isEmpty
                                         ? 'Wajib diisi'

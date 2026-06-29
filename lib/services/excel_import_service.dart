@@ -158,6 +158,7 @@ class ExcelImportService {
         description: currentMarhun,
         isActive: true,
         createdAt: DateTime.now().toIso8601String(),
+        categoryName: categoryName.isEmpty ? null : categoryName,
       );
 
       results.add(ImportedAuctionItem(

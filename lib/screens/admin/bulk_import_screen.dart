@@ -62,21 +62,21 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
     });
 
     try {
-      final result = await FilePicker.pickFiles(
+      final result = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
-        allowMultiple: false,
-        withData: true,
       );
 
-      if (result == null || result.files.single.bytes == null) {
+      if (result == null) {
         setState(() => _isLoading = false);
         return;
       }
 
       if (!mounted) return;
       final provider = Provider.of<AppProvider>(context, listen: false);
-      await provider.parseImportFile(result.files.single.bytes!);
+      
+      final fileBytes = await result.readAsBytes();
+      await provider.parseImportFile(fileBytes);
     } catch (e) {
       setState(() => _errorMessage = e.toString());
     } finally {

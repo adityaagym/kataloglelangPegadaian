@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../utils/app_colors.dart';
 
@@ -18,10 +20,87 @@ class _FilterSheetState extends State<FilterSheet> {
   double _minPrice = 0;
   double _maxPrice = 50000000;
 
+  late TextEditingController _minController;
+  late TextEditingController _maxController;
+  final FocusNode _minFocus = FocusNode();
+  final FocusNode _maxFocus = FocusNode();
+
+  final NumberFormat _numberFormatter = NumberFormat('#,###', 'id_ID');
+
   @override
   void initState() {
     super.initState();
     _selectedCategoryId = widget.initialCategoryId;
+    _minController = TextEditingController(
+      text: _minPrice == 0 ? '0' : _numberFormatter.format(_minPrice.toInt()),
+    );
+    _maxController = TextEditingController(
+      text: _numberFormatter.format(_maxPrice.toInt()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _minController.dispose();
+    _maxController.dispose();
+    _minFocus.dispose();
+    _maxFocus.dispose();
+    super.dispose();
+  }
+
+  /// Parses a user-entered string back into a raw double.
+  double _parsePrice(String text) {
+    if (text.isEmpty) return 0;
+    // Remove all non-digit characters (dots, spaces, etc.)
+    final digitsOnly = text.replaceAll(RegExp(r'[^\d]'), '');
+    return double.tryParse(digitsOnly) ?? 0;
+  }
+
+  /// Formats a raw double price into a human-readable short label.
+  /// Uses "jt" for millions, "M" for miliar (billions).
+  String _formatPriceLabel(double value) {
+    if (value >= 1000000000) {
+      final v = value / 1000000000;
+      // Show decimal only when needed
+      return v == v.roundToDouble()
+          ? '${v.toInt()} M'
+          : '${v.toStringAsFixed(1)} M';
+    } else if (value >= 1000000) {
+      final v = value / 1000000;
+      return v == v.roundToDouble()
+          ? '${v.toInt()} jt'
+          : '${v.toStringAsFixed(1)} jt';
+    } else if (value >= 1000) {
+      final v = value / 1000;
+      return v == v.roundToDouble()
+          ? '${v.toInt()} rb'
+          : '${v.toStringAsFixed(1)} rb';
+    } else {
+      return value.toInt().toString();
+    }
+  }
+
+  /// Called when focus leaves a price field – re-formats the text.
+  void _onPriceFieldSubmitted(TextEditingController controller, bool isMin) {
+    final value = _parsePrice(controller.text);
+    setState(() {
+      if (isMin) {
+        _minPrice = value;
+      } else {
+        _maxPrice = value;
+      }
+      controller.text = value == 0 ? '0' : _numberFormatter.format(value.toInt());
+    });
+  }
+
+  void _resetFilter() {
+    setState(() {
+      _selectedCategoryId = null;
+      _minPrice = 0;
+      _maxPrice = 5000000000;
+      _minController.text = '0';
+      _maxController.text = _numberFormatter.format(5000000000);
+    });
   }
 
   @override
@@ -112,12 +191,19 @@ class _FilterSheetState extends State<FilterSheet> {
                               Expanded(
                                 child: _panel(
                                   title: 'Harga Dasar Lelang',
-                                  subtitle: 'Gunakan batas minimum dan maksimum.',
+                                  subtitle: 'Masukkan batas minimum dan maksimum secara manual.',
                                   child: Column(
                                     children: [
                                       Row(
                                         children: [
-                                          Expanded(child: _priceBox('Minimum', _minPrice)),
+                                          Expanded(
+                                            child: _priceInputBox(
+                                              'Minimum',
+                                              _minController,
+                                              _minFocus,
+                                              true,
+                                            ),
+                                          ),
                                           const Padding(
                                             padding: EdgeInsets.fromLTRB(16, 28, 16, 0),
                                             child: SizedBox(
@@ -125,20 +211,50 @@ class _FilterSheetState extends State<FilterSheet> {
                                               child: Divider(color: AppColors.border),
                                             ),
                                           ),
-                                          Expanded(child: _priceBox('Maksimum', _maxPrice)),
+                                          Expanded(
+                                            child: _priceInputBox(
+                                              'Maksimum',
+                                              _maxController,
+                                              _maxFocus,
+                                              false,
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                      RangeSlider(
-                                        values: RangeValues(_minPrice, _maxPrice),
-                                        min: 0,
-                                        max: 50000000,
-                                        divisions: 100,
-                                        activeColor: AppColors.primary,
-                                        inactiveColor: AppColors.secondary,
-                                        onChanged: (values) => setState(() {
-                                          _minPrice = values.start;
-                                          _maxPrice = values.end;
-                                        }),
+                                      const SizedBox(height: 14),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.secondary,
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.info_outline_rounded,
+                                              size: 18,
+                                              color: AppColors.successGreen,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text(
+                                                'Masukkan angka dalam Rupiah penuh. Contoh: 500000 = Rp 500 rb, 5000000 = Rp 5 jt, 1000000000 = Rp 1 M.',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.successGreen.withValues(
+                                                    alpha: 0.85,
+                                                  ),
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -176,7 +292,7 @@ class _FilterSheetState extends State<FilterSheet> {
                               ),
                               _summaryRow(
                                 'Harga',
-                                '${(_minPrice / 1000000).toStringAsFixed(1)} jt - ${(_maxPrice / 1000000).toStringAsFixed(1)} jt',
+                                'Rp ${_formatPriceLabel(_minPrice)} - Rp ${_formatPriceLabel(_maxPrice)}',
                               ),
                             ],
                           ),
@@ -194,11 +310,7 @@ class _FilterSheetState extends State<FilterSheet> {
                       width: 320,
                       height: 56,
                       child: OutlinedButton(
-                        onPressed: () => setState(() {
-                          _selectedCategoryId = null;
-                          _minPrice = 0;
-                          _maxPrice = 50000000;
-                        }),
+                        onPressed: _resetFilter,
                         child: const Text(
                           'Reset Filter',
                           style: TextStyle(fontWeight: FontWeight.w800),
@@ -211,6 +323,9 @@ class _FilterSheetState extends State<FilterSheet> {
                         height: 56,
                         child: ElevatedButton(
                           onPressed: () {
+                            // Ensure we capture latest typed values
+                            _minPrice = _parsePrice(_minController.text);
+                            _maxPrice = _parsePrice(_maxController.text);
                             widget.onApply(
                               _selectedCategoryId,
                               _minPrice,
@@ -321,7 +436,13 @@ class _FilterSheetState extends State<FilterSheet> {
     );
   }
 
-  Widget _priceBox(String label, double value) {
+  /// Builds an editable price input box with auto-formatting.
+  Widget _priceInputBox(
+    String label,
+    TextEditingController controller,
+    FocusNode focusNode,
+    bool isMin,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -334,22 +455,68 @@ class _FilterSheetState extends State<FilterSheet> {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.muted,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border),
+        TextField(
+          controller: controller,
+          focusNode: focusNode,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            _ThousandSeparatorFormatter(),
+          ],
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textDark,
           ),
-          child: Text(
-            'Rp ${(value / 1000000).toStringAsFixed(1)} jt',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textDark,
+          decoration: InputDecoration(
+            prefixText: 'Rp ',
+            prefixStyle: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary.withValues(alpha: 0.7),
+            ),
+            filled: true,
+            fillColor: AppColors.muted,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(22),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(22),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(22),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 2,
+              ),
             ),
           ),
+          onChanged: (value) {
+            final parsed = _parsePrice(value);
+            setState(() {
+              if (isMin) {
+                _minPrice = parsed;
+              } else {
+                _maxPrice = parsed;
+              }
+            });
+          },
+          onEditingComplete: () {
+            _onPriceFieldSubmitted(controller, isMin);
+            focusNode.unfocus();
+          },
+          onTapOutside: (_) {
+            if (focusNode.hasFocus) {
+              _onPriceFieldSubmitted(controller, isMin);
+              focusNode.unfocus();
+            }
+          },
         ),
       ],
     );
@@ -384,6 +551,38 @@ class _FilterSheetState extends State<FilterSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Custom TextInputFormatter that adds thousand separators (dots) as user types.
+class _ThousandSeparatorFormatter extends TextInputFormatter {
+  final NumberFormat _formatter = NumberFormat('#,###', 'id_ID');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    if (digitsOnly.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    final number = int.tryParse(digitsOnly);
+    if (number == null) return newValue;
+
+    final formatted = _formatter.format(number);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }
