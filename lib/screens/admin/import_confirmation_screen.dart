@@ -12,6 +12,7 @@ class ImportConfirmationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<AppProvider>(context, listen: false);
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -21,6 +22,10 @@ class ImportConfirmationScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xFFF9FAFB), // Clean, corporate light gray background
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
+          onPressed: () => provider.clearImportDraft(),
+        ),
         title: const Text(
           'Konfirmasi Impor Massal',
           style: TextStyle(
@@ -118,70 +123,29 @@ class ImportConfirmationScreen extends StatelessWidget {
                 ),
               ),
 
-              // 4. Floating Footer Action Bar
+              // 4. Floating Footer Action Bar (Bottom Right)
               Positioned(
                 bottom: 24,
-                left: 24,
                 right: 24,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(8), // Corporate, clean corners
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF374151),
-                            side: const BorderSide(color: Color(0xFFD1D5DB), width: 1.5),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          onPressed: () {
-                            provider.clearImportDraft();
-                          },
-                          icon: const Icon(Icons.close, size: 18),
-                          label: const Text(
-                            'Batal',
-                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF16A34A), // Clean green
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          onPressed: validSelectedCount > 0
-                              ? () => _proceedToPhotos(context, provider)
-                              : null,
-                          icon: const Text(
-                            'Lanjut Input Foto',
-                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                          ),
-                          label: const Icon(Icons.arrow_forward, size: 18),
-                        ),
-                      ],
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF16A34A), // Clean green
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+                    elevation: 4,
+                    shadowColor: const Color(0xFF16A34A).withValues(alpha: 0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
+                  onPressed: validSelectedCount > 0
+                      ? () => _proceedToPhotos(context, provider)
+                      : null,
+                  icon: const Text(
+                    'Lanjut Input Foto',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
+                  label: const Icon(Icons.arrow_forward, size: 18),
                 ),
               ),
             ],

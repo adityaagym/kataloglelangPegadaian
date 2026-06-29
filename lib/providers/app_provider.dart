@@ -19,6 +19,7 @@ class AppProvider with ChangeNotifier {
 
   // --- Bulk Import State ---
   List<ImportedAuctionItem> _importDraftItems = [];
+  List<ImportedAuctionItem> _importDraftBackup = [];
   List<ImportedAuctionItem> get importDraftItems => _importDraftItems;
   bool get hasImportDraft => _importDraftItems.isNotEmpty;
   int get selectedImportCount =>
@@ -35,7 +36,25 @@ class AppProvider with ChangeNotifier {
 
   void finishPhotoImport() {
     _activePhotoImportItemIds = [];
+    _importDraftBackup = [];
     notifyListeners();
+  }
+
+  Future<void> cancelPhotoImport() async {
+    if (_activePhotoImportItemIds.isNotEmpty) {
+      // 1. Delete the batch of saved items
+      for (final id in _activePhotoImportItemIds) {
+        await _dbHelper.deleteAuctionItem(id);
+      }
+      _activePhotoImportItemIds = [];
+      
+      // 2. Restore the draft from backup
+      _importDraftItems = List.from(_importDraftBackup);
+      _importDraftBackup = [];
+      
+      await refreshAdminData();
+      notifyListeners();
+    }
   }
 
   List<Category> get categories => _categories;
@@ -336,6 +355,7 @@ class AppProvider with ChangeNotifier {
 
     final ids = await _dbHelper.createAuctionItemsBatch(itemsToSave);
     await refreshAdminData();
+    _importDraftBackup = List.from(_importDraftItems);
     _importDraftItems = [];
     notifyListeners();
     return ids;

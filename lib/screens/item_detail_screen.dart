@@ -1204,9 +1204,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         builder: (context, provider, _) {
                           double displayPrice = widget.item.basePrice;
                           if (_isGoldItem(widget.item)) {
-                            final hdlePrice = provider.goldPricePerGram.toDouble();
-                            final karatVal = FinancingCalculator.parseKarat(widget.item.karat);
-                            final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
+                            final hdlePrice = provider.goldPricePerGram
+                                .toDouble();
+                            final karatVal = FinancingCalculator.parseKarat(
+                              widget.item.karat,
+                            );
+                            final effectiveKarat = karatVal > 0
+                                ? karatVal
+                                : 24.0;
                             displayPrice = FinancingCalculator.hitungHargaEmas(
                               hdlePrice: hdlePrice,
                               weightGram: widget.item.weightGram,
@@ -1654,7 +1659,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       double displayPrice = item.basePrice;
                       if (_isGoldItem(item)) {
                         final hdlePrice = provider.goldPricePerGram.toDouble();
-                        final karatVal = FinancingCalculator.parseKarat(item.karat);
+                        final karatVal = FinancingCalculator.parseKarat(
+                          item.karat,
+                        );
                         final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
                         displayPrice = FinancingCalculator.hitungHargaEmas(
                           hdlePrice: hdlePrice,

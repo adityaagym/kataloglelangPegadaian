@@ -279,6 +279,13 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
       return Scaffold(
         backgroundColor: const Color(0xFFF9FAFB),
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
+            onPressed: () async {
+              final provider = Provider.of<AppProvider>(context, listen: false);
+              await provider.cancelPhotoImport();
+            },
+          ),
           title: const Text(
             'Foto Produk',
             style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: Color(0xFF111827)),
@@ -304,6 +311,13 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF111827)),
+          onPressed: () async {
+            final provider = Provider.of<AppProvider>(context, listen: false);
+            await provider.cancelPhotoImport();
+          },
+        ),
         title: Text(
           'Foto Produk $progress',
           style: const TextStyle(
