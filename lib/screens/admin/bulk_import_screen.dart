@@ -107,7 +107,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF111827),
+                color: Color.fromARGB(255, 17, 39, 17),
                 letterSpacing: -0.5,
               ),
             ),
@@ -246,7 +246,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                   color: const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: const Color(0xFF374151), size: 22),
+                child: Icon(icon, color: const Color.fromARGB(255, 20, 187, 89), size: 22),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -281,7 +281,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
             height: 48,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isPrimary ? const Color(0xFF16A34A) : const Color(0xFF111827),
+                backgroundColor: isPrimary ? const Color(0xFF16A34A) : const Color.fromARGB(255, 0, 81, 255),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
