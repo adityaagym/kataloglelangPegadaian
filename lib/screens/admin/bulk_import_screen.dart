@@ -62,7 +62,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
     });
 
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
         allowMultiple: false,

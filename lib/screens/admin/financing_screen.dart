@@ -521,7 +521,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
   Widget _buildTenorTableCard() {
     return _buildConfigCard(
-      title: 'Tenor KRASIDA & Multiplier',
+      title: 'Tenor Arrum Emas & Multiplier',
       icon: Icons.calendar_month_outlined,
       children: [
         // Tenor selection chips
@@ -1247,7 +1247,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'KCA — Tempo $tempoKca Bulan',
+                        'Rahn — Tempo $tempoKca Bulan',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
@@ -1291,7 +1291,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'KRASIDA — Tenor $tenorMonths Bulan',
+                        'Arrum Emas — Tenor $tenorMonths Bulan',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,

@@ -553,7 +553,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 ],
               );
             } else if (skema == SkemaType.kca) {
-              dialogTitle = 'Detail Simulasi KCA';
+              dialogTitle = 'Detail Simulasi Rahn';
               headerColor = AppColors.info;
               final result = FinancingCalculator.simulasiKca(
                 hargaLelang: totalHarga.round(),
@@ -685,7 +685,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 );
               }
             } else {
-              dialogTitle = 'Detail Simulasi KRASIDA';
+              dialogTitle = 'Detail Simulasi Arrum Emas';
               headerColor = AppColors.accent;
               final tenorMonths =
                   _selectedTenorMonths ??
@@ -1028,6 +1028,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     NumberFormat currencyFormatter, {
     bool scrollable = true,
   }) {
+    final prices = _calculatePrices();
+    final totalHarga = prices['totalHarga'] ?? 0;
+    final appraisalValue = prices['appraisalValue'] ?? 0;
+    final config = _financingConfig ?? <String, dynamic>{};
+
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1354,7 +1359,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ],
 
                       const Text(
-                        'PILIH CARA PEMBELIAN',
+                        'PILIHAN CARA PEMBELIAN',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
@@ -1362,36 +1367,408 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           letterSpacing: 0.8,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _pembelianButton(
-                              'TUNAI',
-                              Icons.payments_outlined,
-                              AppColors.primary,
-                              () => _showSimulationDialog(SkemaType.tunai),
+                      const SizedBox(height: 16),
+
+                      // 1. Pembelian Tunai Card
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _pembelianButton(
-                              'RAHN',
-                              Icons.credit_card_outlined,
-                              AppColors.info,
-                              () => _showSimulationDialog(SkemaType.kca),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.payments_outlined, color: AppColors.primary, size: 20),
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'PEMBELIAN TUNAI',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.primary,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _pembelianButton(
-                              'ARRUM EMAS',
-                              Icons.bar_chart_outlined,
-                              AppColors.accent,
-                              () => _showSimulationDialog(SkemaType.krasida),
+                            const SizedBox(height: 16),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: AppColors.primary.withOpacity(0.15),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'TOTAL BAYAR',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textSecondary,
+                                      letterSpacing: 1.1,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    currencyFormatter.format(totalHarga),
+                                    style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            _bulletPoint('Bayar penuh saat transaksi langsung di cabang.'),
+                            _bulletPoint('Bebas dari bunga, denda, atau cicilan tambahan.'),
+                            if (_simulatePackage) ...[
+                              const SizedBox(height: 16),
+                              _buildPackageItemsList(currencyFormatter),
+                            ],
+                          ],
+                        ),
+                      ),
+
+                      // 2. Simulasi Rahn Card
+                      Builder(
+                        builder: (context) {
+                          final result = FinancingCalculator.simulasiKca(
+                            hargaLelang: totalHarga.round(),
+                            appraisalValue: appraisalValue,
+                            config: config,
+                          );
+
+                          return Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: AppColors.border),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.info.withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 20),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      'SIMULASI RAHN',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.info,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                if (!result.eligible)
+                                  _buildIneligiblePanel(result.message ?? '')
+                                else ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.info.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: AppColors.info.withOpacity(0.15),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _breakdownRow(
+                                          'Harga Lelang',
+                                          currencyFormatter.format(result.hargaLelang),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        _breakdownRow(
+                                          'Uang Muka (DP)',
+                                          currencyFormatter.format(result.uangMuka),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        _breakdownRow(
+                                          'Uang Pinjaman',
+                                          currencyFormatter.format(result.uangPinjaman),
+                                          valueColor: AppColors.info,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.info.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: AppColors.info.withOpacity(0.15),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.timer_outlined,
+                                          color: AppColors.info,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'TEMPO: ${result.tempoKca} BULAN',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.info,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _bulletPoint('Nasabah melunasi sisa pinjaman dalam 4 bulan.'),
+                                  _bulletPoint('TIDAK ADA angsuran rutin bulanan.'),
+                                  _bulletPoint('Bayar bebas kapan saja (bertahap/sekaligus).'),
+                                  const SizedBox(height: 12),
+                                  const Divider(),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.info.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: AppColors.info.withOpacity(0.15),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'TOTAL PELUNASAN',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.textDark,
+                                          ),
+                                        ),
+                                        Text(
+                                          currencyFormatter.format(result.totalPelunasanKca!),
+                                          style: const TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.info,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                if (_simulatePackage) ...[
+                                  const SizedBox(height: 16),
+                                  _buildPackageItemsList(currencyFormatter),
+                                ],
+                              ],
+                            ),
+                          );
+                        }
+                      ),
+
+                      // 3. Simulasi Arrum Emas Card
+                      Builder(
+                        builder: (context) {
+                          final tenorMonths = _selectedTenorMonths ?? _financingTenors.first['months'] as int;
+                          final result = FinancingCalculator.simulasiKrasida(
+                            hargaLelang: totalHarga.round(),
+                            appraisalValue: appraisalValue,
+                            config: config,
+                            tenors: _financingTenors,
+                            tenorMonths: tenorMonths,
+                          );
+
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: AppColors.border),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accent.withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.bar_chart_outlined, color: AppColors.accent, size: 20),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      'SIMULASI ARRUM EMAS',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.accent,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                if (!result.eligible)
+                                  _buildIneligiblePanel(result.message ?? '')
+                                else ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accent.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: AppColors.accent.withOpacity(0.15),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _breakdownRow(
+                                          'Harga Lelang',
+                                          currencyFormatter.format(result.hargaLelang),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        _breakdownRow(
+                                          'Uang Muka (DP)',
+                                          currencyFormatter.format(result.uangMuka),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        _breakdownRow(
+                                          'Uang Pinjaman',
+                                          currencyFormatter.format(result.uangPinjaman),
+                                          valueColor: AppColors.accent,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    '📋 PERBANDINGAN SEMUA TENOR:',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Table(
+                                    columnWidths: const {
+                                      0: FlexColumnWidth(1.2),
+                                      1: FlexColumnWidth(2.4),
+                                    },
+                                    children: [
+                                      TableRow(
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: AppColors.border,
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                        ),
+                                        children: [
+                                          _tableHeader('Tenor'),
+                                          _tableHeader('Angsuran / Bln'),
+                                        ],
+                                      ),
+                                      ...?result.perbandinganTenor?.map((t) {
+                                        return TableRow(
+                                          decoration: const BoxDecoration(
+                                            border: Border(
+                                              bottom: BorderSide(
+                                                color: AppColors.border,
+                                                width: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                          children: [
+                                            _tableCell(
+                                              '${t.tenor} Bln',
+                                              isSelected: false,
+                                            ),
+                                            _tableCell(
+                                              currencyFormatter.format(t.angsuranPerBulan),
+                                              isSelected: false,
+                                            ),
+                                          ],
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ],
+                                if (_simulatePackage) ...[
+                                  const SizedBox(height: 16),
+                                  _buildPackageItemsList(currencyFormatter),
+                                ],
+                              ],
+                            ),
+                          );
+                        }
                       ),
                     ],
                   ),
