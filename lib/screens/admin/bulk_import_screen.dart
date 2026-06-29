@@ -171,7 +171,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _instructionRow('Kolom Nama Produk, Kategori, Berat, dan Harga Dasar wajib diisi.'),
+                _instructionRow('Kolom Nama Produk, Kategori, dan Berat wajib diisi.'),
                 _instructionRow('Kategori harus sesuai dengan daftar di sheet "Daftar Kategori".'),
                 _instructionRow('Baris yang kosong sepenuhnya akan diabaikan otomatis.'),
                 _instructionRow('Setelah konfirmasi data, Anda akan diminta menginput foto per produk.'),

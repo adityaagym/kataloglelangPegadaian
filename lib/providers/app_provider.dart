@@ -163,6 +163,10 @@ class AppProvider with ChangeNotifier {
     return await _dbHelper.getActiveFinancingConfig();
   }
 
+  Future<Map<String, dynamic>?> getLatestFinancingConfig() async {
+    return await _dbHelper.getLatestFinancingConfig();
+  }
+
   Future<List<Map<String, dynamic>>> getFinancingTenors(int configId) async {
     return await _dbHelper.getFinancingTenors(configId);
   }
@@ -212,7 +216,8 @@ class AppProvider with ChangeNotifier {
   // --- Bulk Import ---
   Future<List<ImportedAuctionItem>> parseImportFile(Uint8List fileBytes) async {
     final categories = await _dbHelper.readAllCategories();
-    final parsed = await ExcelImportService.parseFile(fileBytes, categories);
+    final goldPrice = goldPricePerGram;
+    final parsed = await ExcelImportService.parseFile(fileBytes, categories, goldPrice: goldPrice);
     _importDraftItems = parsed;
     notifyListeners();
     return parsed;

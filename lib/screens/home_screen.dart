@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../widgets/item_card.dart';
 import '../widgets/filter_sheet.dart';
-import '../utils/idle_timeout_wrapper.dart';
 import '../utils/app_colors.dart';
 import 'admin/login_screen.dart';
 
@@ -47,13 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
       minPrice: minPrice,
       maxPrice: maxPrice,
     );
-  }
-
-  void _resetKiosk() {
-    _searchController.clear();
-    setState(() => _selectedCategoryId = null);
-    _applyFilters();
-    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   void _showFilterSheet() {

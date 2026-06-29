@@ -12,7 +12,7 @@ class ExcelTemplateService {
     'Kategori',
     'Berat (gram)',
     'Karat (opsional)',
-    'Harga Dasar (Rp)',
+    'Harga Dasar (opsional)',
     'Deskripsi (opsional)',
   ];
 
@@ -23,8 +23,8 @@ class ExcelTemplateService {
     'Perhiasan Emas',
     '5.5',
     '22',
-    '5500000',
-    'Cincin emas polos',
+    '',
+    'Cincin emas polos (harga dihitung otomatis dari HDLE)',
   ];
 
   static final List<String> _sampleRow2 = [
