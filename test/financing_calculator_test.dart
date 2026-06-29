@@ -34,16 +34,16 @@ void main() {
       );
 
       expect(result.eligible, isTrue);
-      expect(result.uangPinjaman, 4600000);
-      expect(result.uangMuka, 900000);
+      expect(result.uangPinjaman, 4620000);
+      expect(result.uangMuka, 950000);
       expect(result.tempoKca, 4);
       expect(result.adminFee, 70000);
-      expect(result.totalPelunasanKca, 4670000);
+      expect(result.totalPelunasanKca, 4851000);
     });
 
     test('simulasiKca calculates correct loan ratio (93%) for low value bracket (<550k)', () {
       // Appraisal Value = 500,000 -> < 550,000 -> Loan Ratio = 93% (0.93)
-      // Loan Amount = roundDown(500,000 * 0.93, 100000) = roundDown(465,000, 100000) = 400,000
+      // Loan Amount = roundDown(500,000 * 0.93, 10000) = roundDown(465,000, 10000) = 460,000
       const hargaLelang = 600000;
       const appraisalValue = 500000.0;
 
@@ -53,7 +53,7 @@ void main() {
         config: mockConfig,
       );
 
-      expect(result.uangPinjaman, 400000);
+      expect(result.uangPinjaman, 460000);
     });
 
     test('simulasiKrasida calculates correct loan amount, DP, and installments with 95% ratio', () {
@@ -62,7 +62,7 @@ void main() {
       // Appraisal Value = 502,894 * 10 = 5,028,940
       // Krasida Loan Ratio = 95% (0.95)
       // Loan Amount (Uang Pinjaman) = roundDown(5,028,940 * 0.95, 100000) = 4,700,000
-      // Uang Muka (DP) = Harga Jual - Loan Amount = 5,500,000 - 4,700,000 = 800,000
+      // Uang Muka (DP) = Harga Jual - Loan Amount + Admin Fee = 5,500,000 - 4,700,000 + 70,000 = 870,000
       // Tenor = 6 months (multiplier = 1.075)
       // Installment = roundUp(4,700,000 * 1.075 / 6, 100) = roundUp(842,083.33, 100) = 842,100
       // Total Bayar = 842,100 * 6 = 5,052,600
@@ -80,7 +80,7 @@ void main() {
 
       expect(result.eligible, isTrue);
       expect(result.uangPinjaman, 4700000);
-      expect(result.uangMuka, 800000);
+      expect(result.uangMuka, 870000);
       expect(result.angsuranPerBulan, 842100);
       expect(result.totalBayar, 5052600);
     });

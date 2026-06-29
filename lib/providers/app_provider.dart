@@ -212,7 +212,11 @@ class AppProvider with ChangeNotifier {
   // --- Bulk Import ---
   Future<List<ImportedAuctionItem>> parseImportFile(Uint8List fileBytes) async {
     final categories = await _dbHelper.readAllCategories();
-    final parsed = await ExcelImportService.parseFile(fileBytes, categories);
+    final parsed = await ExcelImportService.parseFile(
+      fileBytes,
+      categories,
+      _goldPricePerGram,
+    );
     _importDraftItems = parsed;
     notifyListeners();
     return parsed;

@@ -148,18 +148,15 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   }
 
   void _recalculateBasePrice(AppProvider provider) {
-    double karatVal = 24.0;
-    if (_karat != null && _karat!.isNotEmpty) {
-      final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
-      final match = regExp.firstMatch(_karat!);
-      if (match != null) {
-        final parsed = double.tryParse(match.group(1)!) ?? 24.0;
-        karatVal = parsed > 24.0 ? 24.0 : (parsed < 0 ? 0 : parsed);
-      }
-    }
+    final karatVal = FinancingCalculator.parseKarat(_karat);
+    final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
 
-    final rawPrice = provider.goldPricePerGram * _weightGram * (karatVal / 24.0);
-    _basePrice = FinancingCalculator.roundUp(rawPrice, 10000).toDouble();
+    _basePrice = FinancingCalculator.hitungHargaEmas(
+      hdlePrice: provider.goldPricePerGram,
+      weightGram: _weightGram,
+      karatVal: effectiveKarat,
+    ).toDouble();
+
     if (_basePrice > 0) {
       _basePriceController.text = NumberFormat.decimalPattern(
         'id',
@@ -1162,16 +1159,13 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     );
 
     // Calculate auto base price estimation
-    double karatVal = 24.0;
-    if (_karat != null && _karat!.isNotEmpty) {
-      final regExp = RegExp(r'([0-9]+(?:\.[0-9]+)?)');
-      final match = regExp.firstMatch(_karat!);
-      if (match != null) {
-        final parsed = double.tryParse(match.group(1)!) ?? 24.0;
-        karatVal = parsed > 24.0 ? 24.0 : (parsed < 0 ? 0 : parsed);
-      }
-    }
-    final estimatedPrice = provider.goldPricePerGram * (karatVal / 24.0) * _weightGram;
+    final karatVal = FinancingCalculator.parseKarat(_karat);
+    final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
+    final estimatedPrice = FinancingCalculator.hitungHargaEmas(
+      hdlePrice: provider.goldPricePerGram,
+      weightGram: _weightGram,
+      karatVal: effectiveKarat,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),

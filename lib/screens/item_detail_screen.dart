@@ -1204,18 +1204,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         builder: (context, provider, _) {
                           double displayPrice = widget.item.basePrice;
                           if (_isGoldItem(widget.item)) {
-                            final hdlePrice = provider.goldPricePerGram
-                                .toDouble();
-                            final karatVal = FinancingCalculator.parseKarat(
-                              widget.item.karat,
-                            );
-                            final rawItemPrice =
-                                hdlePrice *
-                                widget.item.weightGram *
-                                (karatVal / 24.0);
-                            displayPrice = FinancingCalculator.roundUp(
-                              rawItemPrice,
-                              10000,
+                            final hdlePrice = provider.goldPricePerGram.toDouble();
+                            final karatVal = FinancingCalculator.parseKarat(widget.item.karat);
+                            final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
+                            displayPrice = FinancingCalculator.hitungHargaEmas(
+                              hdlePrice: hdlePrice,
+                              weightGram: widget.item.weightGram,
+                              karatVal: effectiveKarat,
                             ).toDouble();
                           }
                           return Text(
@@ -1659,14 +1654,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       double displayPrice = item.basePrice;
                       if (_isGoldItem(item)) {
                         final hdlePrice = provider.goldPricePerGram.toDouble();
-                        final karatVal = FinancingCalculator.parseKarat(
-                          item.karat,
-                        );
-                        final rawItemPrice =
-                            hdlePrice * item.weightGram * (karatVal / 24.0);
-                        displayPrice = FinancingCalculator.roundUp(
-                          rawItemPrice,
-                          10000,
+                        final karatVal = FinancingCalculator.parseKarat(item.karat);
+                        final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
+                        displayPrice = FinancingCalculator.hitungHargaEmas(
+                          hdlePrice: hdlePrice,
+                          weightGram: item.weightGram,
+                          karatVal: effectiveKarat,
                         ).toDouble();
                       }
                       return Text(

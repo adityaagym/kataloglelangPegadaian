@@ -3,6 +3,7 @@ import 'package:excel/excel.dart';
 import '../models/auction_item.dart';
 import '../models/category.dart';
 import '../models/imported_auction_item.dart';
+import '../services/financing_calculator.dart';
 
 class ExcelImportService {
   static const String _sheetName = 'Template Produk';
@@ -10,6 +11,7 @@ class ExcelImportService {
   static Future<List<ImportedAuctionItem>> parseFile(
     Uint8List fileBytes,
     List<Category> categories,
+    double goldPrice,
   ) async {
     final excel = Excel.decodeBytes(fileBytes);
     final sheet = excel.tables[_sheetName];
@@ -48,11 +50,25 @@ class ExcelImportService {
         errors.add('Berat tidak valid');
       }
 
-      final basePrice = double.tryParse(basePriceText.replaceAll('.', '').replaceAll(',', '')) ?? -1;
-      if (basePriceText.isEmpty || basePrice < 0) {
-        errors.add('Harga dasar tidak valid');
-      }
+      final categoryNameLower = categoryName.toLowerCase().trim();
+      final isGoldCategory = categoryNameLower.contains('emas') || categoryNameLower.contains('logam mulia');
 
+      double basePrice = 0.0;
+      if (isGoldCategory) {
+        final karatText = _readCell(row, 5);
+        final karatVal = FinancingCalculator.parseKarat(karatText);
+        final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
+        basePrice = FinancingCalculator.hitungHargaEmas(
+          hdlePrice: goldPrice,
+          weightGram: weightGram < 0 ? 0 : weightGram,
+          karatVal: effectiveKarat,
+        ).toDouble();
+      } else {
+        basePrice = double.tryParse(basePriceText.replaceAll('.', '').replaceAll(',', '')) ?? -1;
+        if (basePriceText.isEmpty || basePrice < 0) {
+          errors.add('Harga dasar tidak valid');
+        }
+      }
 
       final item = AuctionItem(
         creditNumber: _readCell(row, 1).isEmpty ? null : _readCell(row, 1),
