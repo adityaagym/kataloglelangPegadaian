@@ -5,6 +5,7 @@ class ResponsiveRowColumn extends StatelessWidget {
   final Widget right;
   final double spacing;
   final bool isPortrait;
+  final CrossAxisAlignment rowCrossAxisAlignment;
 
   const ResponsiveRowColumn({
     super.key,
@@ -12,6 +13,7 @@ class ResponsiveRowColumn extends StatelessWidget {
     required this.right,
     required this.isPortrait,
     this.spacing = 24,
+    this.rowCrossAxisAlignment = CrossAxisAlignment.start,
   });
 
   @override
@@ -27,7 +29,7 @@ class ResponsiveRowColumn extends StatelessWidget {
       );
     } else {
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: rowCrossAxisAlignment,
         children: [
           Expanded(child: left),
           SizedBox(width: spacing),

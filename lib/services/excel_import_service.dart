@@ -269,6 +269,11 @@ class ExcelImportService {
         }
       }
 
+      final officialCategory = categories.firstWhere(
+        (c) => c.id == categoryId,
+        orElse: () => Category(id: 0, name: categoryName),
+      );
+
       final item = AuctionItem(
         creditNumber: _readCell(row, 1).isEmpty ? null : _readCell(row, 1),
         name: name,
@@ -279,6 +284,7 @@ class ExcelImportService {
         description: _readCell(row, 7).isEmpty ? null : _readCell(row, 7),
         isActive: true,
         createdAt: DateTime.now().toIso8601String(),
+        categoryName: officialCategory.name,
       );
 
       results.add(ImportedAuctionItem(

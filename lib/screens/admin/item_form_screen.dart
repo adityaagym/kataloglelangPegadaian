@@ -189,11 +189,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Maksimal 10 foto diperbolehkan.'),
-              backgroundColor: AppColors.warning,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              backgroundColor: const Color(0xFFD97706),
             ),
           );
         }
@@ -213,11 +209,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Maksimal 10 foto diperbolehkan.'),
-              backgroundColor: AppColors.warning,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              backgroundColor: const Color(0xFFD97706),
             ),
           );
         }
@@ -235,11 +227,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Pilih kategori terlebih dahulu.'),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          backgroundColor: const Color(0xFFD97706),
         ),
       );
       return;
@@ -248,11 +236,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Minimal 1 foto wajib diunggah.'),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          backgroundColor: const Color(0xFFD97706),
         ),
       );
       return;
@@ -317,11 +301,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Data berhasil disimpan!'),
-            backgroundColor: AppColors.successGreen,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -330,11 +310,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            backgroundColor: const Color(0xFFDC2626),
           ),
         );
       }
@@ -350,14 +326,23 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     final isPortrait = MediaQuery.of(context).size.width < 900;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: widget.itemToEdit != null
           ? AppBar(
               title: const Text(
                 'Edit Barang',
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF111827)),
               ),
               backgroundColor: Colors.white,
               surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1),
+                child: Container(
+                  color: const Color(0xFFE5E7EB),
+                  height: 1,
+                ),
+              ),
             )
           : null,
       body: _isSaving
@@ -369,7 +354,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                   SizedBox(height: 16),
                   Text(
                     'Menyimpan data...',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -377,25 +362,28 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           : Stack(
               children: [
                 SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(32, 32, 32, 120),
+                  padding: const EdgeInsets.fromLTRB(32, 32, 32, 140),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (widget.itemToEdit == null) ...[
+                        const SizedBox(height: 20), // Lower the header
                         const Text(
                           'Tambah Barang Lelang',
                           style: TextStyle(
-                            fontSize: 32,
+                            fontSize: 22,
                             fontWeight: FontWeight.w900,
-                            color: AppColors.textDark,
+                            color: Color(0xFF111827),
+                            letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 6),
                         const Text(
                           'Input data barang baru ke database offline cabang.',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: Color(0xFF6B7280),
                             fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 28),
@@ -454,7 +442,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                         .map(
                                           (c) => DropdownMenuItem(
                                             value: c.id,
-                                            child: Text(c.name),
+                                            child: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                                           ),
                                         )
                                         .toList(),
@@ -585,8 +573,20 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                         ),
                                       ],
                                     ),
-                                ],
-                              ]),
+                                  ] else ...[
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                      child: Text(
+                                        'Spesifikasi khusus tersedia setelah Anda memilih kategori emas.',
+                                        style: TextStyle(
+                                          color: Color(0xFF6B7280),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ]),
 
                               // Card 3: Penetapan Harga & Deskripsi
                               _buildFormCard(
@@ -652,8 +652,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                       vertical: 12,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.background,
-                                      borderRadius: BorderRadius.circular(12),
+                                      color: const Color(0xFFF9FAFB),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFE5E7EB)),
                                     ),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -665,9 +666,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                               const Text(
                                                 'Status Aktif',
                                                 style: TextStyle(
-                                                  fontWeight: FontWeight.w700,
+                                                  fontWeight: FontWeight.w800,
                                                   fontSize: 14,
-                                                  color: AppColors.textDark,
+                                                  color: Color(0xFF111827),
                                                 ),
                                               ),
                                               const SizedBox(height: 4),
@@ -677,8 +678,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                                     : 'Barang disembunyikan',
                                                 style: const TextStyle(
                                                   fontSize: 12,
-                                                  color: AppColors.textSecondary,
-                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xFF6B7280),
+                                                  fontWeight: FontWeight.w600,
                                                 ),
                                               ),
                                             ],
@@ -686,6 +687,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                         ),
                                         Switch(
                                           value: _isActive,
+                                          activeTrackColor: AppColors.primary.withValues(alpha: 0.2),
                                           activeThumbColor: AppColors.primary,
                                           onChanged: (val) => setState(() => _isActive = val),
                                         ),
@@ -702,40 +704,34 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                           children: [
                             // Photos Card
                             Container(
-                              padding: const EdgeInsets.all(24),
+                              padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: AppColors.border),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.02),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFE5E7EB)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.photo_library_outlined, color: AppColors.primary, size: 22),
+                                      const Icon(Icons.photo_library_outlined, color: AppColors.primary, size: 20),
                                       const SizedBox(width: 8),
                                       const Text(
                                         'Unggah Foto Barang',
                                         style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColors.textDark,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900,
+                                          color: Color(0xFF111827),
                                         ),
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
                                         '(Maks 10)',
                                         style: TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.textMuted.withValues(alpha: 0.7),
+                                          fontSize: 13,
+                                          color: const Color(0xFF9CA3AF),
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     ],
@@ -747,7 +743,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                     painter: DashedBorderPainter(
                                       color: AppColors.primary.withValues(alpha: 0.4),
                                       strokeWidth: 2,
-                                      borderRadius: 24,
+                                      borderRadius: 6,
                                     ),
                                     child: GestureDetector(
                                       onTap: _pickImages,
@@ -755,15 +751,15 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                         height: 160,
                                         width: double.infinity,
                                         decoration: BoxDecoration(
-                                          color: AppColors.muted,
-                                          borderRadius: BorderRadius.circular(24),
+                                          color: const Color(0xFFF9FAFB),
+                                          borderRadius: BorderRadius.circular(6),
                                         ),
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Icon(
                                               Icons.cloud_upload_outlined,
-                                              size: 44,
+                                              size: 40,
                                               color: AppColors.primary.withValues(alpha: 0.6),
                                             ),
                                             const SizedBox(height: 10),
@@ -771,17 +767,19 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                               'Ambil Foto dari Kamera\n/ Pilih dari Galeri Tablet',
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                color: AppColors.textSecondary,
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
+                                                color: Color(0xFF4B5563),
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 13,
+                                                height: 1.4,
                                               ),
                                             ),
                                             const SizedBox(height: 6),
-                                            Text(
+                                            const Text(
                                               'Format JPG atau PNG',
                                               style: TextStyle(
-                                                color: AppColors.textMuted.withValues(alpha: 0.7),
+                                                color: Color(0xFF9CA3AF),
                                                 fontSize: 12,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
                                           ],
@@ -798,16 +796,16 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                       onPressed: _takePhoto,
                                       icon: const Icon(
                                         Icons.camera_alt_outlined,
-                                        size: 20,
+                                        size: 18,
                                       ),
-                                      label: const Text('Ambil dari Kamera'),
+                                      label: const Text('Ambil dari Kamera', style: TextStyle(fontWeight: FontWeight.w800)),
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: AppColors.primary,
                                         side: const BorderSide(
                                           color: AppColors.primary,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(6),
                                         ),
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 14,
@@ -864,18 +862,18 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                                     width: 80,
                                                     height: 80,
                                                     decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(18),
+                                                      borderRadius: BorderRadius.circular(6),
                                                       border: isPrimary
                                                           ? Border.all(
                                                               color: AppColors.primary,
                                                               width: 3,
                                                             )
                                                           : Border.all(
-                                                              color: AppColors.border,
+                                                              color: const Color(0xFFE5E7EB),
                                                             ),
                                                     ),
                                                     child: ClipRRect(
-                                                      borderRadius: BorderRadius.circular(15),
+                                                      borderRadius: BorderRadius.circular(4),
                                                       child: imageWidget,
                                                     ),
                                                   ),
@@ -891,7 +889,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                                         decoration: const BoxDecoration(
                                                           color: AppColors.primary,
                                                           borderRadius: BorderRadius.vertical(
-                                                            bottom: Radius.circular(15),
+                                                            bottom: Radius.circular(4),
                                                           ),
                                                         ),
                                                         child: const Text(
@@ -900,7 +898,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                                           style: TextStyle(
                                                             color: Colors.white,
                                                             fontSize: 9,
-                                                            fontWeight: FontWeight.w700,
+                                                            fontWeight: FontWeight.w900,
                                                           ),
                                                         ),
                                                       ),
@@ -913,7 +911,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                                       child: Container(
                                                         padding: const EdgeInsets.all(2),
                                                         decoration: const BoxDecoration(
-                                                          color: AppColors.error,
+                                                          color: Color(0xFFDC2626),
                                                           shape: BoxShape.circle,
                                                         ),
                                                         child: const Icon(
@@ -946,12 +944,12 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                               child: OutlinedButton.icon(
                                 onPressed: () => Navigator.pop(context),
                                 icon: const Icon(Icons.close, size: 18),
-                                label: const Text('Batal & Kembali'),
+                                label: const Text('Batal & Kembali', style: TextStyle(fontWeight: FontWeight.w800)),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.textSecondary,
-                                  side: const BorderSide(color: AppColors.border),
+                                  foregroundColor: const Color(0xFF4B5563),
+                                  side: const BorderSide(color: Color(0xFFD1D5DB)),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                 ),
@@ -1001,10 +999,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            elevation: 4,
-            shadowColor: AppColors.primary.withValues(alpha: 0.4),
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(6),
             ),
             padding: const EdgeInsets.symmetric(
               horizontal: 32,
@@ -1035,15 +1032,15 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 16,
-                color: AppColors.textDark,
+                color: Color(0xFF111827),
               ),
             ),
             Text(
               'Ada data barang baru/perubahan yang belum disimpan.',
               style: TextStyle(
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: Color(0xFF6B7280),
               ),
             ),
           ],
@@ -1052,21 +1049,16 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(6),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                blurRadius: 30,
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
             border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
+              color: const Color(0xFFE5E7EB),
               width: 1.5,
             ),
           ),
@@ -1110,32 +1102,25 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: AppColors.primary, size: 22),
+              Icon(icon, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF111827),
                 ),
               ),
             ],
@@ -1171,17 +1156,17 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.goldBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+        color: const Color(0xFFFFFBEB), // Amber light tint
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
             Icons.gavel_outlined,
-            color: AppColors.gold,
-            size: 24,
+            color: Color(0xFFD97706),
+            size: 22,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1191,9 +1176,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 const Text(
                   'Kalkulator Harga Emas Pegadaian',
                   style: TextStyle(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                     fontSize: 14,
-                    color: AppColors.textDark,
+                    color: Color(0xFF111827),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1201,24 +1186,25 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                   'Harga Emas Saat Ini: ${formatter.format(provider.goldPricePerGram)} / gram',
                   style: const TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF4B5563),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (_weightGram > 0) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
                     ),
                     child: Text(
                       'Estimasi Nilai Taksir: ${formatter.format(estimatedPrice)} (${_weightGram}g @ ${karatVal.toStringAsFixed(0)} Karat)',
                       style: const TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -1237,24 +1223,24 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         Text(
           text,
           style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textDark,
-            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF374151),
+            fontSize: 13,
           ),
         ),
         if (required)
           const Text(
             ' *',
             style: TextStyle(
-              color: AppColors.error,
-              fontWeight: FontWeight.w700,
+              color: Color(0xFFDC2626),
+              fontWeight: FontWeight.w800,
             ),
           ),
         if (suffix != null) ...[
           const SizedBox(width: 6),
           Text(
             suffix,
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12, fontWeight: FontWeight.w700),
           ),
         ],
       ],
@@ -1264,23 +1250,25 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   InputDecoration _inputDecoration(String hint, {String? helperText}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: AppColors.textMuted),
+      hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500),
       helperText: helperText,
+      helperStyle: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF6B7280)),
       helperMaxLines: 2,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: const Color(0xFFF9FAFB),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
-        borderSide: const BorderSide(color: AppColors.cardBorder),
+        borderRadius: BorderRadius.circular(6),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
-        borderSide: const BorderSide(color: AppColors.cardBorder),
+        borderRadius: BorderRadius.circular(6),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(6),
         borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -1301,7 +1289,6 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     double appraisalValue = hargaInt.toDouble();
     if (_isGoldCategory(provider)) {
       final stlPrice = (_financingConfig?['stl_price'] as num?)?.toDouble() ?? 502894;
-      // Bug B fix: gunakan parseKarat terpusat, bukan inline regex duplikat
       final karatVal = FinancingCalculator.parseKarat(_karat);
       appraisalValue = FinancingCalculator.hitungNilaiTaksiran(
         stlPrice: stlPrice,
@@ -1334,26 +1321,26 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
 
     return Container(
       margin: const EdgeInsets.only(top: 24),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.calculate_outlined, color: AppColors.primary, size: 22),
+              const Icon(Icons.calculate_outlined, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
                   'PREVIEW SIMULASI PEMBIAYAAN',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textDark,
+                    color: Color(0xFF111827),
                     letterSpacing: 0.5,
                   ),
                   softWrap: true,
@@ -1366,8 +1353,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
             'Berdasarkan harga lelang: ${currencyFormatter.format(hargaInt)}',
             style: const TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 20),
@@ -1377,7 +1364,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFFE8F5E9), // Light green tint
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(color: const Color(0xFFC8E6C9)),
             ),
             child: Column(
@@ -1385,14 +1372,14 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.payments_outlined, color: AppColors.successGreen, size: 20),
+                    const Icon(Icons.payments_outlined, color: AppColors.successGreen, size: 18),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
                         'TUNAI',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.successGreen,
                         ),
                       ),
@@ -1401,13 +1388,14 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFC8E6C9)),
                       ),
                       child: Text(
                         currencyFormatter.format(tunaiRes.hargaLelang),
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.successGreen,
                         ),
                       ),
@@ -1416,13 +1404,13 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Padding(
-                  padding: EdgeInsets.only(left: 28),
+                  padding: EdgeInsets.only(left: 26),
                   child: Text(
                     'Bayar penuh saat transaksi, tanpa bunga/cicilan.',
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4B5563),
                     ),
                   ),
                 ),
@@ -1437,7 +1425,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFFE3F2FD), // Light blue tint
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFFBBDEFB)),
               ),
               child: Column(
@@ -1445,14 +1433,14 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 20),
+                      const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'KCA (Kredit Cepat Aman) — Tempo ${kcaRes.tempoKca} Bulan',
                           style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
                             color: AppColors.categoryBlueText,
                           ),
                           softWrap: true,
@@ -1464,7 +1452,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                   _buildPreviewDetailRow('Uang Muka (DP)', currencyFormatter.format(kcaRes.uangMuka)),
                   _buildPreviewDetailRow('Uang Pinjaman', currencyFormatter.format(kcaRes.uangPinjaman)),
                   _buildPreviewDetailRow('Biaya Admin', currencyFormatter.format(kcaRes.adminFee!)),
-                  const Divider(height: 16),
+                  const Divider(height: 16, color: Color(0xFFBBDEFB)),
                   _buildPreviewDetailRow(
                     'Total Pelunasan',
                     currencyFormatter.format(kcaRes.totalPelunasanKca!),
@@ -1479,7 +1467,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                       style: TextStyle(
                         fontSize: 11,
                         fontStyle: FontStyle.italic,
-                        color: AppColors.textSecondary,
+                        color: Color(0xFF4B5563),
                       ),
                     ),
                   ),
@@ -1491,13 +1479,13 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFEBEE), // Light red tint
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFFFFCDD2)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
+                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -1506,9 +1494,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                         const Text(
                           'KCA (Tidak Eligible)',
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.error,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFDC2626),
                           ),
                           softWrap: true,
                         ),
@@ -1517,8 +1505,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                           kcaRes.message ?? 'Harga di luar limit kelayakan KCA.',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF4B5563),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -1535,7 +1523,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF8E1), // Light gold tint
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFFFFECB3)),
               ),
               child: Column(
@@ -1543,14 +1531,14 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.bar_chart_outlined, color: AppColors.gold, size: 20),
+                      const Icon(Icons.bar_chart_outlined, color: AppColors.gold, size: 18),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
                           ' KRASIDA (Kredit Gadai Angsuran Bulanan)',
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
                             color: AppColors.categoryAmberText,
                           ),
                           softWrap: true,
@@ -1566,7 +1554,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                     'Simulasi Angsuran Bulanan:',
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.categoryAmberText,
                     ),
                   ),
@@ -1578,8 +1566,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFFFE082)),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFFFECB3)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1589,8 +1577,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                 'Tenor ${t.tenor} Bulan',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textDark,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF111827),
                                 ),
                               ),
                             ),
@@ -1604,7 +1592,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                     '${currencyFormatter.format(t.angsuranPerBulan)} / bln',
                                     style: const TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w900,
                                       color: AppColors.categoryAmberText,
                                     ),
                                   ),
@@ -1615,7 +1603,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                                     'Total bayar: ${currencyFormatter.format(t.totalBayar)}',
                                     style: const TextStyle(
                                       fontSize: 10,
-                                      color: AppColors.textSecondary,
+                                      color: Color(0xFF6B7280),
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ),
@@ -1634,13 +1623,13 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFEBEE), // Light red tint
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFFFFCDD2)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
+                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -1649,9 +1638,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                         const Text(
                           'KRASIDA (Tidak Eligible)',
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.error,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFDC2626),
                           ),
                           softWrap: true,
                         ),
@@ -1660,8 +1649,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                           krasidaRes.message ?? 'Harga di luar limit kelayakan KRASIDA.',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF4B5563),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -1690,16 +1679,16 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
             label,
             style: TextStyle(
               fontSize: 12,
-              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-              color: AppColors.textSecondary,
+              fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+              color: const Color(0xFF4B5563),
             ),
           ),
           Text(
             value,
             style: TextStyle(
               fontSize: 12,
-              fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
-              color: textColor ?? AppColors.textDark,
+              fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+              color: textColor ?? const Color(0xFF111827),
             ),
           ),
         ],

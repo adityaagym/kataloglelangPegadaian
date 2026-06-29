@@ -166,7 +166,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   width: double.infinity,
                   height: 112,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: AppColors.border),
                   ),
@@ -434,6 +434,8 @@ class _DashboardOverviewState extends State<DashboardOverview> {
   int _activeItemCount = 0;
   Map<String, dynamic>? _topCategory;
   List<Map<String, dynamic>> _recentItems = [];
+  double _totalBasePrice = 0;
+  List<Map<String, dynamic>> _categoryBreakdown = [];
   bool _isLoading = true;
   DateTime _currentDeviceTime = DateTime.now();
   Timer? _timeTimer;
@@ -463,12 +465,16 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     final count = await provider.getActiveItemCount();
     final topCat = await provider.getTopCategory();
     final recent = await provider.getRecentItems(limit: 3);
+    final total = await provider.getTotalBasePrice();
+    final breakdown = await provider.getCategoryBreakdown();
 
     if (mounted) {
       setState(() {
         _activeItemCount = count;
         _topCategory = topCat;
         _recentItems = recent;
+        _totalBasePrice = total;
+        _categoryBreakdown = breakdown;
         _isLoading = false;
       });
     }
@@ -490,507 +496,765 @@ class _DashboardOverviewState extends State<DashboardOverview> {
       );
     }
 
-    return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.all(isPortrait ? 20 : 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title row
-          isPortrait
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Ringkasan Katalog Outlet',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Sistem Database Offline (SQLite) Aktif',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Text(
-                        'Hari Ini, $timeStr',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
+    return Scaffold(
+      backgroundColor: Color(0xFFF9FAFB),
+      body: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        padding: EdgeInsets.all(isPortrait ? 20 : 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20), // Lower the header
+            // Title row
+            isPortrait
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ringkasan Katalog Outlet',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textDark,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                    ),
-                  ],
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ringkasan Katalog Outlet',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Sistem Database Offline (SQLite) Aktif',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Text(
-                        'Hari Ini, $timeStr',
-                        style: const TextStyle(
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Sistem Database Offline (SQLite) Aktif',
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-          const SizedBox(height: 28),
-
-          // Workflow info card
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFD7E7D8)),
-            ),
-            child: isPortrait
-                ? Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.article_outlined,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Alur kerja: update harga emas, kelola barang, lalu backup database lokal.',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      GestureDetector(
-                        onTap: widget.onNavigateToGoldPrice,
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.25),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Update Harga Emas',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9), // Pegadaian light green
+                          borderRadius: BorderRadius.circular(6), // Sharp corporate corners
+                          border: Border.all(color: const Color(0xFFC8E6C9)),
+                        ),
+                        child: Text(
+                          'Hari Ini, $timeStr',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                     ],
                   )
                 : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ringkasan Katalog Outlet',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textDark,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            'Sistem Database Offline (SQLite) Aktif',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                       Container(
-                        width: 54,
-                        height: 54,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.secondary,
-                          borderRadius: BorderRadius.circular(18),
+                          color: const Color(0xFFE8F5E9), // Pegadaian light green
+                          borderRadius: BorderRadius.circular(6), // Sharp corporate corners
+                          border: Border.all(color: const Color(0xFFC8E6C9)),
                         ),
-                        child: const Icon(
-                          Icons.article_outlined,
-                          color: AppColors.primary,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
                         child: Text(
-                          'Alur kerja: update harga emas, kelola barang, lalu backup database lokal.',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Update Harga Emas button
-                      GestureDetector(
-                        onTap: widget.onNavigateToGoldPrice,
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: Container(
-                            width: 96,
-                            height: 96,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.25),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Update\nHarga\nEmas',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w900,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
+                          'Hari Ini, $timeStr',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                     ],
                   ),
-          ),
-          const SizedBox(height: 24),
-
-          // Stat cards row
-          isPortrait
-              ? Column(
-                  children: [
-                    _buildStatCard(
-                      icon: Icons.inventory_2_outlined,
-                      iconColor: AppColors.successGreen,
-                      label: 'Total Barang Aktif',
-                      value: '$_activeItemCount',
-                      suffix: 'Barang',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildStatCard(
-                      icon: Icons.category_outlined,
-                      iconColor: AppColors.primary,
-                      label: 'Kategori Terbanyak',
-                      value: _topCategory?['name'] ?? '-',
-                      suffix: _topCategory != null
-                          ? '(${_topCategory!['cnt']})'
-                          : '',
-                    ),
-                    const SizedBox(height: 16),
-                    Consumer<AppProvider>(
-                      builder: (context, provider, _) {
-                        String updateTime = 'Belum ada';
-                        if (provider.lastItemUpdatedAt != null) {
-                          try {
-                            final dt = DateTime.parse(provider.lastItemUpdatedAt!);
-                            final now = DateTime.now();
-                            final isToday = dt.year == now.year &&
-                                dt.month == now.month &&
-                                dt.day == now.day;
-                            if (isToday) {
-                              updateTime =
-                                  'Hari Ini, ${DateFormat('HH:mm').format(dt)}';
-                            } else {
-                              updateTime =
-                                  DateFormat('dd MMM, HH:mm').format(dt);
-                            }
-                          } catch (_) {
-                            updateTime = 'Baru saja';
-                          }
-                        }
-                        return _buildStatCard(
-                          icon: Icons.access_time,
-                          iconColor: AppColors.textMuted,
-                          label: 'Update Terakhir',
-                          value: updateTime,
-                          suffix: '',
-                        );
-                      },
-                    ),
-                  ],
-                )
-              : IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.inventory_2_outlined,
-                          iconColor: AppColors.successGreen,
-                          label: 'Total Barang\nAktif',
-                          value: '$_activeItemCount',
-                          suffix: 'Barang',
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: _buildStatCard(
-                          icon: Icons.category_outlined,
-                          iconColor: AppColors.primary,
-                          label: 'Kategori\nTerbanyak',
-                          value: _topCategory?['name'] ?? '-',
-                          suffix: _topCategory != null
-                              ? '(${_topCategory!['cnt']})'
-                              : '',
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Consumer<AppProvider>(
-                          builder: (context, provider, _) {
-                            String updateTime = 'Belum ada';
-                            if (provider.lastItemUpdatedAt != null) {
-                              try {
-                                final dt = DateTime.parse(provider.lastItemUpdatedAt!);
-                                final now = DateTime.now();
-                                final isToday = dt.year == now.year &&
-                                    dt.month == now.month &&
-                                    dt.day == now.day;
-                                if (isToday) {
-                                  updateTime =
-                                      'Hari Ini,\n${DateFormat('HH:mm').format(dt)}';
-                                } else {
-                                  updateTime =
-                                      DateFormat('dd MMM,\nHH:mm').format(dt);
-                                }
-                              } catch (_) {
-                                updateTime = 'Baru saja';
-                              }
-                            }
-                            return _buildStatCard(
-                              icon: Icons.access_time,
-                              iconColor: AppColors.textMuted,
-                              label: 'Update\nTerakhir',
-                              value: updateTime,
-                              suffix: '',
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-          const SizedBox(height: 28),
-
-          // Recent activity
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Aktivitas Terbaru',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentLight,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${_recentItems.length} item terakhir',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                if (_recentItems.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        'Belum ada aktivitas.',
-                        style: TextStyle(color: AppColors.textMuted),
-                      ),
-                    ),
-                  )
-                else
-                  ...List.generate(_recentItems.length, (index) {
-                    final item = _recentItems[index];
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        bottom: index < _recentItems.length - 1 ? 12 : 0,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.muted,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
+            const SizedBox(height: 24),
+  
+            // Workflow info card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6), // Sharp corners
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: isPortrait
+                  ? Column(
+                      children: [
+                        Row(
                           children: [
-                            // Thumbnail preview
                             Container(
-                              width: 64,
-                              height: 64,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
-                                color: AppColors.secondary,
-                                borderRadius: BorderRadius.circular(24),
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                              child: FutureBuilder<List<ItemPhoto>>(
-                                future: Provider.of<AppProvider>(context, listen: false).getItemPhotos(item['id']),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                                    return ClipRRect(
-                                      borderRadius: BorderRadius.circular(24),
-                                      child: Image.file(
-                                        File(snapshot.data!.first.localPath),
-                                        width: 64,
-                                        height: 64,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => const Icon(
-                                          Icons.image_outlined,
-                                          color: AppColors.textMuted,
-                                          size: 24,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  return const Icon(
-                                    Icons.image_outlined,
-                                    color: AppColors.textMuted,
-                                    size: 24,
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item['name'] ?? '-',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textDark,
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${item['weight_gram']}g',
-                                    style: const TextStyle(
-                                      color: AppColors.textMuted,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              currencyFormatter.format(
-                                (item['base_price'] as num).toDouble(),
-                              ),
-                              style: const TextStyle(
+                              child: const Icon(
+                                Icons.article_outlined,
                                 color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Alur kerja: update harga emas, kelola barang, lalu backup database lokal.',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  }),
-              ],
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            onPressed: widget.onNavigateToGoldPrice,
+                            icon: const Icon(Icons.auto_awesome, size: 16),
+                            label: const Text(
+                              'Update Harga Emas',
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.article_outlined,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Text(
+                            'Alur kerja: update harga emas, kelola barang, lalu backup database lokal.',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Update Harga Emas button
+                        SizedBox(
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            onPressed: widget.onNavigateToGoldPrice,
+                            icon: const Icon(Icons.auto_awesome, size: 16),
+                            label: const Text(
+                              'Update Harga Emas',
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
+            const SizedBox(height: 24),
+  
+            // Stat cards row
+            isPortrait
+                ? Column(
+                    children: [
+                      _buildStatCard(
+                        icon: Icons.inventory_2_outlined,
+                        iconColor: AppColors.successGreen,
+                        label: 'Total Barang Aktif',
+                        value: '$_activeItemCount',
+                        suffix: 'Barang',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTopCategoryCard(),
+                      const SizedBox(height: 16),
+                      Consumer<AppProvider>(
+                        builder: (context, provider, _) {
+                          String updateTime = 'Belum ada';
+                          if (provider.lastItemUpdatedAt != null) {
+                            try {
+                              final dt = DateTime.parse(provider.lastItemUpdatedAt!);
+                              final now = DateTime.now();
+                              final isToday = dt.year == now.year &&
+                                  dt.month == now.month &&
+                                  dt.day == now.day;
+                              if (isToday) {
+                                updateTime =
+                                    'Hari Ini, ${DateFormat('HH:mm').format(dt)}';
+                              } else {
+                                updateTime =
+                                    DateFormat('dd MMM, HH:mm').format(dt);
+                              }
+                            } catch (_) {
+                              updateTime = 'Baru saja';
+                            }
+                          }
+                          return _buildStatCard(
+                            icon: Icons.access_time,
+                            iconColor: AppColors.textMuted,
+                            label: 'Update Terakhir',
+                            value: updateTime,
+                            suffix: '',
+                          );
+                        },
+                      ),
+                    ],
+                  )
+                : IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            icon: Icons.inventory_2_outlined,
+                            iconColor: AppColors.successGreen,
+                            label: 'Total Barang\nAktif',
+                            value: '$_activeItemCount',
+                            suffix: 'Barang',
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(child: _buildTopCategoryCard()),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Consumer<AppProvider>(
+                            builder: (context, provider, _) {
+                              String updateTime = 'Belum ada';
+                              if (provider.lastItemUpdatedAt != null) {
+                                try {
+                                  final dt = DateTime.parse(provider.lastItemUpdatedAt!);
+                                  final now = DateTime.now();
+                                  final isToday = dt.year == now.year &&
+                                      dt.month == now.month &&
+                                      dt.day == now.day;
+                                  if (isToday) {
+                                    updateTime =
+                                        'Hari Ini,\n${DateFormat('HH:mm').format(dt)}';
+                                  } else {
+                                    updateTime =
+                                        DateFormat('dd MMM,\nHH:mm').format(dt);
+                                  }
+                                } catch (_) {
+                                  updateTime = 'Baru saja';
+                                }
+                              }
+                              return _buildStatCard(
+                                icon: Icons.access_time,
+                                iconColor: AppColors.textMuted,
+                                label: 'Update\nTerakhir',
+                                value: updateTime,
+                                suffix: '',
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+            const SizedBox(height: 24),
+
+            // Nilai Transaksi card
+            _buildTransactionValueCard(currencyFormatter),
+            const SizedBox(height: 28),
+  
+            // Recent activity
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Aktivitas Terbaru',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textDark,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFFC8E6C9)),
+                        ),
+                        child: Text(
+                          '${_recentItems.length} item terakhir',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_recentItems.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          'Belum ada aktivitas.',
+                          style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    )
+                  else
+                    ...List.generate(_recentItems.length, (index) {
+                      final item = _recentItems[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index < _recentItems.length - 1 ? 10 : 0,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: Row(
+                            children: [
+                              // Thumbnail preview
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: FutureBuilder<List<ItemPhoto>>(
+                                  future: Provider.of<AppProvider>(context, listen: false).getItemPhotos(item['id']),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                                      return ClipRRect(
+                                        borderRadius: BorderRadius.circular(6),
+                                        child: Image.file(
+                                          File(snapshot.data!.first.localPath),
+                                          width: 60,
+                                          height: 60,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(
+                                            Icons.image_outlined,
+                                            color: AppColors.textMuted,
+                                            size: 20,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return const Icon(
+                                      Icons.image_outlined,
+                                      color: AppColors.textMuted,
+                                      size: 20,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['name'] ?? '-',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.textDark,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF3F4F6),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        'Berat: ${item['weight_gram']}g',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                currencyFormatter.format(
+                                  (item['base_price'] as num).toDouble(),
+                                ),
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Returns the official category text color
+  Color _categoryColor(String? name) {
+    final n = (name ?? '').toLowerCase();
+    if (n.contains('perhiasan') || (n.contains('emas') && !n.contains('logam'))) {
+      return const Color(0xFFD97706);
+    } else if (n.contains('logam')) {
+      return const Color(0xFF475569);
+    } else if (n.contains('elektronik')) {
+      return const Color(0xFF4338CA);
+    } else if (n.contains('kendaraan')) {
+      return const Color(0xFF1E3A8A);
+    }
+    return AppColors.textSecondary;
+  }
+
+  Color _categoryBgColor(String? name) {
+    final n = (name ?? '').toLowerCase();
+    if (n.contains('perhiasan') || (n.contains('emas') && !n.contains('logam'))) {
+      return const Color(0xFFFEF3C7);
+    } else if (n.contains('logam')) {
+      return const Color(0xFFE2E8F0);
+    } else if (n.contains('elektronik')) {
+      return const Color(0xFFEDE9FE);
+    } else if (n.contains('kendaraan')) {
+      return const Color(0xFFDBEAFE);
+    }
+    return const Color(0xFFF3F4F6);
+  }
+
+  Color _categoryBorderColor(String? name) {
+    final n = (name ?? '').toLowerCase();
+    if (n.contains('perhiasan') || (n.contains('emas') && !n.contains('logam'))) {
+      return const Color(0xFFFDE68A);
+    } else if (n.contains('logam')) {
+      return const Color(0xFFCBD5E1);
+    } else if (n.contains('elektronik')) {
+      return const Color(0xFFC4B5FD);
+    } else if (n.contains('kendaraan')) {
+      return const Color(0xFFBFDBFE);
+    }
+    return const Color(0xFFE5E7EB);
+  }
+
+  Widget _buildTopCategoryCard() {
+    final catName = _topCategory?['name'] as String?;
+    final cnt = _topCategory?['cnt'];
+    final color = _categoryColor(catName);
+    final bgColor = _categoryBgColor(catName);
+    final borderColor = _categoryBorderColor(catName);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: Text(
+                  'Kategori\nTerbanyak',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(Icons.category_outlined, color: AppColors.primary, size: 28),
+              ),
+            ],
           ),
+          const SizedBox(height: 16),
+          if (catName != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: borderColor),
+              ),
+              child: Text(
+                catName.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                ),
+              ),
+            )
+          else
+            const Text(
+              '-',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textDark,
+                height: 1.15,
+              ),
+            ),
+          if (cnt != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              '($cnt barang)',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionValueCard(NumberFormat currencyFormatter) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(Icons.receipt_long_outlined, color: AppColors.primary, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nilai Transaksi',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textDark,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    Text(
+                      'Total nilai harga dasar seluruh barang aktif',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Grand total badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFC8E6C9)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'GRAND TOTAL',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      currencyFormatter.format(_totalBasePrice),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          if (_categoryBreakdown.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const Divider(height: 1, color: Color(0xFFE5E7EB)),
+            const SizedBox(height: 16),
+            // Per-category breakdown
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: _categoryBreakdown.map((cat) {
+                final catName = cat['name'] as String?;
+                final cnt = cat['cnt'];
+                final totalVal = (cat['total_value'] as num?)?.toDouble() ?? 0;
+                final color = _categoryColor(catName);
+                final bgColor = _categoryBgColor(catName);
+                final borderColor = _categoryBorderColor(catName);
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (catName ?? '-').toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: color,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        currencyFormatter.format(totalVal),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$cnt barang',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: color.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -1004,18 +1268,11 @@ class _DashboardOverviewState extends State<DashboardOverview> {
     String suffix = '',
   }) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textDark.withValues(alpha: 0.035),
-            blurRadius: 26,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(6), // Sharp corporate corners
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

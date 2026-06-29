@@ -769,6 +769,26 @@ class DatabaseHelper {
     );
   }
 
+  Future<double> getTotalBasePrice() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT SUM(base_price) as total FROM auction_items WHERE is_active = 1',
+    );
+    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  Future<List<Map<String, dynamic>>> getCategoryBreakdown() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT c.name, COUNT(a.id) as cnt, SUM(a.base_price) as total_value
+      FROM auction_items a
+      JOIN categories c ON a.category_id = c.id
+      WHERE a.is_active = 1
+      GROUP BY c.name
+      ORDER BY cnt DESC
+    ''');
+  }
+
   // --- Backup ---
   Future<String> getDatabasePath() async {
     final dbPath = await getDatabasesPath();

@@ -24,6 +24,20 @@ class AppProvider with ChangeNotifier {
   int get selectedImportCount =>
       _importDraftItems.where((i) => i.isSelected && i.isValid).length;
 
+  List<int> _activePhotoImportItemIds = [];
+  List<int> get activePhotoImportItemIds => _activePhotoImportItemIds;
+  bool get hasPhotoImportDraft => _activePhotoImportItemIds.isNotEmpty;
+
+  void startPhotoImport(List<int> ids) {
+    _activePhotoImportItemIds = ids;
+    notifyListeners();
+  }
+
+  void finishPhotoImport() {
+    _activePhotoImportItemIds = [];
+    notifyListeners();
+  }
+
   List<Category> get categories => _categories;
   List<AuctionItem> get items => _filteredItems;
   List<AuctionItem> get allItems => _allItems;
@@ -130,6 +144,13 @@ class AppProvider with ChangeNotifier {
     await refreshAdminData();
   }
 
+  Future<void> deleteItems(List<int> ids) async {
+    for (final id in ids) {
+      await _dbHelper.deleteAuctionItem(id);
+    }
+    await refreshAdminData();
+  }
+
   // --- Gold Price ---
   Future<void> updateGoldPrice(double pricePerGram) async {
     await _dbHelper.updateGoldPrice(pricePerGram);
@@ -158,7 +179,15 @@ class AppProvider with ChangeNotifier {
     return await _dbHelper.getRecentItems(limit: limit);
   }
 
-  // --- Financing ---
+  Future<double> getTotalBasePrice() async {
+    return await _dbHelper.getTotalBasePrice();
+  }
+
+  Future<List<Map<String, dynamic>>> getCategoryBreakdown() async {
+    return await _dbHelper.getCategoryBreakdown();
+  }
+
+
   Future<Map<String, dynamic>?> getActiveFinancingConfig() async {
     return await _dbHelper.getActiveFinancingConfig();
   }
@@ -242,6 +271,55 @@ class AppProvider with ChangeNotifier {
     _importDraftItems = _importDraftItems.map((imported) {
       if (imported.rowIndex == rowIndex) {
         return imported.copyWith(item: updatedItem);
+      }
+      return imported;
+    }).toList();
+    notifyListeners();
+  }
+
+  void updateAndRevalidateImportedItem(int rowIndex, AuctionItem updatedItem) {
+    final errors = <String>[];
+
+    if (updatedItem.name.trim().isEmpty) {
+      errors.add('Nama produk wajib diisi');
+    }
+    if (updatedItem.categoryId == 0) {
+      errors.add('Kategori wajib diisi');
+    }
+    if (updatedItem.weightGram <= 0) {
+      errors.add('Berat tidak valid');
+    }
+
+    final cat = _categories.where((c) => c.id == updatedItem.categoryId).firstOrNull;
+    final isGold = cat != null &&
+        (cat.name.toLowerCase().contains('emas') ||
+            cat.name.toLowerCase().contains('logam mulia'));
+
+    if (!isGold && updatedItem.basePrice <= 0) {
+      errors.add('Harga dasar tidak valid');
+    }
+
+    _importDraftItems = _importDraftItems.map((imported) {
+      if (imported.rowIndex == rowIndex) {
+        final withCatName = AuctionItem(
+          id: updatedItem.id,
+          creditNumber: updatedItem.creditNumber,
+          name: updatedItem.name,
+          categoryId: updatedItem.categoryId,
+          weightGram: updatedItem.weightGram,
+          karat: updatedItem.karat,
+          basePrice: updatedItem.basePrice,
+          description: updatedItem.description,
+          isActive: updatedItem.isActive,
+          createdAt: updatedItem.createdAt,
+          categoryName: cat?.name ?? updatedItem.categoryName,
+        );
+        return ImportedAuctionItem(
+          rowIndex: rowIndex,
+          item: withCatName,
+          validationErrors: errors,
+          isSelected: errors.isEmpty,
+        );
       }
       return imported;
     }).toList();

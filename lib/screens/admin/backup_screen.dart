@@ -66,11 +66,14 @@ class _BackupScreenState extends State<BackupScreen> {
         setState(() => _lastBackupPath = backupPath);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Backup berhasil disimpan ke:\n$backupPath'),
-            backgroundColor: AppColors.successGreen,
+            content: Text(
+              'Backup berhasil disimpan ke:\n$backupPath',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            backgroundColor: const Color(0xFF16A34A),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(6),
             ),
             duration: const Duration(seconds: 5),
           ),
@@ -80,11 +83,14 @@ class _BackupScreenState extends State<BackupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal backup: $e'),
+            content: Text(
+              'Gagal backup: $e',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(6),
             ),
           ),
         );
@@ -102,45 +108,52 @@ class _BackupScreenState extends State<BackupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 20), // Lower the header
           const Text(
             'Backup & Restore Data',
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: AppColors.textDark,
+              color: Color(0xFF111827),
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 6),
           const Text(
             'Kelola backup database SQLite lokal cabang.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            style: TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 28),
 
           // Database info card
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    borderRadius: BorderRadius.circular(20),
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFC8E6C9)),
                   ),
                   child: const Icon(
                     Icons.storage_outlined,
                     color: AppColors.primary,
-                    size: 28,
+                    size: 22,
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,9 +161,9 @@ class _BackupScreenState extends State<BackupScreen> {
                       const Text(
                         'Database Lokal',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF111827),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -158,8 +171,9 @@ class _BackupScreenState extends State<BackupScreen> {
                         Text(
                           _dbPath!,
                           style: const TextStyle(
-                            color: AppColors.textMuted,
+                            color: Color(0xFF6B7280),
                             fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -167,8 +181,9 @@ class _BackupScreenState extends State<BackupScreen> {
                         Text(
                           'Ukuran: $_dbSizeKb KB',
                           style: const TextStyle(
-                            color: AppColors.textSecondary,
+                            color: Color(0xFF374151),
                             fontSize: 13,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                     ],
@@ -176,28 +191,29 @@ class _BackupScreenState extends State<BackupScreen> {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 10,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    borderRadius: BorderRadius.circular(20),
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFC8E6C9)),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.check_circle,
-                        color: AppColors.successGreen,
-                        size: 16,
+                        color: AppColors.primary,
+                        size: 14,
                       ),
                       SizedBox(width: 6),
                       Text(
                         'Aktif',
                         style: TextStyle(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -213,191 +229,202 @@ class _BackupScreenState extends State<BackupScreen> {
             isPortrait: isPortrait,
             spacing: 24,
             left: Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: AppColors.border),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFC8E6C9)),
+                    ),
+                    child: const Icon(
+                      Icons.cloud_download_outlined,
+                      color: AppColors.primary,
+                      size: 26,
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary,
-                          borderRadius: BorderRadius.circular(22),
-                        ),
-                        child: const Icon(
-                          Icons.cloud_download_outlined,
-                          color: AppColors.primary,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Export Database',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Buat salinan backup file database SQLite lokal.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _isExporting ? null : _exportDatabase,
-                          icon: _isExporting
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.backup, size: 20),
-                          label: Text(
-                            _isExporting ? 'Mengekspor...' : 'Backup Sekarang',
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: const StadiumBorder(),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            elevation: 0,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Export Database',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF111827),
+                    ),
                   ),
-                ),
-              right: Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: AppColors.border),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Buat salinan backup file database SQLite lokal.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF6B7280),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      if (_isExporting) ...[
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
-                          child: const LinearProgressIndicator(
-                            minHeight: 10,
-                            color: AppColors.successGreen,
-                            backgroundColor: AppColors.secondary,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (_lastBackupPath != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0xFFD7E7D8)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.check_circle,
-                                color: AppColors.successGreen,
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: _isExporting ? null : _exportDatabase,
+                      icon: _isExporting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
                               ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  _lastBackupPath!,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.successGreen,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: AppColors.goldBg,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.info_outline,
-                          color: AppColors.gold,
-                          size: 32,
-                        ),
+                            )
+                          : const Icon(Icons.backup, size: 20),
+                      label: Text(
+                        _isExporting ? 'Mengekspor...' : 'Backup Sekarang',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Informasi Backup',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
                         ),
+                        elevation: 0,
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Database berisi semua data barang, foto, harga emas, dan konfigurasi pembiayaan. Backup secara rutin untuk mencegah kehilangan data.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.goldBg,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              color: AppColors.warning,
-                              size: 20,
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Lakukan backup sebelum menghapus data atau memperbarui aplikasi.',
-                                style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 12,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
+              ),
             ),
+            right: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                children: [
+                  if (_isExporting) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: const LinearProgressIndicator(
+                        minHeight: 8,
+                        color: AppColors.primary,
+                        backgroundColor: Color(0xFFE8F5E9),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (_lastBackupPath != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFC8E6C9)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: AppColors.primary,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _lastBackupPath!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFFD97706),
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Informasi Backup',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Database berisi semua data barang, foto, harga emas, dan konfigurasi pembiayaan. Backup secara rutin untuk mencegah kehilangan data.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF6B7280),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Color(0xFFD97706),
+                          size: 18,
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Lakukan backup sebelum menghapus data atau memperbarui aplikasi.',
+                            style: TextStyle(
+                              color: Color(0xFF92400E),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

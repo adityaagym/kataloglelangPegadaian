@@ -1,10 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
 import '../../utils/app_colors.dart';
 import '../../services/financing_calculator.dart';
 import '../../widgets/responsive_row_column.dart';
+
+class ThousandSeparatorFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    // Remove all non-digits
+    final cleanText = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (cleanText.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    final double val = double.parse(cleanText);
+    final formatter = NumberFormat.decimalPattern('id');
+    final formatted = formatter.format(val);
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 class FinancingScreen extends StatefulWidget {
   const FinancingScreen({super.key});
@@ -104,9 +135,10 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
           _stlPrice = (config['stl_price'] as num?)?.toDouble() ?? 502894;
 
-          // Set controller values
-          _stlController.text = _stlPrice.round().toString();
-          _adminFeeFlatController.text = _adminFeeFlat.round().toString();
+          // Set controller values with formatting
+          final formatter = NumberFormat.decimalPattern('id');
+          _stlController.text = formatter.format(_stlPrice.round());
+          _adminFeeFlatController.text = formatter.format(_adminFeeFlat.round());
 
           // Initialize tracking values
           _originalStlPrice = _stlPrice;
@@ -129,8 +161,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
         ];
         _selectedTenorMonths = 6;
 
-        _stlController.text = '502894';
-        _adminFeeFlatController.text = '70000';
+        final formatter = NumberFormat.decimalPattern('id');
+        _stlController.text = formatter.format(502894);
+        _adminFeeFlatController.text = formatter.format(70000);
 
         // Initialize tracking values
         _originalStlPrice = 502894;
@@ -182,12 +215,11 @@ class _FinancingScreenState extends State<FinancingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Konfigurasi pembiayaan berhasil disimpan!'),
-            backgroundColor: AppColors.successGreen,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+            content: const Text(
+              'Konfigurasi pembiayaan berhasil disimpan!',
+              style: TextStyle(fontWeight: FontWeight.w800),
             ),
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -196,11 +228,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            backgroundColor: const Color(0xFFDC2626),
           ),
         );
       }
@@ -218,158 +246,169 @@ class _FinancingScreenState extends State<FinancingScreen> {
       );
     }
 
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(32, 32, 32, 120),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 24), 
-              
-              // Title row
-              isPortrait
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Konfigurasi Pembiayaan Syariah',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _isActive ? AppColors.secondary : AppColors.muted,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _isActive ? Icons.check_circle : Icons.cancel_outlined,
-                                color: _isActive
-                                    ? AppColors.successGreen
-                                    : AppColors.textMuted,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _isActive ? 'Aturan aktif' : 'Nonaktif',
-                                style: TextStyle(
-                                  color: _isActive
-                                      ? AppColors.successGreen
-                                      : AppColors.textMuted,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Expanded(
-                          child: Text(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(32, 24, 32, 140),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20), // Lower the header
+                
+                // Title row
+                isPortrait
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
                             'Konfigurasi Pembiayaan Syariah',
                             style: TextStyle(
-                              fontSize: 32,
+                              fontSize: 22,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.textDark,
+                              color: Color(0xFF111827),
+                              letterSpacing: -0.5,
                             ),
-                            softWrap: true,
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _isActive ? AppColors.secondary : AppColors.muted,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _isActive ? Icons.check_circle : Icons.cancel_outlined,
-                                color: _isActive
-                                    ? AppColors.successGreen
-                                    : AppColors.textMuted,
-                                size: 18,
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _isActive ? const Color(0xFFE8F5E9) : const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: _isActive ? const Color(0xFFC8E6C9) : const Color(0xFFE5E7EB),
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _isActive ? 'Aturan aktif' : 'Nonaktif',
-                                style: TextStyle(
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isActive ? Icons.check_circle : Icons.cancel_outlined,
                                   color: _isActive
-                                      ? AppColors.successGreen
-                                      : AppColors.textMuted,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
+                                      ? AppColors.primary
+                                      : const Color(0xFF6B7280),
+                                  size: 16,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  _isActive ? 'Aturan aktif' : 'Nonaktif',
+                                  style: TextStyle(
+                                    color: _isActive
+                                        ? AppColors.primary
+                                        : const Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Konfigurasi Pembiayaan Syariah',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF111827),
+                                letterSpacing: -0.5,
+                              ),
+                              softWrap: true,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _isActive ? const Color(0xFFE8F5E9) : const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: _isActive ? const Color(0xFFC8E6C9) : const Color(0xFFE5E7EB),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isActive ? Icons.check_circle : Icons.cancel_outlined,
+                                  color: _isActive
+                                      ? AppColors.primary
+                                      : const Color(0xFF6B7280),
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _isActive ? 'Aturan aktif' : 'Nonaktif',
+                                  style: TextStyle(
+                                    color: _isActive
+                                        ? AppColors.primary
+                                        : const Color(0xFF6B7280),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Atur parameter bunga, uang muka, STL, dan ratio pinjaman SQLite outlet secara real-time.',
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 28),
+
+                if (isPortrait) ...[
+                  _buildMainParametersCard(),
+                  const SizedBox(height: 20),
+                  _buildImpactPreview(),
+                  const SizedBox(height: 20),
+                  _buildTenorTableCard(),
+                ] else ...[
+                  ResponsiveRowColumn(
+                    isPortrait: false,
+                    spacing: 28,
+                    left: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildMainParametersCard(),
+                        const SizedBox(height: 20),
+                        _buildTenorTableCard(),
                       ],
                     ),
-              const SizedBox(height: 6),
-              const Text(
-                'Atur parameter bunga, uang muka, STL, dan ratio pinjaman SQLite outlet secara real-time.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-              ),
-              const SizedBox(height: 28),
-
-              if (isPortrait) ...[
-                _buildMainParametersCard(),
-                const SizedBox(height: 24),
-                _buildImpactPreview(),
-                const SizedBox(height: 24),
-                _buildTenorTableCard(),
-              ] else ...[
-                ResponsiveRowColumn(
-                  isPortrait: false,
-                  spacing: 28,
-                  left: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildMainParametersCard(),
-                      const SizedBox(height: 24),
-                      _buildTenorTableCard(),
-                    ],
+                    right: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildImpactPreview(),
+                      ],
+                    ),
                   ),
-                  right: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildImpactPreview(),
-                    ],
-                  ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        if (_hasChanges)
-          Positioned(
-            left: 32,
-            right: 32,
-            bottom: 24,
-            child: _buildFloatingSaveButton(),
-          ),
-      ],
+          if (_hasChanges)
+            Positioned(
+              left: 32,
+              right: 32,
+              bottom: 24,
+              child: _buildFloatingSaveButton(),
+            ),
+        ],
+      ),
     );
   }
 
@@ -389,7 +428,8 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     child: _buildParamInputField(
                       label: 'STL per Gram (24K)',
                       controller: _stlController,
-                      suffixText: 'Rp',
+                      prefixText: 'Rp ',
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandSeparatorFormatter()],
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -397,7 +437,8 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     child: _buildParamInputField(
                       label: 'Biaya Administrasi Flat',
                       controller: _adminFeeFlatController,
-                      suffixText: 'Rp',
+                      prefixText: 'Rp ',
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandSeparatorFormatter()],
                     ),
                   ),
                   const SizedBox(width: 20),
@@ -413,13 +454,15 @@ class _FinancingScreenState extends State<FinancingScreen> {
                   _buildParamInputField(
                     label: 'STL per Gram (24K)',
                     controller: _stlController,
-                    suffixText: 'Rp',
+                    prefixText: 'Rp ',
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandSeparatorFormatter()],
                   ),
                   const SizedBox(height: 16),
                   _buildParamInputField(
                     label: 'Biaya Administrasi Flat',
                     controller: _adminFeeFlatController,
-                    suffixText: 'Rp',
+                    prefixText: 'Rp ',
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandSeparatorFormatter()],
                   ),
                   const SizedBox(height: 16),
                   _buildStatusSwitchField(),
@@ -439,9 +482,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
         const Text(
           'Status Aktif Aturan',
           style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+            color: Color(0xFF374151),
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 8),
@@ -449,9 +492,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
           height: 52, // matches the height of our parameter textfields
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: AppColors.muted,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFFD1D5DB)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -459,9 +502,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
               const Text(
                 'Status Aktif',
                 style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   fontSize: 13,
-                  color: AppColors.textDark,
+                  color: Color(0xFF111827),
                 ),
               ),
               Switch(
@@ -493,17 +536,21 @@ class _FinancingScreenState extends State<FinancingScreen> {
             return ChoiceChip(
               label: Text('$months bln'),
               selected: isSelected,
-              selectedColor: AppColors.accent,
+              selectedColor: AppColors.primary,
+              backgroundColor: const Color(0xFFF3F4F6),
               labelStyle: TextStyle(
                 color: isSelected
                     ? Colors.white
                     : (isActive
-                        ? AppColors.textDark
-                        : AppColors.textMuted),
-                fontWeight: FontWeight.w800,
+                        ? const Color(0xFF111827)
+                        : const Color(0xFF9CA3AF)),
+                fontWeight: FontWeight.w900,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(6),
+                side: BorderSide(
+                  color: isSelected ? AppColors.primary : const Color(0xFFD1D5DB),
+                ),
               ),
               onSelected: (selected) {
                 if (selected) {
@@ -518,8 +565,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
         // Tenors table
         Container(
           decoration: BoxDecoration(
-            color: AppColors.muted,
-            borderRadius: BorderRadius.circular(20),
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
           ),
           child: Column(
             children: [
@@ -532,7 +580,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                 decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: AppColors.cardBorder,
+                      color: Color(0xFFE5E7EB),
                     ),
                   ),
                 ),
@@ -541,44 +589,48 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'Status',
+                        'STATUS',
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w900,
                           fontSize: 11,
-                          color: AppColors.textSecondary,
+                          color: Color(0xFF4B5563),
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'Tenor',
+                        'TENOR',
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w900,
                           fontSize: 11,
-                          color: AppColors.textSecondary,
+                          color: Color(0xFF4B5563),
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'Multiplier',
+                        'MULTIPLIER',
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w900,
                           fontSize: 11,
-                          color: AppColors.textSecondary,
+                          color: Color(0xFF4B5563),
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                     Expanded(
                       flex: 1,
                       child: Text(
-                        'Edit',
+                        'EDIT',
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w900,
                           fontSize: 11,
-                          color: AppColors.textSecondary,
+                          color: Color(0xFF4B5563),
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
@@ -602,7 +654,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     border: index < _tenors.length - 1
                         ? const Border(
                             bottom: BorderSide(
-                              color: AppColors.cardBorder,
+                              color: Color(0xFFE5E7EB),
                             ),
                           )
                         : null,
@@ -617,6 +669,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                             Checkbox(
                               value: isActive,
                               activeColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
                               onChanged: (val) {
                                 setState(() {
                                   _tenors[index]['is_active'] =
@@ -629,13 +682,13 @@ class _FinancingScreenState extends State<FinancingScreen> {
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  isActive ? 'On' : 'Off',
+                                  isActive ? 'Aktif' : 'Nonaktif',
                                   style: TextStyle(
                                     color: isActive
-                                        ? AppColors.textDark
-                                        : AppColors.textMuted,
+                                        ? const Color(0xFF111827)
+                                        : const Color(0xFF9CA3AF),
                                     fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
                               ),
@@ -651,8 +704,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
                           child: Text(
                             '$months bln',
                             style: const TextStyle(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                               fontSize: 13,
+                              color: Color(0xFF111827),
                             ),
                           ),
                         ),
@@ -666,8 +720,8 @@ class _FinancingScreenState extends State<FinancingScreen> {
                             multiplier.toStringAsFixed(3),
                             style: const TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF111827),
                             ),
                           ),
                         ),
@@ -676,8 +730,8 @@ class _FinancingScreenState extends State<FinancingScreen> {
                         flex: 1,
                         child: IconButton(
                           icon: const Icon(
-                            Icons.edit,
-                            size: 16,
+                            Icons.edit_outlined,
+                            size: 18,
                             color: AppColors.primary,
                           ),
                           onPressed: () => _showEditTenorDialog(index),
@@ -702,46 +756,46 @@ class _FinancingScreenState extends State<FinancingScreen> {
           onPressed: _isSaving ? null : _saveConfig,
           icon: _isSaving
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
+                    strokeWidth: 2,
                     color: Colors.white,
                   ),
                 )
-              : const Icon(Icons.check_circle_outline_rounded, size: 22),
+              : const Icon(Icons.check_circle_outline_rounded, size: 18),
           label: Text(
             _isSaving ? 'Menyimpan...' : 'Simpan Perubahan',
             style: const TextStyle(
               fontWeight: FontWeight.w900,
-              fontSize: 15,
+              fontSize: 14,
             ),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            elevation: 4,
-            shadowColor: AppColors.primary.withValues(alpha: 0.4),
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(6),
             ),
             padding: const EdgeInsets.symmetric(
-              horizontal: 32,
-              vertical: 20,
+              horizontal: 24,
+              vertical: 18,
             ),
           ),
         );
 
         final notificationIcon = Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+            color: const Color(0xFFFFFBEB),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFFFDE68A)),
           ),
           child: const Icon(
             Icons.warning_amber_rounded,
-            color: AppColors.primary,
-            size: 24,
+            color: Color(0xFFD97706),
+            size: 20,
           ),
         );
 
@@ -753,16 +807,17 @@ class _FinancingScreenState extends State<FinancingScreen> {
               'Perubahan Terdeteksi',
               style: TextStyle(
                 fontWeight: FontWeight.w900,
-                fontSize: 16,
-                color: AppColors.textDark,
+                fontSize: 15,
+                color: Color(0xFF111827),
               ),
             ),
+            SizedBox(height: 2),
             Text(
               'Anda memiliki parameter yang belum disimpan.',
               style: TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 13,
-                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: Color(0xFF6B7280),
               ),
             ),
           ],
@@ -771,25 +826,19 @@ class _FinancingScreenState extends State<FinancingScreen> {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: const Color(0xFFE5E7EB),
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                blurRadius: 30,
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              width: 1.5,
-            ),
           ),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: isWide
               ? Row(
                   children: [
@@ -810,7 +859,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                         Expanded(child: textColumn),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: button,
@@ -828,33 +877,34 @@ class _FinancingScreenState extends State<FinancingScreen> {
     required List<Widget> children,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: AppColors.primary, size: 22),
-              const SizedBox(width: 8),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
               Text(
                 title,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
+                  color: Color(0xFF111827),
                 ),
               ),
             ],
@@ -869,8 +919,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
   Widget _buildParamInputField({
     required String label,
     required TextEditingController controller,
-    String? suffixText,
+    String? prefixText,
     TextInputType keyboardType = TextInputType.number,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -878,38 +929,39 @@ class _FinancingScreenState extends State<FinancingScreen> {
         Text(
           label,
           style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+            color: Color(0xFF374151),
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
+            color: Color(0xFF111827),
           ),
           decoration: InputDecoration(
-            suffixText: suffixText,
-            suffixStyle: const TextStyle(
+            prefixText: prefixText,
+            prefixStyle: const TextStyle(
               fontWeight: FontWeight.w800,
-              color: AppColors.textSecondary,
+              color: Color(0xFF6B7280),
             ),
             filled: true,
-            fillColor: AppColors.muted,
+            fillColor: const Color(0xFFF9FAFB),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderRadius: BorderRadius.circular(6),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(6),
               borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -930,23 +982,56 @@ class _FinancingScreenState extends State<FinancingScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Edit Tenor $months Bulan'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        title: Text(
+          'Edit Tenor $months Bulan',
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Multiplier (Faktor Cicilan Excel)',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF374151)),
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: multiplierCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Multiplier (Faktor Excel)'),
+              style: const TextStyle(fontWeight: FontWeight.w800),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color(0xFFF9FAFB),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                ),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
+            child: const Text('BATAL', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF6B7280))),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
             onPressed: () {
               final multVal = double.tryParse(multiplierCtrl.text) ?? multiplier;
               setState(() {
@@ -954,7 +1039,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
               });
               Navigator.pop(ctx);
             },
-            child: const Text('Simpan'),
+            child: const Text('SIMPAN', style: TextStyle(fontWeight: FontWeight.w900)),
           ),
         ],
       ),
@@ -970,13 +1055,13 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
     final provider = Provider.of<AppProvider>(context, listen: false);
 
-    // Bug D fix: gunakan harga aktual dari config, bukan mockPrice hardcoded.
-    // Simulasikan contoh representatif: emas 22K berat 10 gram.
+    // Simulasi contoh: emas 22K berat 10 gram.
     const mockWeightGram = 10.0;
     const mockKaratVal = 22.0;
     final hdlePrice = provider.goldPricePerGram.toDouble();
-    final stlPrice = _stlPrice;
-    final adminFlat = double.tryParse(_adminFeeFlatController.text) ?? _adminFeeFlat;
+    final cleanStlText = _stlController.text.replaceAll('.', '').replaceAll(',', '');
+    final stlPrice = double.tryParse(cleanStlText) ?? _stlPrice;
+    final adminFlat = double.tryParse(_adminFeeFlatController.text.replaceAll('.', '').replaceAll(',', '')) ?? _adminFeeFlat;
 
     final mockHargaLelang = FinancingCalculator.hitungHargaEmas(
       hdlePrice: hdlePrice,
@@ -1024,59 +1109,58 @@ class _FinancingScreenState extends State<FinancingScreen> {
     final krasidaTotal = krasidaRes.totalBayar ?? 0;
 
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.insights_outlined, color: AppColors.primary, size: 26),
-              SizedBox(width: 12),
-              Expanded(
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(Icons.insights_outlined, color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
                 child: Text(
-                  'IMPACT PREVIEW (Simulasi Contoh)',
+                  'IMPACT PREVIEW',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textDark,
+                    color: Color(0xFF111827),
                     letterSpacing: 0.5,
                   ),
-                  softWrap: true,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.muted,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.info_outline, size: 16, color: AppColors.textSecondary),
+                const Icon(Icons.info_outline, size: 16, color: Color(0xFF4B5563)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Simulasi: Emas 22K · 10g · ${currencyFormatter.format(mockHargaLelang)}',
                     style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textDark,
+                      fontSize: 13,
+                      color: Color(0xFF111827),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -1084,156 +1168,150 @@ class _FinancingScreenState extends State<FinancingScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // TUNAI CARD
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.categoryGreenBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.categoryGreenText.withValues(alpha: 0.2)),
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFC8E6C9)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.payments_outlined, color: AppColors.categoryGreenText, size: 26),
+                    const Icon(Icons.payments_outlined, color: AppColors.primary, size: 22),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
                         'TUNAI',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.categoryGreenText,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFC8E6C9)),
                       ),
                       child: Text(
                         currencyFormatter.format(tunaiTotal),
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.categoryGreenText,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 const Padding(
-                  padding: EdgeInsets.only(left: 36),
+                  padding: EdgeInsets.only(left: 32),
                   child: Text(
                     'Bayar penuh saat transaksi, tanpa bunga/cicilan.',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4B5563),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // KCA CARD
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.categoryBlueBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.categoryBlueText.withValues(alpha: 0.2)),
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.credit_card_outlined, color: AppColors.categoryBlueText, size: 26),
+                    const Icon(Icons.credit_card_outlined, color: Color(0xFF1D4ED8), size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'KCA — Tempo $tempoKca Bulan',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.categoryBlueText,
+                          color: Color(0xFF1D4ED8),
                         ),
                         softWrap: true,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(kcaUm)),
                 _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(kcaUp)),
                 _buildImpactDetailRow('Biaya Admin', currencyFormatter.format(adminFlat.round())),
-                const Divider(height: 24, color: Color(0xFFBBDEFB)),
+                const Divider(height: 20, color: Color(0xFFDBEAFE)),
                 _buildImpactDetailRow(
                   'Total Pelunasan',
                   currencyFormatter.format(kcaPelunasan),
                   isBold: true,
-                  textColor: AppColors.categoryBlueText,
+                  textColor: const Color(0xFF1D4ED8),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // KRASIDA CARD
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.categoryAmberBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.categoryAmberText.withValues(alpha: 0.2)),
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFFDE68A)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.bar_chart_outlined, color: AppColors.categoryAmberText, size: 26),
+                    const Icon(Icons.bar_chart_outlined, color: Color(0xFFB45309), size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'KRASIDA — Tenor $tenorMonths Bulan',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.categoryAmberText,
+                          color: Color(0xFFB45309),
                         ),
                         softWrap: true,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 _buildImpactDetailRow('Uang Muka (DP)', currencyFormatter.format(krasidaUm)),
                 _buildImpactDetailRow('Uang Pinjaman', currencyFormatter.format(krasidaUp)),
                 _buildImpactDetailRow('Angsuran per Bulan', '${currencyFormatter.format(krasidaAngsuran)} / bln'),
-                const Divider(height: 24, color: Color(0xFFFFECB3)),
+                const Divider(height: 20, color: Color(0xFFFEF3C7)),
                 _buildImpactDetailRow(
                   'Total Bayar',
                   currencyFormatter.format(krasidaTotal),
                   isBold: true,
-                  textColor: AppColors.categoryAmberText,
+                  textColor: const Color(0xFFB45309),
                 ),
               ],
             ),
@@ -1250,7 +1328,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
     Color? textColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1258,9 +1336,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: isBold ? 16 : 15,
-                fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-                color: isBold ? AppColors.textDark : AppColors.textSecondary,
+                fontSize: isBold ? 14 : 13,
+                fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+                color: isBold ? const Color(0xFF111827) : const Color(0xFF4B5563),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -1270,9 +1348,9 @@ class _FinancingScreenState extends State<FinancingScreen> {
             child: Text(
               value,
               style: TextStyle(
-                fontSize: isBold ? 18 : 16,
-                fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
-                color: textColor ?? AppColors.textDark,
+                fontSize: isBold ? 15 : 13,
+                fontWeight: isBold ? FontWeight.w900 : FontWeight.w800,
+                color: textColor ?? const Color(0xFF111827),
               ),
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,

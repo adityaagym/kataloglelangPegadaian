@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
 import '../../database/database_helper.dart';
 import '../../models/auction_item.dart';
 import '../../utils/file_helper.dart';
-import '../../utils/app_colors.dart';
 
 class ImportPhotoCaptureScreen extends StatefulWidget {
   final List<int> itemIds;
@@ -73,6 +73,53 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
     });
   }
 
+  void _showPhotoSourceSelector(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 16),
+              const Text(
+                'PILIH SUMBER FOTO',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  color: Color(0xFF111827),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFF111827)),
+                title: const Text('Kamera', style: TextStyle(fontWeight: FontWeight.w700)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhoto();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: Color(0xFF111827)),
+                title: const Text('Galeri Foto', style: TextStyle(fontWeight: FontWeight.w700)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickFromGallery();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _removePhoto(int photoIndex) async {
     setState(() {
       _itemPhotos[_currentIndex]?.removeAt(photoIndex);
@@ -93,6 +140,22 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
   }
 
   Future<void> _next() async {
+    final photos = _itemPhotos[_currentIndex] ?? [];
+    if (photos.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Foto produk belum terupload! Harap unggah minimal 1 foto.',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+            backgroundColor: Color(0xFFDC2626), // Corporate Red
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isSaving = true);
     await _saveCurrentItemPhotos();
 
@@ -103,37 +166,132 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
       });
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Semua foto berhasil disimpan ✓'),
-            backgroundColor: AppColors.primary,
-          ),
-        );
-        Navigator.popUntil(context, (route) => route.isFirst);
+        setState(() => _isSaving = false);
+        _showSuccessDialog();
       }
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Must click the button to close
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          child: Container(
+            width: 400,
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Color(0xFF16A34A),
+                  size: 64,
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'IMPOR SELESAI',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF111827),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Semua produk dan foto pendukung telah berhasil diunggah dan disimpan ke dalam katalog.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF4B5563),
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF16A34A),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      final provider = Provider.of<AppProvider>(context, listen: false);
+                      provider.finishPhotoImport();
+                    },
+                    child: const Text(
+                      'SELESAI & KEMBALI',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _skip() {
     if (_currentIndex < _items.length - 1) {
       setState(() => _currentIndex++);
     } else {
-      Navigator.popUntil(context, (route) => route.isFirst);
+      final provider = Provider.of<AppProvider>(context, listen: false);
+      provider.finishPhotoImport();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
     if (_isLoading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        backgroundColor: Color(0xFFF9FAFB),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF16A34A)),
+        ),
       );
     }
 
     if (_items.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Foto Produk')),
-        body: const Center(child: Text('Tidak ada item untuk difoto')),
+        backgroundColor: const Color(0xFFF9FAFB),
+        appBar: AppBar(
+          title: const Text(
+            'Foto Produk',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: Color(0xFF111827)),
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: const Center(
+          child: Text(
+            'Tidak ada item untuk difoto',
+            style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w800, fontSize: 18),
+          ),
+        ),
       );
     }
 
@@ -141,94 +299,129 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
     final photos = _itemPhotos[_currentIndex] ?? [];
     final progress = '${_currentIndex + 1}/${_items.length}';
     final isLast = _currentIndex >= _items.length - 1;
+    final categoryName = item.categoryName ?? 'Lainnya';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: Text(
           'Foto Produk $progress',
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
+            color: Color(0xFF111827),
+            letterSpacing: -0.5,
+          ),
         ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
+          child: Container(color: const Color(0xFFE5E7EB), height: 1),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Progress bar
+            // 1. Progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: (_currentIndex + 1) / _items.length,
-                backgroundColor: AppColors.muted,
-                color: AppColors.primary,
+                backgroundColor: const Color(0xFFE5E7EB),
+                color: const Color(0xFF16A34A),
                 minHeight: 6,
               ),
             ),
-            const SizedBox(height: 20),
-            // Item info card
+            const SizedBox(height: 24),
+
+            // 2. Item Info Card (Identical layout to the confirmation page card)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(6), // Sharp corporate corners
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFlatCategoryBadge(categoryName),
+                        const SizedBox(height: 6),
+                        Text(
+                          item.name.isEmpty ? '(Nama Kosong)' : item.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (item.creditNumber?.isNotEmpty == true)
+                              _buildBlueCreditNumberBadge(item.creditNumber!),
+                            if (item.weightGram > 0)
+                              _buildWeightBadge(item.weightGram),
+                            if (item.karat != null && item.karat!.isNotEmpty)
+                              _buildKaratBadge(item.karat!),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 16,
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Berat: ${item.weightGram}g',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text(
-                        'Harga: Rp ${item.basePrice.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.payments_outlined, size: 18, color: Color(0xFF16A34A)),
+                          const SizedBox(width: 4),
+                          Text(
+                            currencyFormatter.format(item.basePrice),
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF16A34A),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            // Photo area
+            const SizedBox(height: 24),
+
+            // 3. Photo area
             if (photos.isEmpty)
               GestureDetector(
-                onTap: _takePhoto,
+                onTap: () => _showPhotoSourceSelector(context),
                 child: Container(
-                  height: 220,
+                  height: 240,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppColors.muted,
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6), // Sharp corners
                     border: Border.all(
-                      color: AppColors.border,
-                      style: BorderStyle.solid,
+                      color: const Color(0xFFD1D5DB),
+                      width: 1.5,
+                      style: BorderStyle.solid, // Flat solid clean borders
                     ),
                   ),
                   child: const Column(
@@ -236,13 +429,26 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
                     children: [
                       Icon(
                         Icons.camera_alt_outlined,
-                        size: 48,
-                        color: AppColors.textMuted,
+                        size: 44,
+                        color: Color(0xFF6B7280),
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'Ketuk untuk ambil foto',
-                        style: TextStyle(color: AppColors.textMuted),
+                        'Ambil Foto Produk',
+                        style: TextStyle(
+                          color: Color(0xFF374151),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Ketuk untuk menggunakan Kamera atau Galeri',
+                        style: TextStyle(
+                          color: Color(0xFF9CA3AF),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -253,29 +459,69 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
                 height: 200,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: photos.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemCount: photos.length + 1,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
+                    if (index == photos.length) {
+                      // Add Photo Card
+                      return GestureDetector(
+                        onTap: () => _showPhotoSourceSelector(context),
+                        child: Container(
+                          height: 198,
+                          width: 130,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: const Color(0xFFD1D5DB),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_a_photo_outlined, size: 28, color: Color(0xFF6B7280)),
+                              SizedBox(height: 8),
+                              Text(
+                                'Tambah Foto',
+                                style: TextStyle(
+                                  color: Color(0xFF374151),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
                     return Stack(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.file(
-                            photos[index],
-                            height: 200,
-                            width: 200,
-                            fit: BoxFit.cover,
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.file(
+                              photos[index],
+                              height: 198,
+                              width: 198,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                         Positioned(
-                          top: 6,
-                          right: 6,
+                          top: 8,
+                          right: 8,
                           child: GestureDetector(
                             onTap: () => _removePhoto(index),
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: const BoxDecoration(
-                                color: Colors.red,
+                                color: Color(0xFFDC2626), // Sharp corporate red
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -288,23 +534,24 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
                         ),
                         if (index == 0)
                           Positioned(
-                            bottom: 6,
-                            left: 6,
+                            bottom: 8,
+                            left: 8,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
+                                horizontal: 8,
+                                vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(6),
+                                color: const Color(0xFF16A34A),
+                                borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
-                                'Utama',
+                                'UTAMA',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ),
@@ -314,41 +561,43 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
                   },
                 ),
               ),
-            const SizedBox(height: 16),
-            // Photo action buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickFromGallery,
-                    icon: const Icon(Icons.photo_library_outlined, size: 18),
-                    label: const Text('Galeri'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _takePhoto,
-                    icon: const Icon(Icons.camera_alt, size: 18),
-                    label: const Text('Kamera'),
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(height: 32),
+            Container(color: const Color(0xFFE5E7EB), height: 1),
             const SizedBox(height: 24),
-            // Navigation buttons
+
+            // 5. Navigation buttons
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF374151),
+                      side: const BorderSide(color: Color(0xFFD1D5DB), width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
                     onPressed: _isSaving ? null : _skip,
-                    child: const Text('Lewati'),
+                    child: const Text(
+                      'Lewati',
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   flex: 2,
                   child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF16A34A), // Corporate Green
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
                     onPressed: _isSaving ? null : _next,
                     icon: _isSaving
                         ? const SizedBox(
@@ -362,6 +611,7 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
                         : const Icon(Icons.save_alt, size: 18),
                     label: Text(
                       isLast ? 'Simpan & Selesai' : 'Simpan & Lanjut',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
                     ),
                   ),
                 ),
@@ -369,6 +619,105 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFlatCategoryBadge(String categoryName) {
+    final isGold = categoryName.toLowerCase().contains('emas') ||
+        categoryName.toLowerCase().contains('logam mulia');
+
+    final bgColor = isGold ? const Color(0xFFFEF3C7) : const Color(0xFFF3F4F6);
+    final textColor = isGold ? const Color(0xFF92400E) : const Color(0xFF374151);
+    final borderColor = isGold ? const Color(0xFFFDE68A) : const Color(0xFFE5E7EB);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: borderColor),
+      ),
+      child: Text(
+        categoryName.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color: textColor,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlueCreditNumberBadge(String creditNumber) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF), // Light blue background
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFBFDBFE)), // Light blue border
+      ),
+      child: Text(
+        creditNumber,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+          color: Color(0xFF1E40AF), // Dark blue text
+          fontFamily: 'JetBrains Mono',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeightBadge(double weight) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4), // Light green background
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.scale_outlined, size: 16, color: Color(0xFF166534)),
+          const SizedBox(width: 4),
+          Text(
+            'Berat: ${weight}g',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF166534),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKaratBadge(String karat) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED), // Light orange background
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFFED7AA)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.workspace_premium_outlined, size: 16, color: Color(0xFFC2410C)),
+          const SizedBox(width: 4),
+          Text(
+            'Karat: $karat',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFFC2410C),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -45,11 +45,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Masukkan harga yang valid.'),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          backgroundColor: const Color(0xFFD97706),
         ),
       );
       return;
@@ -70,12 +66,9 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
           SnackBar(
             content: const Text(
               'Harga emas berhasil diperbarui! Harga katalog telah dikalkulasi ulang.',
+              style: TextStyle(fontWeight: FontWeight.w800),
             ),
-            backgroundColor: AppColors.successGreen,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -84,11 +77,7 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            backgroundColor: const Color(0xFFDC2626),
           ),
         );
       }
@@ -113,307 +102,616 @@ class _GoldPriceScreenState extends State<GoldPriceScreen> {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Update HDLE Hari Ini',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textDark,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20), // Lower the header
+            const Text(
+              'Update HDLE Hari Ini',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF111827),
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Harga barang kategori emas di katalog otomatis mengikuti HDLE per gram yang tersimpan.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          const SizedBox(height: 28),
+            const SizedBox(height: 6),
+            const Text(
+              'Harga barang kategori emas di katalog otomatis mengikuti HDLE per gram yang tersimpan.',
+              style: TextStyle(color: Color(0xFF6B7280), fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 28),
 
-          ResponsiveRowColumn(
-            isPortrait: isPortrait,
-            spacing: 28,
-            left: Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Diamond icon
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.diamond_outlined,
-                          size: 28,
-                          color: AppColors.primary,
-                        ),
+            isPortrait
+                ? ResponsiveRowColumn(
+                    isPortrait: isPortrait,
+                    spacing: 28,
+                    left: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
                       ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Harga Dasar Lelang Emas (HDLE) per Gram',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Masukkan HDLE terbaru untuk simulasi harga dasar lelang pada seluruh barang emas.',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Input field
-                      const Text(
-                        'HDLE Hari Ini',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const Text(
-                        ' *',
-                        style: TextStyle(
-                          color: AppColors.error,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _priceController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          _ThousandsSeparatorFormatter(),
-                        ],
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                        ),
-                        decoration: InputDecoration(
-                          prefixText: 'Rp ',
-                          prefixStyle: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.muted,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: const BorderSide(
-                              color: AppColors.primary,
-                              width: 2,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: const BorderSide(
-                              color: AppColors.primary,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'Contoh: jika HDLE per gram emas murni hari ini adalah Rp 1.120.000, masukkan angka 1.120.000.',
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
- 
-                      // Save button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: const StadiumBorder(),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            elevation: 0,
-                          ),
-                          onPressed: _isSaving ? null : _saveGoldPrice,
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  'Simpan HDLE',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              right: Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Preview Harga Katalog',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textDark,
+                          // Diamond icon
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.diamond_outlined,
+                              size: 22,
+                              color: AppColors.primary,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Harga Dasar Lelang Emas (HDLE) per Gram',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF111827),
                             ),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Masukkan HDLE terbaru untuk simulasi harga dasar lelang pada seluruh barang emas.',
+                            style: TextStyle(
+                              color: Color(0xFF6B7280),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Input field
+                          Row(
+                            children: [
+                              const Text(
+                                'HDLE Hari Ini',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF374151),
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                ' *',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _priceController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              _ThousandsSeparatorFormatter(),
+                            ],
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                            ),
+                            decoration: InputDecoration(
+                              prefixText: 'Rp ',
+                              prefixStyle: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF9FAFB),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFD1D5DB),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFD1D5DB),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.secondary,
-                              borderRadius: BorderRadius.circular(8),
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
                             ),
                             child: const Text(
-                              'Otomatis',
+                              'Contoh: jika HDLE per gram emas murni hari ini adalah Rp 1.120.000, masukkan angka 1.120.000.',
                               style: TextStyle(
-                                color: AppColors.primary,
+                                color: Color(0xFF4B5563),
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
+                                height: 1.4,
                               ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+       
+                          // Save button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              onPressed: _isSaving ? null : _saveGoldPrice,
+                              child: _isSaving
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Simpan HDLE',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
                       ),
-                      const Divider(height: 32),
-
-                      if (_goldItems.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(32),
-                          child: Center(
-                            child: Text(
-                              'Belum ada barang emas.',
-                              style: TextStyle(color: AppColors.textMuted),
-                            ),
-                          ),
-                        )
-                      else
-                        ...List.generate(
-                          _goldItems.length > 5 ? 5 : _goldItems.length,
-                          (index) {
-                            final item = _goldItems[index];
-                            final name = item['name'] as String;
-                            final weight = (item['weight_gram'] as num).toDouble();
-                            final karat = item['karat'] as String?;
-                            final calculatedPrice = (item['calculated_price'] as num).toDouble();
-                            final displayCount = _goldItems.length > 5 ? 5 : _goldItems.length;
-
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                bottom: index < displayCount - 1 ? 12 : 0,
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: AppColors.muted,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                    ),
+                    right: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Text(
+                                'Preview Harga Katalog',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF111827),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFC8E6C9)),
+                                ),
+                                child: const Text(
+                                  'Otomatis',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 32, color: Color(0xFFE5E7EB)),
+
+                          if (_goldItems.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.all(32),
+                              child: Center(
+                                child: Text(
+                                  'Belum ada barang emas.',
+                                  style: TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            )
+                          else
+                            ...List.generate(
+                              _goldItems.length > 5 ? 5 : _goldItems.length,
+                              (index) {
+                                final item = _goldItems[index];
+                                final name = item['name'] as String;
+                                final weight = (item['weight_gram'] as num).toDouble();
+                                final karat = item['karat'] as String?;
+                                final calculatedPrice = (item['calculated_price'] as num).toDouble();
+                                final displayCount = _goldItems.length > 5 ? 5 : _goldItems.length;
+
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: index < displayCount - 1 ? 12 : 0,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF9FAFB),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Color(0xFF111827),
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${weight}g ${(karat != null && karat.isNotEmpty) ? " · $karat Karat" : ""}',
+                                                style: const TextStyle(
+                                                  color: Color(0xFF6B7280),
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          currencyFormatter.format(calculatedPrice),
+                                          style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  )
+                : IntrinsicHeight(
+                    child: ResponsiveRowColumn(
+                      isPortrait: isPortrait,
+                      spacing: 28,
+                      rowCrossAxisAlignment: CrossAxisAlignment.stretch,
+                      left: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Diamond icon
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.diamond_outlined,
+                                size: 22,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Harga Dasar Lelang Emas (HDLE) per Gram',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF111827),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Masukkan HDLE terbaru untuk simulasi harga dasar lelang pada seluruh barang emas.',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Input field
+                            Row(
+                              children: [
+                                const Text(
+                                  'HDLE Hari Ini',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF374151),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                Text(
+                                  ' *',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _priceController,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                _ThousandsSeparatorFormatter(),
+                              ],
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary,
+                              ),
+                              decoration: InputDecoration(
+                                prefixText: 'Rp ',
+                                prefixStyle: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primary,
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF9FAFB),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFD1D5DB),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFD1D5DB),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                              ),
+                              child: const Text(
+                                'Contoh: jika HDLE per gram emas murni hari ini adalah Rp 1.120.000, masukkan angka 1.120.000.',
+                                style: TextStyle(
+                                  color: Color(0xFF4B5563),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+         
+                            // Save button
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                onPressed: _isSaving ? null : _saveGoldPrice,
+                                child: _isSaving
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Simpan HDLE',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      right: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  'Preview Harga Katalog',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF111827),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE8F5E9),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFFC8E6C9)),
+                                  ),
+                                  child: const Text(
+                                    'Otomatis',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 32, color: Color(0xFFE5E7EB)),
+
+                            if (_goldItems.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(32),
+                                child: Center(
+                                  child: Text(
+                                    'Belum ada barang emas.',
+                                    style: TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                              )
+                            else
+                              ...List.generate(
+                                _goldItems.length > 5 ? 5 : _goldItems.length,
+                                (index) {
+                                  final item = _goldItems[index];
+                                  final name = item['name'] as String;
+                                  final weight = (item['weight_gram'] as num).toDouble();
+                                  final karat = item['karat'] as String?;
+                                  final calculatedPrice = (item['calculated_price'] as num).toDouble();
+                                  final displayCount = _goldItems.length > 5 ? 5 : _goldItems.length;
+
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: index < displayCount - 1 ? 12 : 0,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF9FAFB),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                                      ),
+                                      child: Row(
                                         children: [
-                                          Text(
-                                            name,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.textDark,
-                                              fontSize: 15,
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  name,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color(0xFF111827),
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${weight}g ${(karat != null && karat.isNotEmpty) ? " · $karat Karat" : ""}',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF6B7280),
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          const SizedBox(height: 4),
+                                          const SizedBox(width: 12),
                                           Text(
-                                            '${weight}g${(karat != null && karat.isNotEmpty) ? " · $karat Karat" : ""}',
+                                            currencyFormatter.format(calculatedPrice),
                                             style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 16,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      currencyFormatter.format(calculatedPrice),
-                                      style: const TextStyle(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 17,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  );
+                                },
                               ),
-                            );
-                          },
+                          ],
                         ),
-                    ],
+                      ),
+                    ),
                   ),
-                ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

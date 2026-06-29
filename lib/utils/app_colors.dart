@@ -62,23 +62,43 @@ class AppColors {
 
   static Color categoryBadgeBg(String? category) {
     final name = (category ?? '').toLowerCase();
-    if (name.contains('emas') || name.contains('perhiasan')) {
-      return categoryGreenBg;
+    if (name.contains('perhiasan') || (name.contains('emas') && !name.contains('logam'))) {
+      // Perhiasan Emas - amber
+      return const Color(0xFFFEF3C7);
     }
-    if (name.contains('elektronik')) return categoryBlueBg;
-    if (name.contains('logam')) return categoryAmberBg;
-    if (name.contains('kendaraan')) return categoryPurpleBg;
-    return const Color(0xFFF5F5F5);
+    if (name.contains('logam')) {
+      // Logam Mulia - slate
+      return const Color(0xFFE2E8F0);
+    }
+    if (name.contains('elektronik')) {
+      // Elektronik - indigo
+      return const Color(0xFFEDE9FE);
+    }
+    if (name.contains('kendaraan')) {
+      // Kendaraan - dark blue
+      return const Color(0xFFDBEAFE);
+    }
+    return const Color(0xFFF3F4F6);
   }
 
   static Color categoryBadgeText(String? category) {
     final name = (category ?? '').toLowerCase();
-    if (name.contains('emas') || name.contains('perhiasan')) {
-      return categoryGreenText;
+    if (name.contains('perhiasan') || (name.contains('emas') && !name.contains('logam'))) {
+      // Perhiasan Emas - amber
+      return const Color(0xFFD97706);
     }
-    if (name.contains('elektronik')) return categoryBlueText;
-    if (name.contains('logam')) return categoryAmberText;
-    if (name.contains('kendaraan')) return categoryPurpleText;
+    if (name.contains('logam')) {
+      // Logam Mulia - slate
+      return const Color(0xFF475569);
+    }
+    if (name.contains('elektronik')) {
+      // Elektronik - indigo
+      return const Color(0xFF4338CA);
+    }
+    if (name.contains('kendaraan')) {
+      // Kendaraan - dark blue
+      return const Color(0xFF1E3A8A);
+    }
     return textSecondary;
   }
 }
