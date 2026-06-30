@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:excel/excel.dart';
 import '../models/auction_item.dart';
@@ -5,6 +6,7 @@ import '../models/category.dart';
 import '../models/imported_auction_item.dart';
 import '../services/financing_calculator.dart';
 import '../services/excel_template_service.dart';
+import 'csv_service.dart';
 
 class ExcelImportService {
   static const String _templateSheetName = 'Template Produk';
@@ -14,36 +16,49 @@ class ExcelImportService {
     List<Category> categories, {
     double goldPrice = 0,
   }) async {
-    final excel = Excel.decodeBytes(fileBytes);
-    
-    // Check if it's Siscadu report format
-    for (final table in excel.tables.keys) {
-      final sheet = excel.tables[table];
-      if (sheet == null || sheet.maxRows == 0) continue;
+    final isXlsx = fileBytes.length >= 4 &&
+        fileBytes[0] == 0x50 &&
+        fileBytes[1] == 0x4B &&
+        fileBytes[2] == 0x03 &&
+        fileBytes[3] == 0x04;
+
+    if (isXlsx) {
+      final excel = Excel.decodeBytes(fileBytes);
       
-      if (sheet.sheetName == ExcelTemplateService.sheetName) {
-        return _parseTemplateProduk(sheet, categories, goldPrice);
-      }
-      
-      // Read first few rows to detect headers
-      for (var i = 0; i < (sheet.maxRows < 15 ? sheet.maxRows : 15); i++) {
-        final row = sheet.rows[i];
-        if (row.isEmpty) continue;
+      // Check if it's Siscadu report format
+      for (final table in excel.tables.keys) {
+        final sheet = excel.tables[table];
+        if (sheet == null || sheet.maxRows == 0) continue;
         
-        final rowString = row.map((e) => _stringValue(e).toLowerCase().replaceAll('\n', ' ')).join(' ');
-        if (rowString.contains('no. akad') && rowString.contains('marhun') && rowString.contains('taksiran')) {
-          return _parseSiscaduReport(sheet, categories, goldPrice, headerRowIndex: i);
+        if (sheet.sheetName == ExcelTemplateService.sheetName) {
+          return _parseTemplateProduk(sheet, categories, goldPrice);
+        }
+        
+        // Read first few rows to detect headers
+        for (var i = 0; i < (sheet.maxRows < 15 ? sheet.maxRows : 15); i++) {
+          final row = sheet.rows[i];
+          if (row.isEmpty) continue;
+          
+          final rowString = row.map((e) => _stringValue(e).toLowerCase().replaceAll('\n', ' ')).join(' ');
+          if (rowString.contains('no. akad') && rowString.contains('marhun') && rowString.contains('taksiran')) {
+            return _parseSiscaduReport(sheet, categories, goldPrice, headerRowIndex: i);
+          }
         }
       }
+      
+      // If not Siscadu, fallback to Template Produk
+      final templateSheet = excel.tables[_templateSheetName];
+      if (templateSheet != null) {
+        return _parseTemplateProduk(templateSheet, categories, goldPrice);
+      }
+      
+      throw const FormatException('Format file tidak dikenali. Gunakan "Template Produk" atau "Laporan Siscadu Pegadaian".');
+    } else {
+      // Parse as CSV
+      final csvString = utf8.decode(fileBytes, allowMalformed: true);
+      final csvRows = CsvService.parseCsv(csvString);
+      return _parseCsvTemplate(csvRows, categories, goldPrice);
     }
-    
-    // If not Siscadu, fallback to Template Produk
-    final templateSheet = excel.tables[_templateSheetName];
-    if (templateSheet != null) {
-      return _parseTemplateProduk(templateSheet, categories, goldPrice);
-    }
-    
-    throw const FormatException('Format file tidak dikenali. Gunakan "Template Produk" atau "Laporan Siscadu Pegadaian".');
   }
 
   // --- Parser for Siscadu Report ---
@@ -311,5 +326,91 @@ class ExcelImportService {
     final value = cell?.value;
     if (value == null) return '';
     return value.toString();
+  }
+
+  static List<ImportedAuctionItem> _parseCsvTemplate(
+    List<List<String>> csvRows,
+    List<Category> categories,
+    double goldPrice,
+  ) {
+    final categoryMap = {for (final c in categories) c.name.toLowerCase().trim(): c.id};
+    final results = <ImportedAuctionItem>[];
+
+    for (var rowIndex = 1; rowIndex < csvRows.length; rowIndex++) {
+      final row = csvRows[rowIndex];
+      if (row.isEmpty || row.every((cell) => cell.trim().isEmpty)) continue;
+
+      final errors = <String>[];
+
+      String getCell(int idx) {
+        if (idx < row.length) return row[idx].trim();
+        return '';
+      }
+
+      final name = getCell(2);
+      final categoryName = getCell(3);
+      final weightText = getCell(4);
+      final basePriceText = getCell(6);
+      final creditNumber = getCell(1);
+      final karat = getCell(5);
+      final description = getCell(7);
+
+      if (name.isEmpty) {
+        errors.add('Nama produk wajib diisi');
+      }
+
+      final categoryId = categoryMap[categoryName.toLowerCase().trim()];
+      if (categoryName.isEmpty) {
+        errors.add('Kategori wajib diisi');
+      } else if (categoryId == null) {
+        errors.add('Kategori "$categoryName" tidak ditemukan');
+      }
+
+      final weightGram = double.tryParse(weightText.replaceAll(',', '.')) ?? -1;
+      if (weightText.isEmpty || weightGram < 0) {
+        errors.add('Berat tidak valid');
+      }
+
+      final basePrice = double.tryParse(basePriceText.replaceAll('.', '').replaceAll(',', '')) ?? 0;
+
+      double finalBasePrice = basePrice < 0 ? 0 : basePrice;
+      if (categoryId != null) {
+        final category = categories.firstWhere((c) => c.id == categoryId, orElse: () => Category(id: 0, name: ''));
+        if (category.name.toLowerCase().contains('emas') || category.name.toLowerCase().contains('logam mulia')) {
+          final karatVal = FinancingCalculator.parseKarat(karat);
+          finalBasePrice = FinancingCalculator.hitungHargaEmas(
+            hdlePrice: goldPrice,
+            weightGram: weightGram,
+            karatVal: karatVal > 0 ? karatVal : 24.0,
+          ).toDouble();
+        }
+      }
+
+      final officialCategory = categories.firstWhere(
+        (c) => c.id == categoryId,
+        orElse: () => Category(id: 0, name: categoryName),
+      );
+
+      final item = AuctionItem(
+        creditNumber: creditNumber.isEmpty ? null : creditNumber,
+        name: name,
+        categoryId: categoryId ?? 0,
+        weightGram: weightGram < 0 ? 0 : weightGram,
+        karat: karat.isEmpty ? null : karat,
+        basePrice: finalBasePrice,
+        description: description.isEmpty ? null : description,
+        isActive: true,
+        createdAt: DateTime.now().toIso8601String(),
+        categoryName: officialCategory.name,
+      );
+
+      results.add(ImportedAuctionItem(
+        rowIndex: rowIndex + 1,
+        item: item,
+        validationErrors: errors,
+      ));
+    }
+
+    return results;
   }
 }

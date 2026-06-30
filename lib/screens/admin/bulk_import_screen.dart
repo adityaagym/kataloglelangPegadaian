@@ -25,18 +25,69 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
       final categories = provider.categories;
       final bytes = ExcelTemplateService.generateTemplateBytes(categories);
 
-      final directory =
-          await getDownloadsDirectory() ??
-          await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/template_produk_lelang.xlsx';
+      String? targetDirPath;
+      bool isCustomSelected = false;
+
+      if (Platform.isAndroid) {
+        final defaultDownloadDir = Directory('/storage/emulated/0/Download');
+        if (await defaultDownloadDir.exists()) {
+          targetDirPath = defaultDownloadDir.path;
+        }
+      } else {
+        final defaultDownloadDir = await getDownloadsDirectory();
+        if (defaultDownloadDir != null) {
+          targetDirPath = defaultDownloadDir.path;
+        }
+      }
+
+      // If downloads directory couldn't be determined, ask user to select one
+      if (targetDirPath == null) {
+        targetDirPath = await FilePicker.getDirectoryPath();
+        isCustomSelected = true;
+      }
+
+      if (targetDirPath == null) {
+        // User cancelled picker
+        return;
+      }
+
+      final filePath = '$targetDirPath/template_produk_lelang.xlsx';
       final file = File(filePath);
-      await file.writeAsBytes(bytes);
+
+      try {
+        await file.writeAsBytes(bytes);
+      } catch (writeError) {
+        // If writing failed (e.g. permission error on Android), ask the user to pick a folder manually
+        if (!isCustomSelected) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Akses folder Download ditolak. Silakan pilih folder penyimpanan.',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          final pickedPath = await FilePicker.getDirectoryPath();
+          if (pickedPath != null) {
+            final fallbackFile = File('$pickedPath/template_produk_lelang.xlsx');
+            await fallbackFile.writeAsBytes(bytes);
+            targetDirPath = pickedPath;
+          } else {
+            return; // cancelled
+          }
+        } else {
+          rethrow;
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Template disimpan di $filePath',
+              'Template disimpan di $targetDirPath/template_produk_lelang.xlsx',
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             backgroundColor: const Color(0xFF16A34A),
@@ -64,7 +115,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
     try {
       final result = await FilePicker.pickFile(
         type: FileType.custom,
-        allowedExtensions: ['xlsx'],
+        allowedExtensions: ['xlsx', 'csv'],
       );
 
       if (result == null) {
@@ -113,7 +164,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Unduh template, isi data produk, lalu unggah file Excel untuk diimport ke database.',
+              'Unduh template, isi data produk, lalu unggah file Excel atau CSV untuk diimport ke database.',
               style: TextStyle(color: Color(0xFF6B7280), fontSize: 14, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 28),
@@ -129,10 +180,10 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
             const SizedBox(height: 16),
             _buildCard(
               icon: Icons.upload_file_outlined,
-              title: '2. Unggah File Excel',
+              title: '2. Unggah File Excel / CSV',
               description:
-                  'Pilih file .xlsx yang sudah diisi sesuai format template.',
-              buttonLabel: 'Pilih File Excel',
+                  'Pilih file .xlsx atau .csv yang sudah diisi sesuai format template.',
+              buttonLabel: 'Pilih File Excel / CSV',
               onPressed: _pickExcelFile,
               isLoading: _isLoading,
               isPrimary: true,

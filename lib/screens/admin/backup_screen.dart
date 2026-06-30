@@ -2,9 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../providers/app_provider.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/responsive_row_column.dart';
+import '../../services/csv_service.dart';
+import '../../database/database_helper.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -46,21 +49,25 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _exportDatabase() async {
     setState(() => _isExporting = true);
     try {
-      final path = await Provider.of<AppProvider>(
-        context,
-        listen: false,
-      ).getDatabasePath();
-      final sourceFile = File(path);
-
-      if (!await sourceFile.exists()) {
-        throw Exception('Database file not found');
+      // 1. Let the user choose the destination folder
+      final selectedDirectory = await FilePicker.getDirectoryPath();
+      if (selectedDirectory == null) {
+        // User cancelled
+        setState(() => _isExporting = false);
+        return;
       }
 
-      // Copy to a backup location
+      // 2. Fetch all auction items (including inactive ones for full backup)
+      final items = await DatabaseHelper.instance.readAllAuctionItems(activeOnly: false);
+
+      // 3. Convert to CSV
+      final csvContent = CsvService.convertToCsv(items);
+
+      // 4. Save to chosen folder
       final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      final backupDir = sourceFile.parent;
-      final backupPath = '${backupDir.path}/backup_katalog_$timestamp.db';
-      await sourceFile.copy(backupPath);
+      final backupPath = '$selectedDirectory/backup_katalog_$timestamp.csv';
+      final file = File(backupPath);
+      await file.writeAsString(csvContent);
 
       if (mounted) {
         setState(() => _lastBackupPath = backupPath);
@@ -120,7 +127,7 @@ class _BackupScreenState extends State<BackupScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Kelola backup database SQLite lokal cabang.',
+            'Kelola backup data katalog lelang cabang.',
             style: TextStyle(
               color: Color(0xFF6B7280),
               fontSize: 14,
@@ -253,7 +260,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Export Database',
+                    'Export Data ke CSV',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -262,7 +269,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Buat salinan backup file database SQLite lokal.',
+                    'Buat salinan backup data produk lelang ke dalam format CSV yang dapat di-import kembali.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF6B7280),
@@ -382,7 +389,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Database berisi semua data barang, foto, harga emas, dan konfigurasi pembiayaan. Backup secara rutin untuk mencegah kehilangan data.',
+                    'Backup berisi data barang, berat, karat, harga, dan deskripsi produk. Backup secara rutin ke format CSV untuk mencegah kehilangan data.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF6B7280),

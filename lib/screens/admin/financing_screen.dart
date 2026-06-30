@@ -47,16 +47,16 @@ class FinancingScreen extends StatefulWidget {
 class _FinancingScreenState extends State<FinancingScreen> {
   // Parameter utama
   List<int> _dpOptions = [15, 25, 35, 50];
-  double _adminFeeFlat = 15000;
+  double _adminFeeFlat = 70000;
   double _adminFeePercent = 0;
   double _munahRate = 0.38;
   bool _isActive = true;
 
-  double _stlPrice = 502894;
+  double _stlPrice = 2200000;
 
   // Track original values to show floating save button when modified
-  double _originalStlPrice = 502894;
-  double _originalAdminFeeFlat = 15000;
+  double _originalStlPrice = 2200000;
+  double _originalAdminFeeFlat = 70000;
   bool _originalIsActive = true;
   List<Map<String, dynamic>> _originalTenors = [];
 
@@ -162,11 +162,11 @@ class _FinancingScreenState extends State<FinancingScreen> {
         _selectedTenorMonths = 6;
 
         final formatter = NumberFormat.decimalPattern('id');
-        _stlController.text = formatter.format(502894);
+        _stlController.text = formatter.format(2200000);
         _adminFeeFlatController.text = formatter.format(70000);
 
         // Initialize tracking values
-        _originalStlPrice = 502894;
+        _originalStlPrice = 2200000;
         _originalAdminFeeFlat = 70000;
         _originalIsActive = _isActive;
         _originalTenors = _tenors.map((t) => Map<String, dynamic>.from(t)).toList();
@@ -182,7 +182,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
       final provider = Provider.of<AppProvider>(context, listen: false);
       
       final cleanStlText = _stlController.text.replaceAll('.', '').replaceAll(',', '');
-      final stlVal = double.tryParse(cleanStlText) ?? 502894;
+      final stlVal = double.tryParse(cleanStlText) ?? 2200000;
       
       final hdleVal = provider.goldPricePerGram;
       

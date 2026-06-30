@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -66,5 +67,23 @@ void main() {
 
     expect(result.length, 1);
     expect(result.first.isValid, true);
+  });
+
+  test('parseFile parses CSV data successfully', () async {
+    const csvString = 'No,No Kredit (opsional),Nama Produk,Kategori,Berat (gram),Karat (opsional),Harga Dasar (opsional),Deskripsi (opsional)\n'
+        '1,KRD-999,Kalung Emas Cantik,Perhiasan Emas,10.0,24,12000000,Kalung emas murni 24 karat';
+    final bytes = Uint8List.fromList(utf8.encode(csvString));
+
+    final result = await ExcelImportService.parseFile(bytes, categories, goldPrice: 1200000);
+
+    expect(result, isNotEmpty);
+    final first = result.first;
+    expect(first.isValid, true);
+    expect(first.item.name, 'Kalung Emas Cantik');
+    expect(first.item.categoryId, 1);
+    expect(first.item.weightGram, 10.0);
+    expect(first.item.basePrice, 12000000);
+    expect(first.item.creditNumber, 'KRD-999');
+    expect(first.item.description, 'Kalung emas murni 24 karat');
   });
 }

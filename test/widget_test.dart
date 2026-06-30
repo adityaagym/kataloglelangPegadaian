@@ -6,6 +6,6 @@ void main() {
     expect(AppColors.primary.toARGB32(), 0xFF00AA13);
     expect(AppColors.primaryDark.toARGB32(), 0xFF006838);
     expect(AppColors.background.toARGB32(), 0xFFE8F5E9);
-    expect(AppColors.categoryBadgeText('Elektronik').toARGB32(), 0xFF0D47A1);
+    expect(AppColors.categoryBadgeText('Elektronik').toARGB32(), 0xFF4338CA);
   });
 }
