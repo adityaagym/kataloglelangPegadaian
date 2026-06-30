@@ -24,7 +24,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Map<String, dynamic>? _financingConfig;
   List<Map<String, dynamic>> _financingTenors = [];
   bool _isFinancingLoading = true;
-  int? _selectedTenorMonths;
   List<AuctionItem> _packageItems = [];
   bool _simulatePackage = false;
 
@@ -48,9 +47,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         setState(() {
           _financingConfig = config;
           _financingTenors = activeTenors;
-          _selectedTenorMonths = activeTenors.isNotEmpty
-              ? activeTenors.first['months'] as int
-              : null;
           _packageItems = packageItems;
           _isFinancingLoading = false;
         });
@@ -69,189 +65,127 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildNav(),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isPortrait =
-                        constraints.maxWidth < constraints.maxHeight ||
-                        constraints.maxWidth < 900;
-
-                    if (isPortrait) {
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(32, 10, 32, 32),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.border),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.textDark.withValues(
-                                  alpha: 0.08,
-                                ),
-                                blurRadius: 38,
-                                offset: const Offset(0, 16),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildImageColumn(height: 480),
-                              const SizedBox(height: 28),
-                              _buildDetails(
-                                currencyFormatter,
-                                scrollable: false,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    } else {
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(32, 10, 32, 32),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.border),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.textDark.withValues(
-                                  alpha: 0.08,
-                                ),
-                                blurRadius: 38,
-                                offset: const Offset(0, 16),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(flex: 54, child: _buildImageColumn()),
-                              const SizedBox(width: 28),
-                              Expanded(
-                                flex: 46,
-                                child: _buildDetails(
-                                  currencyFormatter,
-                                  scrollable: true,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                  },
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Background glows (Same style as home screen)
+          IgnorePointer(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -300,
+                  left: -250,
+                  child: Container(
+                    width: 650,
+                    height: 650,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.15),
+                          AppColors.primary.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                Positioned(
+                  top: -300,
+                  right: -250,
+                  child: Container(
+                    width: 650,
+                    height: 650,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.15),
+                          AppColors.primary.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isPortrait = constraints.maxWidth < 900;
 
-  Widget _buildNav() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 22, 32, 10),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
-        ),
-        child: Row(
-          children: [
-            _navChip(
-              Icons.arrow_back,
-              'Kembali ke Katalog',
-              () => Navigator.pop(context),
-              filled: true,
+                if (isPortrait) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppColors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildImageColumn(height: 400),
+                          const SizedBox(height: 20),
+                          const Divider(color: AppColors.border),
+                          const SizedBox(height: 12),
+                          _buildDetails(currencyFormatter, scrollable: false),
+                        ],
+                      ),
+                    ),
+                  );
+                } else {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(40, 24, 40, 40),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppColors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Left side: Image + Specs (Narrowed to 38% width)
+                          Expanded(flex: 38, child: _buildImageColumn()),
+                          const SizedBox(width: 32),
+                          // Right side: Details & Simulation (Expanded to 62% width)
+                          Expanded(
+                            flex: 62,
+                            child: _buildDetails(
+                              currencyFormatter,
+                              scrollable: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
-            const SizedBox(width: 12),
-            _navTextChip(
-              widget.item.categoryName ?? 'Kategori',
-              AppColors.primary,
-            ),
-            const SizedBox(width: 12),
-            Consumer<AppProvider>(
-              builder: (context, provider, _) => _navTextChip(
-                'Cabang ${provider.branchName}',
-                Colors.white.withValues(alpha: 0.10),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navChip(
-    IconData icon,
-    String label,
-    VoidCallback onTap, {
-    bool filled = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 48),
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: filled ? 0.20 : 0.10),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navTextChip(String label, Color color) {
-    final solid = color == AppColors.primary;
-    return Container(
-      constraints: const BoxConstraints(minHeight: 48),
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(999),
-        border: solid
-            ? null
-            : Border.all(color: Colors.white.withValues(alpha: 0.20)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 15,
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -259,10 +193,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Widget _buildImageColumn({double? height}) {
     return Container(
       height: height ?? double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFF7F8F7),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
       child: FutureBuilder<List<ItemPhoto>>(
@@ -277,15 +211,30 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             );
           }
           final photos = snapshot.data ?? [];
-          if (photos.isEmpty) {
-            return const Center(
-              child: Icon(
-                Icons.image_not_supported_outlined,
-                size: 92,
-                color: AppColors.textMuted,
-              ),
-            );
-          }
+
+          final mainImageWidget = photos.isEmpty
+              ? const Center(
+                  child: Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 80,
+                    color: AppColors.textMuted,
+                  ),
+                )
+              : PageView.builder(
+                  controller: _pageController,
+                  itemCount: photos.length,
+                  onPageChanged: (index) =>
+                      setState(() => _currentImageIndex = index),
+                  itemBuilder: (context, index) => Image.file(
+                    File(photos[index].localPath),
+                    fit: BoxFit.contain,
+                    errorBuilder: (ctx, err, stack) => const Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                );
 
           return Column(
             children: [
@@ -293,26 +242,27 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 child: Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: photos.length,
-                        onPageChanged: (index) =>
-                            setState(() => _currentImageIndex = index),
-                        itemBuilder: (context, index) => Image.file(
-                          File(photos[index].localPath),
-                          fit: BoxFit.contain,
-                          errorBuilder: (ctx, err, stack) => const Icon(
-                            Icons.error_outline,
-                            size: 70,
-                            color: AppColors.textMuted,
-                          ),
+                      borderRadius: BorderRadius.circular(16),
+                      child: mainImageWidget,
+                    ),
+                    // Floating Back Button
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: IconButton.filled(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: 0.9),
+                          foregroundColor: AppColors.textDark,
+                          elevation: 3,
+                          shadowColor: Colors.black.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
                     if (photos.length > 1) ...[
                       Positioned(
-                        left: 16,
+                        left: 8,
                         top: 0,
                         bottom: 0,
                         child: _imageArrow(
@@ -322,7 +272,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         ),
                       ),
                       Positioned(
-                        right: 16,
+                        right: 8,
                         top: 0,
                         bottom: 0,
                         child: _imageArrow(
@@ -335,48 +285,46 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              // Indicator below the image, styled clearly and boldly
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.20),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      'FOTO ${_currentImageIndex + 1} DARI ${photos.length}',
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
               if (photos.length > 1) ...[
                 const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.20),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        'FOTO ${_currentImageIndex + 1} DARI ${photos.length}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
                     photos.length,
                     (index) => AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      width: index == _currentImageIndex ? 24 : 10,
-                      height: 10,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: index == _currentImageIndex ? 16 : 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
                       decoration: BoxDecoration(
                         color: index == _currentImageIndex
                             ? AppColors.primary
@@ -387,6 +335,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 16),
+              // Specs Grid directly below photo
+              _buildSpecsGrid(),
             ],
           );
         },
@@ -405,12 +356,99 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             curve: Curves.easeOut,
           );
         },
-        icon: Icon(icon),
+        icon: Icon(icon, size: 20),
         style: IconButton.styleFrom(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.white.withValues(alpha: 0.8),
           foregroundColor: AppColors.primary,
-          fixedSize: const Size(50, 50),
+          fixedSize: const Size(40, 40),
+          padding: EdgeInsets.zero,
         ),
+      ),
+    );
+  }
+
+  Widget _buildSpecsGrid() {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      childAspectRatio: 3.0,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        _specCard(
+          Icons.scale_outlined,
+          'Berat',
+          widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
+        ),
+        _specCard(
+          Icons.diamond_outlined,
+          'Karat',
+          widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
+        ),
+        _specCard(
+          Icons.category_outlined,
+          'Kategori',
+          widget.item.categoryName ?? '-',
+        ),
+        _specCard(
+          Icons.receipt_long_outlined,
+          'No Akad',
+          widget.item.creditNumber?.isNotEmpty == true
+              ? widget.item.creditNumber!
+              : '-',
+        ),
+      ],
+    );
+  }
+
+  Widget _specCard(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 16),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -486,20 +524,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Title Section
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.muted,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
+                  horizontal: 10,
+                  vertical: 4,
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.categoryBadgeBg(widget.item.categoryName),
@@ -511,19 +551,19 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     color: AppColors.categoryBadgeText(
                       widget.item.categoryName,
                     ),
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 widget.item.name,
                 style: const TextStyle(
-                  fontSize: 26,
+                  fontSize: 22,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textDark,
-                  height: 1.15,
+                  height: 1.2,
                 ),
               ),
               if (widget.item.description != null &&
@@ -532,7 +572,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 Text(
                   widget.item.description!,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                     height: 1.4,
@@ -542,747 +582,441 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 6),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          childAspectRatio: 2.7,
-          crossAxisSpacing: 6,
-          mainAxisSpacing: 6,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _specCard(
-              Icons.scale_outlined,
-              'Berat',
-              widget.item.weightGram > 0
-                  ? '${widget.item.weightGram} gram'
-                  : '-',
-            ),
-            _specCard(
-              Icons.diamond_outlined,
-              'Karat',
-              widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
-            ),
-
-            _specCard(
-              Icons.category_outlined,
-              'Kategori',
-              widget.item.categoryName ?? '-',
-            ),
-            _specCard(
-              Icons.receipt_long_outlined,
-              'No Akad',
-              widget.item.creditNumber?.isNotEmpty == true
-                  ? widget.item.creditNumber!
-                  : '-',
-            ),
-          ],
-        ),
         const SizedBox(height: 16),
-        // UNIFIED HARGA & TRANSAKSI CARD (Sleek, Clean & Fresh)
+
+        // Price display card
         Container(
           width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Price Header & Badge
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'HARGA DASAR LELANG',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textSecondary,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        if (_isGoldItem(widget.item))
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(
-                                color: AppColors.accent.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.workspace_premium_outlined,
-                                  color: AppColors.accent,
-                                  size: 14,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'EMAS',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.accent,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Consumer<AppProvider>(
-                        builder: (context, provider, _) {
-                          double displayPrice = widget.item.basePrice;
-                          if (_isGoldItem(widget.item)) {
-                            final hdlePrice = provider.goldPricePerGram
-                                .toDouble();
-                            final karatVal = FinancingCalculator.parseKarat(
-                              widget.item.karat,
-                            );
-                            final effectiveKarat = karatVal > 0
-                                ? karatVal
-                                : 24.0;
-                            displayPrice = FinancingCalculator.hitungHargaEmas(
-                              hdlePrice: hdlePrice,
-                              weightGram: widget.item.weightGram,
-                              karatVal: effectiveKarat,
-                            ).toDouble();
-                          }
-                          return Text(
-                            currencyFormatter.format(displayPrice),
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.primary,
-                              letterSpacing: -1.0,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+              const Text(
+                'HARGA DASAR LELANG / TUNAI',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.8,
                 ),
               ),
-
-              // Gold Reference Banner (inside the card)
-              if (_isGoldItem(widget.item)) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Consumer<AppProvider>(
-                    builder: (context, provider, _) => Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.accent.withValues(alpha: 0.15),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent.withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.trending_up,
-                              color: AppColors.accent,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Harga Acuan Emas Hari Ini',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${currencyFormatter.format(provider.goldPricePerGram)} / gram',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.textDark,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+              const SizedBox(height: 6),
+              Consumer<AppProvider>(
+                builder: (context, provider, _) {
+                  double displayPrice = widget.item.basePrice;
+                  if (_isGoldItem(widget.item)) {
+                    final hdlePrice = provider.goldPricePerGram.toDouble();
+                    final karatVal = FinancingCalculator.parseKarat(
+                      widget.item.karat,
+                    );
+                    final effectiveKarat = karatVal > 0 ? karatVal : 24.0;
+                    displayPrice = FinancingCalculator.hitungHargaEmas(
+                      hdlePrice: hdlePrice,
+                      weightGram: widget.item.weightGram,
+                      karatVal: effectiveKarat,
+                    ).toDouble();
+                  }
+                  return Text(
+                    currencyFormatter.format(displayPrice),
+                    style: const TextStyle(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primary,
+                      letterSpacing: -1.0,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Divider separating Price and Action Panel
-              if (!_isFinancingLoading &&
-                  _financingConfig != null &&
-                  _financingTenors.isNotEmpty) ...[
-                const Divider(height: 1, color: AppColors.border),
-
-                // Bottom section (Mode & Buttons)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  color: AppColors.primary.withValues(alpha: 0.02),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Mode selection (Package vs Single)
-                      if (_packageItems.length > 1) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'MODE SIMULASI',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.textSecondary,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              padding: const EdgeInsets.all(3),
-                              child: Row(
-                                children: [
-                                  _choiceTab(
-                                    'Barang Ini',
-                                    !_simulatePackage,
-                                    () => setState(
-                                      () => _simulatePackage = false,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  _choiceTab(
-                                    'Paket Akad',
-                                    _simulatePackage,
-                                    () =>
-                                        setState(() => _simulatePackage = true),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      const Text(
-                        'PILIHAN CARA PEMBELIAN',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // 1. Pembelian Tunai Card
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.payments_outlined, color: AppColors.primary, size: 20),
-                                ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  'PEMBELIAN TUNAI',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.primary,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: AppColors.primary.withValues(alpha: 0.15),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'TOTAL BAYAR',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textSecondary,
-                                      letterSpacing: 1.1,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    currencyFormatter.format(totalHarga),
-                                    style: const TextStyle(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _bulletPoint('Bayar penuh saat transaksi langsung di cabang.'),
-                            _bulletPoint('Bebas dari bunga, denda, atau cicilan tambahan.'),
-                            if (_simulatePackage) ...[
-                              const SizedBox(height: 16),
-                              _buildPackageItemsList(currencyFormatter),
-                            ],
-                          ],
-                        ),
-                      ),
-
-                      // 2. Simulasi Rahn Card
-                      Builder(
-                        builder: (context) {
-                          final result = FinancingCalculator.simulasiKca(
-                            hargaLelang: totalHarga.round(),
-                            appraisalValue: appraisalValue,
-                            config: config,
-                          );
-
-                          return Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 20),
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: AppColors.border),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.02),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.info.withValues(alpha: 0.1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.credit_card_outlined, color: AppColors.info, size: 20),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Text(
-                                      'SIMULASI RAHN',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.info,
-                                        letterSpacing: 0.8,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                if (!result.eligible)
-                                  _buildIneligiblePanel(result.message ?? '')
-                                else ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.info.withValues(alpha: 0.05),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: AppColors.info.withValues(alpha: 0.15),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        _breakdownRow(
-                                          'Harga Lelang',
-                                          currencyFormatter.format(result.hargaLelang),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        _breakdownRow(
-                                          'Uang Muka (DP)',
-                                          currencyFormatter.format(result.uangMuka),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        _breakdownRow(
-                                          'Uang Pinjaman',
-                                          currencyFormatter.format(result.uangPinjaman),
-                                          valueColor: AppColors.info,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.info.withValues(alpha: 0.05),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: AppColors.info.withValues(alpha: 0.15),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.timer_outlined,
-                                          color: AppColors.info,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'TEMPO: ${result.tempoKca} BULAN',
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w900,
-                                            color: AppColors.info,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  _bulletPoint('Nasabah melunasi sisa pinjaman dalam 4 bulan.'),
-                                  _bulletPoint('TIDAK ADA angsuran rutin bulanan.'),
-                                  _bulletPoint('Bayar bebas kapan saja (bertahap/sekaligus).'),
-                                  const SizedBox(height: 12),
-                                  const Divider(),
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.info.withValues(alpha: 0.05),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: AppColors.info.withValues(alpha: 0.15),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'TOTAL PELUNASAN',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w900,
-                                            color: AppColors.textDark,
-                                          ),
-                                        ),
-                                        Text(
-                                          currencyFormatter.format(result.totalPelunasanKca!),
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w900,
-                                            color: AppColors.info,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                                if (_simulatePackage) ...[
-                                  const SizedBox(height: 16),
-                                  _buildPackageItemsList(currencyFormatter),
-                                ],
-                              ],
-                            ),
-                          );
-                        }
-                      ),
-
-                      // 3. Simulasi Arrum Emas Card
-                      Builder(
-                        builder: (context) {
-                          final tenorMonths = _selectedTenorMonths ?? _financingTenors.first['months'] as int;
-                          final result = FinancingCalculator.simulasiKrasida(
-                            hargaLelang: totalHarga.round(),
-                            appraisalValue: appraisalValue,
-                            config: config,
-                            tenors: _financingTenors,
-                            tenorMonths: tenorMonths,
-                          );
-
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: AppColors.border),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.02),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.accent.withValues(alpha: 0.1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.bar_chart_outlined, color: AppColors.accent, size: 20),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Text(
-                                      'SIMULASI ARRUM EMAS',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.accent,
-                                        letterSpacing: 0.8,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                if (!result.eligible)
-                                  _buildIneligiblePanel(result.message ?? '')
-                                else ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.accent.withValues(alpha: 0.05),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: AppColors.accent.withValues(alpha: 0.15),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        _breakdownRow(
-                                          'Harga Lelang',
-                                          currencyFormatter.format(result.hargaLelang),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        _breakdownRow(
-                                          'Uang Muka (DP)',
-                                          currencyFormatter.format(result.uangMuka),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        _breakdownRow(
-                                          'Uang Pinjaman',
-                                          currencyFormatter.format(result.uangPinjaman),
-                                          valueColor: AppColors.accent,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    '📋 PERBANDINGAN SEMUA TENOR:',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.textDark,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Table(
-                                    columnWidths: const {
-                                      0: FlexColumnWidth(1.2),
-                                      1: FlexColumnWidth(2.4),
-                                    },
-                                    children: [
-                                      TableRow(
-                                        decoration: const BoxDecoration(
-                                          border: Border(
-                                            bottom: BorderSide(
-                                              color: AppColors.border,
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                        ),
-                                        children: [
-                                          _tableHeader('Tenor'),
-                                          _tableHeader('Angsuran / Bln'),
-                                        ],
-                                      ),
-                                      ...?result.perbandinganTenor?.map((t) {
-                                        return TableRow(
-                                          decoration: const BoxDecoration(
-                                            border: Border(
-                                              bottom: BorderSide(
-                                                color: AppColors.border,
-                                                width: 0.5,
-                                              ),
-                                            ),
-                                          ),
-                                          children: [
-                                            _tableCell(
-                                              '${t.tenor} Bln',
-                                              isSelected: false,
-                                            ),
-                                            _tableCell(
-                                              currencyFormatter.format(t.angsuranPerBulan),
-                                              isSelected: false,
-                                            ),
-                                          ],
-                                        );
-                                      }),
-                                    ],
-                                  ),
-                                ],
-                                if (_simulatePackage) ...[
-                                  const SizedBox(height: 16),
-                                  _buildPackageItemsList(currencyFormatter),
-                                ],
-                              ],
-                            ),
-                          );
-                        }
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ],
           ),
         ),
-      ],
-    );
+        const SizedBox(height: 16),
 
-    if (scrollable) {
-      return SingleChildScrollView(child: content);
-    }
-    return content;
-  }
-
-  Widget _specCard(IconData icon, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.muted,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(6),
+        // Gold Reference Banner
+        if (_isGoldItem(widget.item)) ...[
+          Consumer<AppProvider>(
+            builder: (context, provider, _) => Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.accent.withValues(alpha: 0.15),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.trending_up,
+                    color: AppColors.accent,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Harga Acuan Emas Hari Ini: ${currencyFormatter.format(provider.goldPricePerGram)} / gram',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Color.fromARGB(255, 33, 33, 33),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 20),
           ),
-          const SizedBox(width: 6),
-          Expanded(
+          const SizedBox(height: 16),
+        ],
+
+        // SIMULATION PANEL (Rahn & Arrum Emas stacked cleanly inside a card)
+        if (!_isFinancingLoading &&
+            _financingConfig != null &&
+            _financingTenors.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
+                const Text(
+                  'PEMBIAYAAN',
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.8,
                   ),
                 ),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 19,
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.w900,
+                const SizedBox(height: 20),
+
+                // Package mode toggle (if applicable)
+                if (_packageItems.length > 1) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Simulasi Paket Akad',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        padding: const EdgeInsets.all(3),
+                        child: Row(
+                          children: [
+                            _choiceTab(
+                              'Barang Ini',
+                              !_simulatePackage,
+                              () => setState(() => _simulatePackage = false),
+                            ),
+                            const SizedBox(width: 4),
+                            _choiceTab(
+                              'Paket Akad',
+                              _simulatePackage,
+                              () => setState(() => _simulatePackage = true),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+                  const Divider(color: AppColors.border),
+                  const SizedBox(height: 16),
+                ],
+
+                // 1. RAHN (GADAI EMAS) SECTION
+                _buildRahnSection(
+                  totalHarga,
+                  appraisalValue,
+                  config,
+                  currencyFormatter,
+                ),
+                const SizedBox(height: 24),
+                const Divider(color: AppColors.border),
+                const SizedBox(height: 20),
+
+                // 2. ARRUM EMAS SECTION
+                _buildArrumEmasSection(
+                  totalHarga,
+                  appraisalValue,
+                  config,
+                  currencyFormatter,
                 ),
               ],
             ),
           ),
         ],
-      ),
+      ],
+    );
+
+    if (scrollable) {
+      return SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: content,
+      );
+    }
+    return content;
+  }
+
+  Widget _buildRahnSection(
+    double totalHarga,
+    double appraisalValue,
+    Map<String, dynamic> config,
+    NumberFormat currencyFormatter,
+  ) {
+    final result = FinancingCalculator.simulasiKca(
+      hargaLelang: totalHarga.round(),
+      appraisalValue: appraisalValue,
+      config: config,
+    );
+
+    if (!result.eligible) {
+      return _buildIneligiblePanel(result.message ?? '');
+    }
+
+    final isPortrait = MediaQuery.of(context).size.width < 900;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(Icons.handshake_outlined, color: AppColors.primary, size: 18),
+            SizedBox(width: 8),
+            Text(
+              'Rahn (Gadai Emas)',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: isPortrait
+              ? Column(
+                  children: [
+                    _rahnInfoColumn(
+                      'Uang Muka (DP)',
+                      currencyFormatter.format(result.uangMuka),
+                      AppColors.accent,
+                    ),
+                    const Divider(height: 24),
+                    _rahnInfoColumn(
+                      'Jangka Waktu',
+                      '${result.tempoKca} Bulan',
+                      AppColors.textDark,
+                    ),
+                    const Divider(height: 24),
+                    _rahnInfoColumn(
+                      'Total Pelunasan',
+                      currencyFormatter.format(result.totalPelunasanKca!),
+                      AppColors.primary,
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: _rahnInfoColumn(
+                        'Uang Muka (DP)',
+                        currencyFormatter.format(result.uangMuka),
+                        AppColors.accent,
+                      ),
+                    ),
+                    Container(width: 1, height: 50, color: AppColors.border),
+                    Expanded(
+                      child: _rahnInfoColumn(
+                        'Jangka Waktu',
+                        '${result.tempoKca} Bulan',
+                        AppColors.textDark,
+                      ),
+                    ),
+                    Container(width: 1, height: 50, color: AppColors.border),
+                    Expanded(
+                      child: _rahnInfoColumn(
+                        'Total Pelunasan',
+                        currencyFormatter.format(result.totalPelunasanKca!),
+                        AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _rahnInfoColumn(String label, String value, Color valueColor) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: valueColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildArrumEmasSection(
+    double totalHarga,
+    double appraisalValue,
+    Map<String, dynamic> config,
+    NumberFormat currencyFormatter,
+  ) {
+    final tempResult = FinancingCalculator.simulasiKrasida(
+      hargaLelang: totalHarga.round(),
+      appraisalValue: appraisalValue,
+      config: config,
+      tenors: _financingTenors,
+      tenorMonths: _financingTenors.first['months'] as int,
+    );
+
+    if (!tempResult.eligible) {
+      return _buildIneligiblePanel(tempResult.message ?? '');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Icon(
+              Icons.trending_up_outlined,
+              color: AppColors.primary,
+              size: 18,
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Arrum Emas (Cicilan)',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Table(
+            columnWidths: const {
+              0: FlexColumnWidth(1.2),
+              1: FlexColumnWidth(2.0),
+              2: FlexColumnWidth(2.0),
+              3: FlexColumnWidth(2.2),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              TableRow(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.border, width: 1.5),
+                  ),
+                ),
+                children: [
+                  _tableHeader('Tenor'),
+                  _tableHeader('Uang DP'),
+                  _tableHeader('Uang Pinjaman'),
+                  _tableHeader('Angsuran / Bln'),
+                ],
+              ),
+              ..._financingTenors.map((t) {
+                final tenorMonths = t['months'] as int;
+                final result = FinancingCalculator.simulasiKrasida(
+                  hargaLelang: totalHarga.round(),
+                  appraisalValue: appraisalValue,
+                  config: config,
+                  tenors: _financingTenors,
+                  tenorMonths: tenorMonths,
+                );
+
+                return TableRow(
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.border, width: 0.5),
+                    ),
+                  ),
+                  children: [
+                    _tableCell('${result.tenor} Bln', isBold: true),
+                    _tableCell(currencyFormatter.format(result.uangMuka)),
+                    _tableCell(currencyFormatter.format(result.uangPinjaman)),
+                    _tableCell(
+                      currencyFormatter.format(result.angsuranPerBulan),
+                      textColor: AppColors.primary,
+                      isBold: true,
+                    ),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ),
+        if (_simulatePackage) ...[
+          const SizedBox(height: 16),
+          _buildPackageItemsList(currencyFormatter),
+        ],
+      ],
     );
   }
 
@@ -1292,26 +1026,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       borderRadius: BorderRadius.circular(30),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
             color: selected ? Colors.white : AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
@@ -1335,70 +1060,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     }
   }
 
-  Widget _bulletPoint(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '• ',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: AppColors.primary,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textDark,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _breakdownRow(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF374151),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: valueColor ?? AppColors.textDark,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildIneligiblePanel(String message) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF0F0),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1408,24 +1077,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               Icon(
                 Icons.warning_amber_rounded,
                 color: AppColors.error,
-                size: 24,
+                size: 20,
               ),
-              SizedBox(width: 8),
+              SizedBox(width: 6),
               Text(
                 'Skema Tidak Tersedia',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w900,
                   color: AppColors.error,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             message,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,
             ),
@@ -1438,10 +1107,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Widget _buildPackageItemsList(NumberFormat currencyFormatter) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -1450,16 +1119,16 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           Text(
             '📦 BARANG DALAM PAKET ${widget.item.creditNumber}:',
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w900,
               color: AppColors.textDark,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           ..._packageItems.map((item) {
             final isSelf = item.id == widget.item.id;
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: 3),
               child: Row(
                 children: [
                   Text(
@@ -1475,7 +1144,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     child: Text(
                       '${item.name} (${item.karat ?? "-"}K, ${item.weightGram}g)${isSelf ? " (Barang ini)" : ""}',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: isSelf ? FontWeight.w800 : FontWeight.w600,
                         color: isSelf ? AppColors.primary : AppColors.textDark,
                       ),
@@ -1499,7 +1168,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       return Text(
                         currencyFormatter.format(displayPrice),
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: isSelf
                               ? FontWeight.w800
                               : FontWeight.w700,
@@ -1521,7 +1190,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
   Widget _tableHeader(String label) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: Alignment.center,
@@ -1529,8 +1198,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           label,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w900,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
             color: AppColors.textSecondary,
           ),
         ),
@@ -1538,9 +1207,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
-  Widget _tableCell(String text, {bool isSelected = false}) {
+  Widget _tableCell(
+    String text, {
+    bool isSelected = false,
+    bool isBold = false,
+    Color? textColor,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: Alignment.center,
@@ -1548,9 +1222,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           text,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-            color: isSelected ? AppColors.accent : AppColors.textDark,
+            fontSize: 17,
+            fontWeight: (isBold || isSelected)
+                ? FontWeight.w900
+                : FontWeight.w700,
+            color:
+                textColor ??
+                (isSelected ? AppColors.accent : AppColors.textDark),
           ),
         ),
       ),

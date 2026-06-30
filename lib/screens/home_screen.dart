@@ -75,35 +75,76 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildHero(currencyFormatter),
-                      _buildCatalogGrid(),
-                      _buildFooter(),
-                    ],
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          IgnorePointer(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -300,
+                  left: -250,
+                  child: Container(
+                    width: 650,
+                    height: 650,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.15),
+                          AppColors.primary.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  top: -300,
+                  right: -250,
+                  child: Container(
+                    width: 650,
+                    height: 650,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.15),
+                          AppColors.primary.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        _buildHero(currencyFormatter),
+                        _buildCatalogGrid(),
+                        _buildFooter(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader() {
     final isPortrait = MediaQuery.of(context).size.width < 900;
-    
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         isPortrait ? 16 : 40,
@@ -118,12 +159,12 @@ class _HomeScreenState extends State<HomeScreen> {
           vertical: isPortrait ? 12 : 20,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.10),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+          border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 22,
               offset: const Offset(0, 10),
             ),
@@ -139,13 +180,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 width: isPortrait ? 140 : 280,
                 height: isPortrait ? 52 : 84,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 2,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Image.asset(
                   'assets/logo_pegadaian_syariah.png',
@@ -164,11 +203,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Consumer<AppProvider>(
                 builder: (context, provider, _) => Text(
-                  isPortrait ? provider.branchName : 'Cabang ${provider.branchName}',
+                  isPortrait
+                      ? provider.branchName
+                      : 'Cabang ${provider.branchName}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textDark,
                     fontSize: isPortrait ? 18 : 32,
                     fontWeight: FontWeight.w800,
                     height: 1.1,
@@ -206,6 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
     VoidCallback? onTap, {
     bool isCompact = false,
   }) {
+    final isInteractive = onTap != null;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
@@ -216,24 +258,34 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: onTap == null ? 0.10 : 0.20),
+          color: isInteractive ? AppColors.primaryLight : AppColors.muted,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: Colors.white.withValues(alpha: onTap == null ? 0.20 : 0.30),
+            color: isInteractive
+                ? AppColors.primary.withValues(alpha: 0.3)
+                : AppColors.border,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: isCompact ? 18 : 20, color: Colors.white),
+            Icon(
+              icon,
+              size: isCompact ? 18 : 20,
+              color: isInteractive
+                  ? AppColors.primary
+                  : AppColors.textSecondary,
+            ),
             if (label.isNotEmpty) ...[
               const SizedBox(width: 8),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+                style: TextStyle(
+                  color: isInteractive
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w800,
                   fontSize: 16,
                 ),
               ),
@@ -246,23 +298,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHero(NumberFormat currencyFormatter) {
     final isPortrait = MediaQuery.of(context).size.width < 900;
-    
+
     final goldCard = Consumer<AppProvider>(
       builder: (context, provider, _) => Container(
-        width: isPortrait ? double.infinity : 390,
-        padding: const EdgeInsets.all(24),
+        width: isPortrait ? double.infinity : 320,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: const Color(0xFFF1F8F1),
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.secondary),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
               'Harga emas hari ini',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: AppColors.successGreen,
               ),
@@ -271,21 +324,10 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               '${currencyFormatter.format(provider.goldPricePerGram)} / gram',
               style: TextStyle(
-                fontSize: isPortrait ? 26 : 34,
+                fontSize: isPortrait ? 22 : 26,
                 fontWeight: FontWeight.w900,
                 color: AppColors.primary,
                 height: 1.1,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Harga produk emas otomatis menyesuaikan.',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.successGreen.withValues(
-                  alpha: 0.70,
-                ),
               ),
             ),
           ],
@@ -295,23 +337,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final infoColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Temukan barang lelang favorit anda dengan mudah dan aman , hanya di PEGADAIAN.',
+          'Temukan barang lelang yang tersedia.',
           style: TextStyle(
-            fontSize: isPortrait ? 24 : 34,
-            fontWeight: FontWeight.w800,
+            fontSize: isPortrait ? 25 : 30,
+            fontWeight: FontWeight.w900,
             height: 1.2,
             color: AppColors.textDark,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 8),
         Text(
-          'Gunakan pencarian besar atau filter sederhana untuk melihat perhiasan emas, elektronik, logam mulia, dan kendaraan.',
+          'Gunakan pencarian atau filter untuk mencari perhiasan emas, elektronik, logam mulia, dan kendaraan.',
           style: TextStyle(
             fontSize: isPortrait ? 15 : 20,
             fontWeight: FontWeight.w600,
-            height: 1.55,
+            height: 1.45,
             color: AppColors.textSecondary,
           ),
         ),
@@ -323,19 +366,19 @@ class _HomeScreenState extends State<HomeScreen> {
         isPortrait ? 16 : 40,
         8,
         isPortrait ? 16 : 40,
-        isPortrait ? 16 : 20,
+        isPortrait ? 12 : 16,
       ),
       child: Container(
-        padding: EdgeInsets.all(isPortrait ? 20 : 32),
+        padding: EdgeInsets.all(isPortrait ? 16 : 20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(isPortrait ? 28 : 40),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 50,
-              offset: const Offset(0, 15),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -346,45 +389,42 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       goldCard,
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       infoColumn,
                     ],
                   )
                 : Row(
                     children: [
                       Expanded(child: infoColumn),
-                      const SizedBox(width: 40),
+                      const SizedBox(width: 24),
                       goldCard,
                     ],
                   ),
-            SizedBox(height: isPortrait ? 20 : 30),
+            SizedBox(height: isPortrait ? 16 : 18),
             Row(
               children: [
                 Expanded(
                   child: SizedBox(
-                    height: isPortrait ? 64 : 80,
+                    height: isPortrait ? 52 : 56,
                     child: TextField(
                       controller: _searchController,
                       style: TextStyle(
-                        fontSize: isPortrait ? 18 : 22,
+                        fontSize: isPortrait ? 15 : 16,
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Cari perhiasan, handphone, laptop...',
                         hintStyle: TextStyle(
                           color: AppColors.textMuted,
-                          fontSize: isPortrait ? 18 : 24,
+                          fontSize: isPortrait ? 16 : 21,
                           fontWeight: FontWeight.w600,
                         ),
                         prefixIcon: Padding(
-                          padding: EdgeInsets.only(
-                            left: isPortrait ? 16 : 22,
-                            right: isPortrait ? 10 : 14,
-                          ),
+                          padding: const EdgeInsets.only(left: 14, right: 10),
                           child: Icon(
                             Icons.search,
                             color: AppColors.primary,
-                            size: isPortrait ? 26 : 32,
+                            size: isPortrait ? 20 : 22,
                           ),
                         ),
                         suffixIcon: _searchController.text.isNotEmpty
@@ -398,6 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             : null,
                         filled: true,
                         fillColor: AppColors.muted,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(999),
                           borderSide: const BorderSide(color: AppColors.border),
@@ -410,31 +451,34 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(999),
                           borderSide: const BorderSide(
                             color: AppColors.primary,
-                            width: 2,
+                            width: 1.5,
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: isPortrait ? 12 : 20),
+                const SizedBox(width: 12),
                 SizedBox(
-                  height: isPortrait ? 64 : 80,
+                  height: isPortrait ? 52 : 56,
                   child: ElevatedButton.icon(
                     onPressed: _showFilterSheet,
-                    icon: Icon(Icons.tune, size: isPortrait ? 20 : 26),
+                    icon: Icon(Icons.tune, size: isPortrait ? 18 : 20),
                     label: Text(
                       'Filter',
                       style: TextStyle(
-                        fontSize: isPortrait ? 16 : 20,
+                        fontSize: isPortrait ? 14 : 15,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isPortrait ? 24 : 40,
+                        horizontal: isPortrait ? 20 : 28,
                       ),
                       backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
                   ),
                 ),
@@ -579,9 +623,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Text(
                               'Barang Lelang Tersedia',
                               style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.textDark),
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textDark,
+                              ),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -589,14 +634,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.secondary,
                                 borderRadius: BorderRadius.circular(999),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.08),
-                                    blurRadius: 18,
-                                  ),
-                                ],
                               ),
                               child: Text(
                                 '${provider.items.length} barang',
@@ -637,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               SizedBox(height: 6),
                               Text(
-                                'Temukan dan beli barang lelang pilihan anda  .',
+                                'Temukan dan beli barang lelang pilihan anda.',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -653,14 +692,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.secondary,
                             borderRadius: BorderRadius.circular(999),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 18,
-                              ),
-                            ],
                           ),
                           child: Text(
                             '${provider.items.length} barang aktif',
@@ -696,7 +729,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFooter() {
     final isPortrait = MediaQuery.of(context).size.width < 900;
-    
+
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
         final totalItems = provider.items.length;
@@ -710,11 +743,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return Container(
           height: isPortrait ? 76 : 88,
           padding: EdgeInsets.symmetric(horizontal: isPortrait ? 16 : 40),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
-            ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: AppColors.border)),
           ),
           child: Row(
             children: [
@@ -726,14 +757,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       text: totalItems == 0 ? '0' : '$startIndex - $endIndex',
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: AppColors.textDark,
                       ),
                     ),
                     TextSpan(text: ' dari $totalItems barang'),
                   ],
                 ),
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.82),
+                  color: AppColors.textSecondary,
                   fontSize: isPortrait ? 14 : 17,
                   fontWeight: FontWeight.w600,
                 ),
@@ -782,7 +813,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _footerCircle(IconData icon, bool filled, bool isPortrait, VoidCallback? onTap) {
+  Widget _footerCircle(
+    IconData icon,
+    bool filled,
+    bool isPortrait,
+    VoidCallback? onTap,
+  ) {
     final size = isPortrait ? 40.0 : 48.0;
     return InkWell(
       onTap: onTap,
@@ -791,13 +827,15 @@ class _HomeScreenState extends State<HomeScreen> {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: filled ? Colors.white : Colors.white.withValues(alpha: 0.10),
+          color: filled ? AppColors.primary : Colors.transparent,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
+          border: Border.all(
+            color: filled ? AppColors.primary : AppColors.border,
+          ),
         ),
         child: Icon(
           icon,
-          color: filled ? AppColors.primary : Colors.white.withValues(alpha: 0.3),
+          color: filled ? Colors.white : AppColors.textMuted,
           size: isPortrait ? 20 : 24,
         ),
       ),
