@@ -112,7 +112,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isPortrait = constraints.maxWidth < 900;
+                final isPortrait = constraints.maxWidth < 750;
 
                 if (isPortrait) {
                   return SingleChildScrollView(
@@ -137,11 +137,15 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildImageColumn(height: 400),
+                          _buildImageColumn(height: 460, isPortrait: isPortrait),
                           const SizedBox(height: 20),
                           const Divider(color: AppColors.border),
                           const SizedBox(height: 12),
-                          _buildDetails(currencyFormatter, scrollable: false),
+                          _buildDetails(
+                            currencyFormatter,
+                            isPortrait: isPortrait,
+                            scrollable: false,
+                          ),
                         ],
                       ),
                     ),
@@ -166,14 +170,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Left side: Image + Specs (Narrowed to 38% width)
-                          Expanded(flex: 38, child: _buildImageColumn()),
-                          const SizedBox(width: 32),
-                          // Right side: Details & Simulation (Expanded to 62% width)
+                          // Left side: Image + Specs (50% width)
                           Expanded(
-                            flex: 62,
+                            flex: 50,
+                            child: _buildImageColumn(isPortrait: isPortrait),
+                          ),
+                          const SizedBox(width: 32),
+                          // Right side: Details & Simulation (50% width)
+                          Expanded(
+                            flex: 50,
                             child: _buildDetails(
                               currencyFormatter,
+                              isPortrait: isPortrait,
                               scrollable: true,
                             ),
                           ),
@@ -190,7 +198,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
-  Widget _buildImageColumn({double? height}) {
+  Widget _buildImageColumn({double? height, required bool isPortrait}) {
     return Container(
       height: height ?? double.infinity,
       padding: const EdgeInsets.all(12),
@@ -337,7 +345,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               ],
               const SizedBox(height: 16),
               // Specs Grid directly below photo
-              _buildSpecsGrid(),
+              _buildSpecsGrid(isPortrait),
             ],
           );
         },
@@ -367,39 +375,46 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
-  Widget _buildSpecsGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      childAspectRatio: 3.0,
-      crossAxisSpacing: 8,
-      mainAxisSpacing: 8,
-      physics: const NeverScrollableScrollPhysics(),
-      children: [
-        _specCard(
-          Icons.scale_outlined,
-          'Berat',
-          widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
-        ),
-        _specCard(
-          Icons.diamond_outlined,
-          'Karat',
-          widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
-        ),
-        _specCard(
-          Icons.category_outlined,
-          'Kategori',
-          widget.item.categoryName ?? '-',
-        ),
-        _specCard(
-          Icons.receipt_long_outlined,
-          'No Akad',
-          widget.item.creditNumber?.isNotEmpty == true
-              ? widget.item.creditNumber!
-              : '-',
-        ),
-      ],
+  Widget _buildSpecsGrid(bool isPortrait) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        // Adjust childAspectRatio dynamically based on available width
+        final aspectRatio = width < 300 ? 2.3 : (width < 380 ? 2.6 : 3.0);
+        return GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          childAspectRatio: aspectRatio,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _specCard(
+              Icons.scale_outlined,
+              'Berat',
+              widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
+            ),
+            _specCard(
+              Icons.diamond_outlined,
+              'Karat',
+              widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
+            ),
+            _specCard(
+              Icons.category_outlined,
+              'Kategori',
+              widget.item.categoryName ?? '-',
+            ),
+            _specCard(
+              Icons.receipt_long_outlined,
+              'No Akad',
+              widget.item.creditNumber?.isNotEmpty == true
+                  ? widget.item.creditNumber!
+                  : '-',
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -514,6 +529,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
   Widget _buildDetails(
     NumberFormat currencyFormatter, {
+    required bool isPortrait,
     bool scrollable = true,
   }) {
     final prices = _calculatePrices();
@@ -757,6 +773,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   appraisalValue,
                   config,
                   currencyFormatter,
+                  isPortrait,
                 ),
                 const SizedBox(height: 24),
                 const Divider(color: AppColors.border),
@@ -790,6 +807,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     double appraisalValue,
     Map<String, dynamic> config,
     NumberFormat currencyFormatter,
+    bool isPortrait,
   ) {
     final result = FinancingCalculator.simulasiKca(
       hargaLelang: totalHarga.round(),
@@ -800,8 +818,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     if (!result.eligible) {
       return _buildIneligiblePanel(result.message ?? '');
     }
-
-    final isPortrait = MediaQuery.of(context).size.width < 900;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -888,19 +904,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       children: [
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 6),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: valueColor,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: valueColor,
+            ),
           ),
         ),
       ],

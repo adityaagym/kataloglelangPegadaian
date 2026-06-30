@@ -281,7 +281,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
             height: 48,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isPrimary ? const Color(0xFF16A34A) : const Color.fromARGB(255, 0, 81, 255),
+                backgroundColor: isPrimary ? const Color(0xFF16A34A) :  const Color(0xFF16A34A),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
