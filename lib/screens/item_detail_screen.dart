@@ -137,10 +137,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildImageColumn(height: 460, isPortrait: isPortrait),
-                          const SizedBox(height: 20),
+                          _buildImageColumn(
+                            height: _isGoldItem(widget.item) ? 640 : 580,
+                            isPortrait: isPortrait,
+                          ),
+                          const SizedBox(height: 10),
                           const Divider(color: AppColors.border),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           _buildDetails(
                             currencyFormatter,
                             isPortrait: isPortrait,
@@ -170,15 +173,15 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Left side: Image + Specs (50% width)
+                          // Left side: Image + Specs (40% width)
                           Expanded(
-                            flex: 50,
+                            flex: 40,
                             child: _buildImageColumn(isPortrait: isPortrait),
                           ),
                           const SizedBox(width: 32),
-                          // Right side: Details & Simulation (50% width)
+                          // Right side: Details & Simulation (60% width)
                           Expanded(
-                            flex: 50,
+                            flex: 60,
                             child: _buildDetails(
                               currencyFormatter,
                               isPortrait: isPortrait,
@@ -297,35 +300,6 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.20),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        'FOTO ${_currentImageIndex + 1} DARI ${photos.length}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
                     photos.length,
                     (index) => AnimatedContainer(
@@ -376,51 +350,111 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   }
 
   Widget _buildSpecsGrid(bool isPortrait) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        // Adjust childAspectRatio dynamically based on available width
-        final aspectRatio = width < 300 ? 2.3 : (width < 380 ? 2.6 : 3.0);
-        return GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          childAspectRatio: aspectRatio,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
+    final isGold = _isGoldItem(widget.item);
+
+    if (isPortrait) {
+      // Portrait mode: 1 column vertical stack (1-by-1 downwards) with large fonts
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isGold) ...[
             _specCard(
               Icons.scale_outlined,
               'Berat',
               widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
+              isSmall: false,
             ),
+            const SizedBox(height: 8),
             _specCard(
               Icons.diamond_outlined,
               'Karat',
               widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
+              isSmall: false,
             ),
-            _specCard(
-              Icons.category_outlined,
-              'Kategori',
-              widget.item.categoryName ?? '-',
-            ),
-            _specCard(
-              Icons.receipt_long_outlined,
-              'No Akad',
-              widget.item.creditNumber?.isNotEmpty == true
-                  ? widget.item.creditNumber!
-                  : '-',
-            ),
+            const SizedBox(height: 8),
           ],
-        );
-      },
-    );
+          _specCard(
+            Icons.category_outlined,
+            'Kategori',
+            widget.item.categoryName ?? '-',
+            isSmall: false,
+          ),
+          const SizedBox(height: 8),
+          _specCard(
+            Icons.receipt_long_outlined,
+            'No Akad',
+            widget.item.creditNumber?.isNotEmpty == true
+                ? widget.item.creditNumber!
+                : '-',
+            isSmall: false,
+          ),
+        ],
+      );
+    } else {
+      // Landscape mode: Row 1 (Berat & Karat), Row 2 (Kategori & No Akad) using flexible side-by-side Rows (isSmall: true)
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isGold) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _specCard(
+                    Icons.scale_outlined,
+                    'Berat',
+                    widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
+                    isSmall: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _specCard(
+                    Icons.diamond_outlined,
+                    'Karat',
+                    widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
+                    isSmall: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: _specCard(
+                  Icons.category_outlined,
+                  'Kategori',
+                  widget.item.categoryName ?? '-',
+                  isSmall: true,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _specCard(
+                  Icons.receipt_long_outlined,
+                  'No Akad',
+                  widget.item.creditNumber?.isNotEmpty == true
+                      ? widget.item.creditNumber!
+                      : '-',
+                  isSmall: true,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
   }
 
-  Widget _specCard(IconData icon, String label, String value) {
+  Widget _specCard(IconData icon, String label, String value, {required bool isSmall}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmall ? 8 : 12,
+        vertical: isSmall ? 4 : 8,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -429,23 +463,26 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: EdgeInsets.all(isSmall ? 4 : 6),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 16),
+            child: Icon(icon, color: AppColors.primary, size: isSmall ? 12 : 16),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: isSmall ? 6 : 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: isSmall ? 11 : 14,
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
@@ -454,8 +491,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: isSmall ? 12 : 16,
                     color: AppColors.textDark,
                     fontWeight: FontWeight.w900,
                   ),
