@@ -26,10 +26,13 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   bool _isFinancingLoading = true;
   List<AuctionItem> _packageItems = [];
   bool _simulatePackage = false;
+  late Future<List<ItemPhoto>> _photosFuture;
 
   @override
   void initState() {
     super.initState();
+    _photosFuture = Provider.of<AppProvider>(context, listen: false)
+        .getItemPhotos(widget.item.id!);
     _loadFinancingData();
   }
 
@@ -211,10 +214,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         border: Border.all(color: AppColors.border),
       ),
       child: FutureBuilder<List<ItemPhoto>>(
-        future: Provider.of<AppProvider>(
-          context,
-          listen: false,
-        ).getItemPhotos(widget.item.id!),
+        future: _photosFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(

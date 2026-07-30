@@ -4,13 +4,37 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/auction_item.dart';
 import '../providers/app_provider.dart';
+import '../models/item_photo.dart';
 import '../screens/item_detail_screen.dart';
 import '../utils/app_colors.dart';
 
-class ItemCard extends StatelessWidget {
+class ItemCard extends StatefulWidget {
   final AuctionItem item;
 
   const ItemCard({super.key, required this.item});
+
+  @override
+  State<ItemCard> createState() => _ItemCardState();
+}
+
+class _ItemCardState extends State<ItemCard> {
+  late Future<List<ItemPhoto>> _photosFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _photosFuture = Provider.of<AppProvider>(context, listen: false)
+        .getItemPhotos(widget.item.id!);
+  }
+
+  @override
+  void didUpdateWidget(covariant ItemCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.item.id != widget.item.id) {
+      _photosFuture = Provider.of<AppProvider>(context, listen: false)
+          .getItemPhotos(widget.item.id!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +43,7 @@ class ItemCard extends StatelessWidget {
       symbol: 'Rp ',
       decimalDigits: 0,
     );
-    final category = item.categoryName ?? 'Lainnya';
+    final category = widget.item.categoryName ?? 'Lainnya';
 
     return Material(
       color: Colors.transparent,
@@ -27,7 +51,7 @@ class ItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(26),
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ItemDetailScreen(item: item)),
+          MaterialPageRoute(builder: (context) => ItemDetailScreen(item: widget.item)),
         ),
         child: Ink(
           decoration: BoxDecoration(
@@ -52,11 +76,8 @@ class ItemCard extends StatelessWidget {
                 ),
                 child: AspectRatio(
                   aspectRatio: 0.85,
-                  child: FutureBuilder(
-                    future: Provider.of<AppProvider>(
-                      context,
-                      listen: false,
-                    ).getItemPhotos(item.id!),
+                  child: FutureBuilder<List<ItemPhoto>>(
+                    future: _photosFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(
@@ -93,7 +114,7 @@ class ItemCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            if (item.karat != null && item.karat!.isNotEmpty)
+                            if (widget.item.karat != null && widget.item.karat!.isNotEmpty)
                               Positioned(
                                 top: 12,
                                 left: 12,
@@ -107,7 +128,7 @@ class ItemCard extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
-                                    item.karat!,
+                                    widget.item.karat!,
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
@@ -159,7 +180,7 @@ class ItemCard extends StatelessWidget {
                     SizedBox(
                       height: 44,
                       child: Text(
-                        item.name,
+                        widget.item.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -185,7 +206,7 @@ class ItemCard extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        currencyFormatter.format(item.basePrice),
+                        currencyFormatter.format(widget.item.basePrice),
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
@@ -211,7 +232,7 @@ class ItemCard extends StatelessWidget {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ItemDetailScreen(item: item),
+                            builder: (context) => ItemDetailScreen(item: widget.item),
                           ),
                         ),
                         icon: const Icon(Icons.calculate_outlined, size: 18),
