@@ -69,85 +69,88 @@ class _ItemCardState extends State<ItemCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(25),
-                  topRight: Radius.circular(25),
-                ),
-                child: AspectRatio(
-                  aspectRatio: 0.85,
-                  child: FutureBuilder<List<ItemPhoto>>(
-                    future: _photosFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        );
-                      }
-                      if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                        final photos = snapshot.data!;
-                        final primaryPhoto = photos.firstWhere(
-                          (p) => p.isPrimary,
-                          orElse: () => photos.first,
-                        );
-                        return Stack(
-                          children: [
-                            Positioned.fill(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Image.file(
-                                  File(primaryPhoto.localPath),
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                        Icons.image_not_supported_outlined,
-                                        size: 54,
-                                        color: AppColors.textMuted,
-                                      ),
-                                ),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(25),
+                    topRight: Radius.circular(25),
+                  ),
+                  child: Container(
+                    width: double.infinity,
+                    color: const Color(0xFFF9FAFB),
+                    child: FutureBuilder<List<ItemPhoto>>(
+                      future: _photosFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
                               ),
                             ),
-                            if (widget.item.karat != null && widget.item.karat!.isNotEmpty)
-                              Positioned(
-                                top: 12,
-                                left: 12,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
+                          );
+                        }
+                        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                          final photos = snapshot.data!;
+                          final primaryPhoto = photos.firstWhere(
+                            (p) => p.isPrimary,
+                            orElse: () => photos.first,
+                          );
+                          return Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Image.file(
+                                    File(primaryPhoto.localPath),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(
+                                          Icons.image_not_supported_outlined,
+                                          size: 54,
+                                          color: AppColors.textMuted,
+                                        ),
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.accent,
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    widget.item.karat!,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              if (widget.item.karat != null && widget.item.karat!.isNotEmpty)
+                                Positioned(
+                                  top: 12,
+                                  left: 12,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.accent,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      widget.item.karat!,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          );
+                        }
+                        return const Center(
+                          child: Icon(
+                            Icons.image_outlined,
+                            size: 54,
+                            color: AppColors.textMuted,
+                          ),
                         );
-                      }
-                      return const Center(
-                        child: Icon(
-                          Icons.image_outlined,
-                          size: 54,
-                          color: AppColors.textMuted,
-                        ),
-                      );
-                    },
+                      },
+                    ),
                   ),
                 ),
               ),

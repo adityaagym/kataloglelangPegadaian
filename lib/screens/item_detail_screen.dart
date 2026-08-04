@@ -141,7 +141,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildImageColumn(
-                            height: _isGoldItem(widget.item) ? 640 : 580,
+                            height: _isGoldItem(widget.item) ? 380 : 340,
                             isPortrait: isPortrait,
                           ),
                           const SizedBox(height: 10),
@@ -452,8 +452,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Widget _specCard(IconData icon, String label, String value, {required bool isSmall}) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isSmall ? 8 : 12,
-        vertical: isSmall ? 4 : 8,
+        horizontal: isSmall ? 10 : 14,
+        vertical: isSmall ? 6 : 10,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -463,14 +463,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(isSmall ? 4 : 6),
+            padding: EdgeInsets.all(isSmall ? 6 : 8),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: AppColors.primary, size: isSmall ? 12 : 16),
+            child: Icon(icon, color: AppColors.primary, size: isSmall ? 15 : 20),
           ),
-          SizedBox(width: isSmall ? 6 : 8),
+          SizedBox(width: isSmall ? 8 : 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -482,7 +482,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: isSmall ? 11 : 14,
+                    fontSize: isSmall ? 13 : 16,
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
@@ -492,7 +492,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: isSmall ? 12 : 16,
+                    fontSize: isSmall ? 15 : 18,
                     color: AppColors.textDark,
                     fontWeight: FontWeight.w900,
                   ),
@@ -898,7 +898,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     ),
                     const Divider(height: 24),
                     _rahnInfoColumn(
-                      'Total Pelunasan',
+                      'Jumlah Pembiayaan',
                       currencyFormatter.format(result.totalPelunasanKca!),
                       AppColors.primary,
                     ),
@@ -924,7 +924,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     Container(width: 1, height: 50, color: AppColors.border),
                     Expanded(
                       child: _rahnInfoColumn(
-                        'Total Pelunasan',
+                        'Jumlah Pembiayaan',
                         currencyFormatter.format(result.totalPelunasanKca!),
                         AppColors.primary,
                       ),

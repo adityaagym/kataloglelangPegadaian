@@ -521,7 +521,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
 
   Widget _buildTenorTableCard() {
     return _buildConfigCard(
-      title: 'Tenor Arrum Emas & Multiplier',
+      title: 'Tenor Arrum Emas & Margin',
       icon: Icons.calendar_month_outlined,
       children: [
         // Tenor selection chips
@@ -613,7 +613,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                     Expanded(
                       flex: 2,
                       child: Text(
-                        'MULTIPLIER',
+                        'MARGIN',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 11,
@@ -992,7 +992,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Multiplier (Faktor Cicilan Excel)',
+              'Margin (Faktor Cicilan Excel)',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF374151)),
             ),
             const SizedBox(height: 8),
@@ -1264,7 +1264,7 @@ class _FinancingScreenState extends State<FinancingScreen> {
                 _buildImpactDetailRow('Biaya Admin', currencyFormatter.format(adminFlat.round())),
                 const Divider(height: 20, color: Color(0xFFDBEAFE)),
                 _buildImpactDetailRow(
-                  'Total Pelunasan',
+                  'Jumlah Pembiayaan',
                   currencyFormatter.format(kcaPelunasan),
                   isBold: true,
                   textColor: const Color(0xFF1D4ED8),

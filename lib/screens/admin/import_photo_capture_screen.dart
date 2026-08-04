@@ -52,6 +52,8 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
     final pickedFile = await picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 80,
+      maxWidth: 1280,
+      maxHeight: 1280,
     );
     if (pickedFile == null) return;
 
@@ -65,6 +67,8 @@ class _ImportPhotoCaptureScreenState extends State<ImportPhotoCaptureScreen> {
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
+      maxWidth: 1280,
+      maxHeight: 1280,
     );
     if (pickedFile == null) return;
 

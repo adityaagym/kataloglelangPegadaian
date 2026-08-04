@@ -707,18 +707,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
               const SizedBox(height: 22),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isPortrait ? 3 : 4,
-                  childAspectRatio: isPortrait ? 0.46 : 0.49,
-                  crossAxisSpacing: isPortrait ? 16 : 28,
-                  mainAxisSpacing: isPortrait ? 16 : 28,
-                ),
-                itemCount: paginatedItems.length,
-                itemBuilder: (context, index) =>
-                    ItemCard(item: paginatedItems[index]),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isMobilePortrait = screenWidth < 600;
+                  final crossAxisCount = isMobilePortrait ? 2 : (isPortrait ? 3 : 4);
+                  final childAspectRatio = isMobilePortrait
+                      ? 0.58
+                      : (isPortrait ? 0.50 : 0.52);
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: childAspectRatio,
+                      crossAxisSpacing: isPortrait ? 12 : 28,
+                      mainAxisSpacing: isPortrait ? 16 : 28,
+                    ),
+                    itemCount: paginatedItems.length,
+                    itemBuilder: (context, index) =>
+                        ItemCard(item: paginatedItems[index]),
+                  );
+                },
               ),
             ],
           ),

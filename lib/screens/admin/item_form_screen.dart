@@ -182,7 +182,11 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   }
 
   Future<void> _pickImages() async {
-    final List<XFile> images = await _picker.pickMultiImage();
+    final List<XFile> images = await _picker.pickMultiImage(
+      imageQuality: 80,
+      maxWidth: 1280,
+      maxHeight: 1280,
+    );
     if (images.isNotEmpty) {
       if (_existingPhotos.length + _newPhotos.length + images.length > 10) {
         if (mounted) {
@@ -202,7 +206,12 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   }
 
   Future<void> _takePhoto() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+      maxWidth: 1280,
+      maxHeight: 1280,
+    );
     if (image != null) {
       if (_existingPhotos.length + _newPhotos.length + 1 > 10) {
         if (mounted) {
@@ -1454,7 +1463,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                   _buildPreviewDetailRow('Biaya Admin', currencyFormatter.format(kcaRes.adminFee!)),
                   const Divider(height: 16, color: Color(0xFFBBDEFB)),
                   _buildPreviewDetailRow(
-                    'Total Pelunasan',
+                    'Jumlah Pembiayaan',
                     currencyFormatter.format(kcaRes.totalPelunasanKca!),
                     isBold: true,
                     textColor: AppColors.categoryBlueText,
