@@ -115,7 +115,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isPortrait = constraints.maxWidth < 750;
+                final isPortrait = constraints.maxWidth < 900;
 
                 if (isPortrait) {
                   return SingleChildScrollView(
@@ -141,12 +141,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildImageColumn(
-                            height: _isGoldItem(widget.item) ? 380 : 340,
+                            height: 380,
                             isPortrait: isPortrait,
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
+                          _buildSpecsGrid(isPortrait),
+                          const SizedBox(height: 20),
                           const Divider(color: AppColors.border),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           _buildDetails(
                             currencyFormatter,
                             isPortrait: isPortrait,
@@ -317,9 +319,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
-              // Specs Grid directly below photo
-              _buildSpecsGrid(isPortrait),
+              if (!isPortrait) ...[
+                const SizedBox(height: 16),
+                // Specs Grid directly below photo
+                _buildSpecsGrid(isPortrait),
+              ],
             ],
           );
         },
@@ -352,101 +356,110 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Widget _buildSpecsGrid(bool isPortrait) {
     final isGold = _isGoldItem(widget.item);
 
-    if (isPortrait) {
-      // Portrait mode: 1 column vertical stack (1-by-1 downwards) with large fonts
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isGold) ...[
-            _specCard(
-              Icons.scale_outlined,
-              'Berat',
-              widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
-              isSmall: false,
-            ),
-            const SizedBox(height: 8),
-            _specCard(
-              Icons.diamond_outlined,
-              'Karat',
-              widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
-              isSmall: false,
-            ),
-            const SizedBox(height: 8),
-          ],
-          _specCard(
-            Icons.category_outlined,
-            'Kategori',
-            widget.item.categoryName ?? '-',
-            isSmall: false,
-          ),
-          const SizedBox(height: 8),
-          _specCard(
-            Icons.receipt_long_outlined,
-            'No Akad',
-            widget.item.creditNumber?.isNotEmpty == true
-                ? widget.item.creditNumber!
-                : '-',
-            isSmall: false,
-          ),
-        ],
-      );
-    } else {
-      // Landscape mode: Row 1 (Berat & Karat), Row 2 (Kategori & No Akad) using flexible side-by-side Rows (isSmall: true)
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isGold) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _specCard(
-                    Icons.scale_outlined,
-                    'Berat',
-                    widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
-                    isSmall: true,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _specCard(
-                    Icons.diamond_outlined,
-                    'Karat',
-                    widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
-                    isSmall: true,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If the specs grid has at least 450px of width, use 2-column layout
+        // Otherwise (on narrow spaces or mobile phones), use 1-column vertical layout
+        final useTwoColumns = constraints.maxWidth >= 450;
+        final isSmall = constraints.maxWidth < 600;
+
+        if (!useTwoColumns) {
+          // 1 column vertical stack
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: _specCard(
-                  Icons.category_outlined,
-                  'Kategori',
-                  widget.item.categoryName ?? '-',
-                  isSmall: true,
+              if (isGold) ...[
+                _specCard(
+                  Icons.scale_outlined,
+                  'Berat',
+                  widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
+                  isSmall: isSmall,
                 ),
+                const SizedBox(height: 8),
+                _specCard(
+                  Icons.diamond_outlined,
+                  'Karat',
+                  widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
+                  isSmall: isSmall,
+                ),
+                const SizedBox(height: 8),
+              ],
+              _specCard(
+                Icons.category_outlined,
+                'Kategori',
+                widget.item.categoryName ?? '-',
+                isSmall: isSmall,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _specCard(
-                  Icons.receipt_long_outlined,
-                  'No Akad',
-                  widget.item.creditNumber?.isNotEmpty == true
-                      ? widget.item.creditNumber!
-                      : '-',
-                  isSmall: true,
-                ),
+              const SizedBox(height: 8),
+              _specCard(
+                Icons.receipt_long_outlined,
+                'No Akad',
+                widget.item.creditNumber?.isNotEmpty == true
+                    ? widget.item.creditNumber!
+                    : '-',
+                isSmall: isSmall,
               ),
             ],
-          ),
-        ],
-      );
-    }
+          );
+        } else {
+          // 2 columns side-by-side
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isGold) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: _specCard(
+                        Icons.scale_outlined,
+                        'Berat',
+                        widget.item.weightGram > 0 ? '${widget.item.weightGram} gram' : '-',
+                        isSmall: isSmall,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _specCard(
+                        Icons.diamond_outlined,
+                        'Karat',
+                        widget.item.karat?.isNotEmpty == true ? widget.item.karat! : '-',
+                        isSmall: isSmall,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: _specCard(
+                      Icons.category_outlined,
+                      'Kategori',
+                      widget.item.categoryName ?? '-',
+                      isSmall: isSmall,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _specCard(
+                      Icons.receipt_long_outlined,
+                      'No Akad',
+                      widget.item.creditNumber?.isNotEmpty == true
+                          ? widget.item.creditNumber!
+                          : '-',
+                      isSmall: isSmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+      },
+    );
   }
 
   Widget _specCard(IconData icon, String label, String value, {required bool isSmall}) {
