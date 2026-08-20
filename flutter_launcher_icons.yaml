@@ -3,6 +3,8 @@ flutter_launcher_icons:
   ios: true
   remove_alpha_ios: true
   image_path: "assets/logo_launcher.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/logo_launcher_foreground.png"
   web:
     generate: true
     image_path: "assets/logo_launcher.png"

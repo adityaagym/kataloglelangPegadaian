@@ -42,7 +42,7 @@ android {
         variant.outputs
             .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
             .forEach { output ->
-                output.outputFileName = "GALANG-Pegadaian-Lelang-${variant.name}.apk"
+                output.outputFileName = "SILAS-${variant.name}.apk"
             }
     }
 }

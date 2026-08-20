@@ -3,11 +3,12 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <application
-        android:label="GALANG-Pegadaian Lelang"
+        android:label="SILAS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
+            android:label="SILAS"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""

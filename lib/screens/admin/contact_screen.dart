@@ -153,7 +153,7 @@ class ContactScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Aplikasi Katalog Lelang Pegadaian Syariah ini dirancang dan didevelop secara kolaboratif oleh tim kami untuk menghadirkan pengalaman kelola barang lelang yang responsif dan efisien.',
+                    'Aplikasi SILAS (Sistem Informasi Lelang Amanah Syariah) Pegadaian ini dirancang dan didevelop secara kolaboratif oleh tim kami untuk menghadirkan pengalaman kelola dan katalog barang lelang yang responsif, amanah, dan efisien.',
                     style: TextStyle(
                       fontFamily: 'Outfit',
                       color: Colors.white.withValues(alpha: 0.9),

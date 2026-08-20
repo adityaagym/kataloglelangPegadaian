@@ -176,7 +176,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       vertical: 2,
                     ),
                     child: Image.asset(
-                      'assets/logo_pegadaian_syariah.png',
+                      'assets/logo_silas_horizontal.png',
                       fit: BoxFit.contain,
                     ),
                   ),

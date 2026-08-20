@@ -73,6 +73,9 @@ flutter:
 
   assets:
     - assets/logo_pegadaian_syariah.png
+    - assets/logo_silas_horizontal.png
+    - assets/logo_launcher.png
+    - assets/logo_launcher_foreground.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

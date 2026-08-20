@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Image.asset(
-                  'assets/logo_pegadaian_syariah.png',
+                  'assets/logo_silas_horizontal.png',
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
                 ),
