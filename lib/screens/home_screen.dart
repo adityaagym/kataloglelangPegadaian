@@ -217,15 +217,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            _headerPill(
-              Icons.lock_outline,
-              isPortrait ? '' : 'Admin',
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              ),
-              isCompact: isPortrait,
-            ),
             if (!isPortrait) ...[
               const SizedBox(width: 12),
               _headerPill(

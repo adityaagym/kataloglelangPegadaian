@@ -206,6 +206,163 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     );
   }
 
+  void _openImagePreview(List<ItemPhoto> photos) {
+    if (photos.isEmpty) return;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.9),
+      barrierDismissible: true,
+      builder: (context) {
+        int previewIndex = _currentImageIndex;
+        final previewController = PageController(initialPage: previewIndex);
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              insetPadding: EdgeInsets.zero,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Background barrier that closes dialog on tap
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Navigator.pop(context),
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+
+                  // Larger Image Display
+                  GestureDetector(
+                    onTap: () {}, // Do nothing, absorb tap on image itself
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      height: MediaQuery.of(context).size.height * 0.75,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          PageView.builder(
+                            controller: previewController,
+                            itemCount: photos.length,
+                            onPageChanged: (index) {
+                              setDialogState(() {
+                                previewIndex = index;
+                              });
+                              setState(() {
+                                _currentImageIndex = index;
+                                _pageController.jumpToPage(index);
+                              });
+                            },
+                            itemBuilder: (context, index) {
+                              return InteractiveViewer(
+                                maxScale: 4.0,
+                                child: Image.file(
+                                  File(photos[index].localPath),
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (ctx, err, stack) => const Icon(
+                                    Icons.error_outline,
+                                    size: 60,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // Left/Right Navigation Arrows
+                          if (photos.length > 1) ...[
+                            if (previewIndex > 0)
+                              Positioned(
+                                left: 8,
+                                child: IconButton.filled(
+                                  onPressed: () {
+                                    previewController.animateToPage(
+                                      previewIndex - 1,
+                                      duration: const Duration(milliseconds: 250),
+                                      curve: Curves.easeOut,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.chevron_left, size: 28),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black.withValues(alpha: 0.5),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            if (previewIndex < photos.length - 1)
+                              Positioned(
+                                right: 8,
+                                child: IconButton.filled(
+                                  onPressed: () {
+                                    previewController.animateToPage(
+                                      previewIndex + 1,
+                                      duration: const Duration(milliseconds: 250),
+                                      curve: Curves.easeOut,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.chevron_right, size: 28),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.black.withValues(alpha: 0.5),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Page Indicator (Dots)
+                  if (photos.length > 1)
+                    Positioned(
+                      bottom: 32,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          photos.length,
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: index == previewIndex ? 18 : 8,
+                            height: 8,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: index == previewIndex
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Close button
+                  Positioned(
+                    top: 24,
+                    right: 24,
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black.withValues(alpha: 0.4),
+                        shape: const CircleBorder(),
+                        padding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildImageColumn({double? height, required bool isPortrait}) {
     return Container(
       height: height ?? double.infinity,
@@ -233,18 +390,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     color: AppColors.textMuted,
                   ),
                 )
-              : PageView.builder(
-                  controller: _pageController,
-                  itemCount: photos.length,
-                  onPageChanged: (index) =>
-                      setState(() => _currentImageIndex = index),
-                  itemBuilder: (context, index) => Image.file(
-                    File(photos[index].localPath),
-                    fit: BoxFit.contain,
-                    errorBuilder: (ctx, err, stack) => const Icon(
-                      Icons.error_outline,
-                      size: 60,
-                      color: AppColors.textMuted,
+              : GestureDetector(
+                  onTap: () => _openImagePreview(photos),
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: photos.length,
+                    onPageChanged: (index) =>
+                        setState(() => _currentImageIndex = index),
+                    itemBuilder: (context, index) => Image.file(
+                      File(photos[index].localPath),
+                      fit: BoxFit.contain,
+                      errorBuilder: (ctx, err, stack) => const Icon(
+                        Icons.error_outline,
+                        size: 60,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ),
                 );
